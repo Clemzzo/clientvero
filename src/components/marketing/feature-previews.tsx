@@ -13,7 +13,7 @@ const toneClasses: Record<Tone, string> = {
   ink: "bg-ink-100 text-ink-500",
 };
 
-function StatusPill({ tone, children }: { tone: Tone; children: ReactNode }) {
+export function StatusPill({ tone, children }: { tone: Tone; children: ReactNode }) {
   return (
     <span
       className={cn(

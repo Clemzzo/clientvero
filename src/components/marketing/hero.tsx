@@ -1,6 +1,8 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Check } from "lucide-react";
 
+import danielAvatar from "@/assets/images/dk.png";
 import { DashboardPreview } from "@/components/marketing/dashboard-preview";
 import { Button } from "@/components/ui/button";
 
@@ -86,9 +88,13 @@ function Testimonial() {
   return (
     <figure className="mt-5 max-w-86 rounded-2xl border border-ink-200 bg-white p-4 shadow-[0_24px_60px_-28px_rgba(7,11,24,0.35)] lg:absolute lg:-bottom-24 lg:right-0 lg:mt-0">
       <div className="flex gap-3.5">
-        <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-linear-to-br from-brand-500 to-violet-leaf text-sm font-semibold text-white">
-          DK
-        </span>
+        <Image
+          src={danielAvatar}
+          alt=""
+          loading="eager"
+          sizes="44px"
+          className="size-11 shrink-0 rounded-xl object-cover"
+        />
         <div>
           <blockquote className="text-[13px] leading-[1.55] text-ink-700">
             “ClientVero has completely streamlined our client process. We&rsquo;re more organised,

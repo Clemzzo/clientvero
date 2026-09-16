@@ -1,3 +1,4 @@
+import Image from "next/image";
 import {
   Bell,
   ChevronDown,
@@ -18,6 +19,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
+import sarahAvatar from "@/assets/images/sarah.png";
 import { Logo } from "@/components/layout/logo";
 import { TiltCard } from "@/components/marketing/tilt-card";
 import { cn } from "@/lib/utils";
@@ -107,9 +109,13 @@ export function DashboardPreview() {
           <div className="ml-auto flex items-center gap-3 sm:ml-0">
             <Bell className="size-4 text-ink-400" />
             <div className="flex items-center gap-2">
-              <span className="grid size-7 place-items-center rounded-full bg-brand-100 text-[10px] font-semibold text-brand-700">
-                SC
-              </span>
+              <Image
+                src={sarahAvatar}
+                alt=""
+                loading="eager"
+                sizes="28px"
+                className="size-7 shrink-0 rounded-full object-cover"
+              />
               <span className="hidden leading-tight sm:block">
                 <span className="block text-[11px] font-semibold text-ink-900">Sarah Chen</span>
                 <span className="block text-[10px] text-ink-400">Acme Studio</span>
