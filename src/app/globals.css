@@ -25,8 +25,7 @@
   --color-ink-50: #f8f9fc;
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-bricolage), var(--font-inter), ui-sans-serif, sans-serif;
-}
+  --font-display: var(--font-bricolage), var(--font-inter), ui-sans-serif, sans-serif;}
 
 :root {
   color-scheme: light;

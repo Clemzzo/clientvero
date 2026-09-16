@@ -57,8 +57,8 @@ export function Hero() {
             </Button>
 
             <Button variant="outline" size="lg" className="rounded-lg" asChild>
-              <Link href="#demo">
-                See How It Works
+              <Link href="#how-it-works">
+                See how it works
               </Link>
             </Button>
           </div>
