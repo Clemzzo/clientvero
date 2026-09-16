@@ -1941,9 +1941,10 @@ Platform admins only.
 
 ```text
 /
+/pricing
 ```
 
-Sections:
+Landing page (`/`) sections:
 
 ```text
 Navigation
@@ -1955,11 +1956,15 @@ Solution
 Feature Grid
 Client Portal Showcase
 How It Works
-Pricing
+FAQ
 Testimonials
 Final CTA
 Footer
 ```
+
+FAQ answers common buying questions and must only describe capabilities within MVP scope.
+
+Pricing lives on its own page (`/pricing`), linked from the main navigation, and renders the plans from the pricing configuration (see §95), followed by the same FAQ used on the landing page.
 
 Hero message:
 
@@ -2426,7 +2431,7 @@ $0/month
 
 ## Pro
 
-~$19/month
+$5/month
 
 - unlimited clients
 - unlimited projects
@@ -2438,7 +2443,7 @@ $0/month
 
 ## Agency
 
-~$49/month
+$10/month
 
 - team members
 - larger AI limits

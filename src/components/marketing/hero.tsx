@@ -52,7 +52,7 @@ export function Hero() {
           >
             <Button size="lg" className="rounded-lg" asChild>
               <Link href="/sign-up">
-                Start free trial
+                Start for free
               </Link>
             </Button>
 
