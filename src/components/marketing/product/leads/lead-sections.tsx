@@ -1,56 +1,12 @@
-import type { ReactNode } from "react";
-import { ArrowRight, Check, Filter, Search, UserPlus } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { ArrowRight, Filter, Search, UserPlus } from "lucide-react";
 
 import { LeadsPreview, StatusPill } from "@/components/marketing/feature-previews";
-import { Reveal } from "@/components/shared/reveal";
-import { cn } from "@/lib/utils";
-
-type SectionProps = {
-  id: string;
-  title: string;
-  intro: string;
-  className?: string;
-  dark?: boolean;
-  children: ReactNode;
-};
-
-function Section({ id, title, intro, className, dark = false, children }: SectionProps) {
-  const headingId = `${id}-heading`;
-
-  return (
-    <section
-      id={id}
-      aria-labelledby={headingId}
-      className={cn("py-20 lg:py-28", dark && "bg-brand-950", className)}
-    >
-      <div className="mx-auto max-w-360 px-5 sm:px-8 lg:px-10">
-        <Reveal>
-          <h2
-            id={headingId}
-            className={cn(
-              "max-w-[22ch] font-display text-[clamp(26px,2.6vw,33px)] font-extrabold leading-[1.15] tracking-[-0.03em]",
-              dark ? "text-white" : "text-ink-900",
-            )}
-          >
-            {title}
-          </h2>
-          <p
-            className={cn(
-              "mt-3.5 max-w-[52ch] text-[14.5px] leading-[1.6]",
-              dark ? "text-brand-100" : "text-ink-500",
-            )}
-          >
-            {intro}
-          </p>
-        </Reveal>
-        <Reveal delay={0.1} className="mt-12">
-          {children}
-        </Reveal>
-      </div>
-    </section>
-  );
-}
+import {
+  CheckList,
+  FeatureCards,
+  ProductSection,
+  type FeatureCard,
+} from "@/components/marketing/product/product-section";
 
 const stages = [
   { name: "New", detail: "Just came in and hasn't been reviewed yet." },
@@ -63,7 +19,7 @@ const stages = [
 
 export function LeadPipeline() {
   return (
-    <Section
+    <ProductSection
       id="pipeline"
       title="See where every deal stands."
       intro="Every lead moves through the same clear stages, so you always know what needs your attention next. Switch between pipeline and list view whenever you like."
@@ -80,38 +36,17 @@ export function LeadPipeline() {
         </ol>
         <LeadsPreview />
       </div>
-    </Section>
+    </ProductSection>
   );
 }
 
-const carriedOver = 
-["Name and email", 
- "Phone number", 
- "Company and website"];
+const carriedOver = ["Name and email", "Phone number", "Company and website"];
 
 const conversionSteps = [
   "The lead is marked Won",
   "Its notes and activity stay attached",
   "If anything fails, nothing is half-converted",
 ];
-
-function CheckList({ title, items }: { title: string; items: string[] }) {
-  return (
-    <div>
-      <h3 className="text-[14px] font-semibold text-white">{title}</h3>
-      <ul className="mt-4 space-y-3">
-        {items.map((item) => (
-          <li key={item} className="flex items-center gap-2.5 text-[14px] text-brand-100">
-            <span className="grid size-5 shrink-0 place-items-center rounded-full bg-brand-500 text-white">
-              <Check aria-hidden className="size-3" strokeWidth={3} />
-            </span>
-            {item}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
 
 function ConversionPreview() {
   return (
@@ -146,7 +81,7 @@ function ConversionPreview() {
 
 export function LeadConversion() {
   return (
-    <Section
+    <ProductSection
       id="convert"
       title="From lead to client in one click."
       intro="When a lead says yes, convert it and start sending proposals straight away. No retyping details into another tool."
@@ -159,11 +94,11 @@ export function LeadConversion() {
         </div>
         <ConversionPreview />
       </div>
-    </Section>
+    </ProductSection>
   );
 }
 
-const tools: { title: string; detail: string; icon: LucideIcon }[] = [
+const tools: FeatureCard[] = [
   { title: "Search", detail: "Look up any lead by name, company, or email.", icon: Search },
   { title: "Filter", detail: "Narrow the list by status or where the lead came from.", icon: Filter },
   {
@@ -175,28 +110,13 @@ const tools: { title: string; detail: string; icon: LucideIcon }[] = [
 
 export function LeadSearch() {
   return (
-    <Section
+    <ProductSection
       id="find"
       title="Find any lead in seconds."
       intro="A growing list stays easy to work with."
       className="bg-ink-50"
     >
-      <ul className="grid gap-5 sm:grid-cols-3">
-        {tools.map((tool) => (
-          <li
-            key={tool.title}
-            className="flex flex-col rounded-2xl border border-ink-200 bg-white p-6 sm:p-7"
-          >
-            <span className="grid size-11 place-items-center rounded-xl bg-brand-50 text-brand-600">
-              <tool.icon aria-hidden className="size-5" />
-            </span>
-            <h3 className="mt-5 font-display text-[17px] font-bold tracking-[-0.02em] text-ink-900">
-              {tool.title}
-            </h3>
-            <p className="mt-2 text-[14px] leading-[1.6] text-ink-500">{tool.detail}</p>
-          </li>
-        ))}
-      </ul>
-    </Section>
+      <FeatureCards items={tools} />
+    </ProductSection>
   );
 }

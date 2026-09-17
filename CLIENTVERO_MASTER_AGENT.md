@@ -1943,6 +1943,7 @@ Platform admins only.
 /
 /pricing
 /product/leads
+/product/clients
 ```
 
 Landing page (`/`) sections:
