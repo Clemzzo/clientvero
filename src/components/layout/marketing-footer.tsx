@@ -7,7 +7,7 @@ type FooterColumn = { label: string; links: NavLink[] };
 
 function footerColumns(): FooterColumn[] {
   const topLevelLinks = navigation.flatMap((item) =>
-    !item.items && item.href ? [{ label: item.label, href: item.href }] : [],
+    item.items ? [] : [{ label: item.label, href: item.href }],
   );
 
   return navigation.flatMap((item) => {

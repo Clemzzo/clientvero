@@ -50,7 +50,7 @@ export function PortalShowcase() {
 
           <h2
             id="portal-heading"
-            className="mt-3.5 max-w-[16ch] font-display text-[clamp(1.6rem,2.6vw,2.05rem)] font-extrabold leading-[1.15] tracking-[-0.03em] text-white"
+            className="mt-3.5 max-w-[16ch] font-display text-[clamp(26px,2.6vw,33px)] font-extrabold leading-[1.15] tracking-[-0.03em] text-white"
           >
             A private portal for every client.
           </h2>

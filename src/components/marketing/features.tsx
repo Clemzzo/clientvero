@@ -104,7 +104,7 @@ export function Features() {
             <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-brand-600">Features</p>
             <h2
               id="features-heading"
-              className="mt-3.5 max-w-[20ch] font-display text-[clamp(1.6rem,2.6vw,2.05rem)] font-extrabold leading-[1.15] tracking-[-0.03em] text-ink-900"
+              className="mt-3.5 max-w-[20ch] font-display text-[clamp(26px,2.6vw,33px)] font-extrabold leading-[1.15] tracking-[-0.03em] text-ink-900"
             >
               Every step of client work, connected.
             </h2>

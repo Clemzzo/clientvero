@@ -69,7 +69,7 @@ export function MarketingHeader() {
 
       {mobileOpen && (
         <div className="border-t border-ink-200 bg-white px-5 pb-6 pt-4 sm:px-8 lg:hidden">
-          <nav className="flex flex-col">
+          <nav aria-label="Main" className="flex flex-col">
             {navigation.flatMap((item) =>
               item.items
                 ? [
@@ -93,7 +93,7 @@ export function MarketingHeader() {
                 : [
                     <Link
                       key={item.label}
-                      href={item.href ?? "#"}
+                      href={item.href}
                       onClick={() => setMobileOpen(false)}
                       className="rounded-lg px-2 py-2.5 pt-4 text-[15px] font-semibold text-ink-900"
                     >

@@ -31,7 +31,7 @@ export function Hero() {
 
           <h1
             style={delay(1)}
-            className="rise-in mt-7 max-w-[17ch] font-display text-[clamp(2.6rem,5.7vw,4.25rem)] font-extrabold leading-[1.02] tracking-[-0.035em] text-ink-900"
+            className="rise-in mt-7 max-w-[17ch] font-display text-[clamp(42px,5.7vw,68px)] font-extrabold leading-[1.02] tracking-[-0.035em] text-ink-900"
           >
             Turn clients into long-term <span className="text-brand-600">growth</span>
             <span className="text-brand-300">.</span>

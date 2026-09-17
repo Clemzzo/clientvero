@@ -82,6 +82,7 @@ These come straight from the PRD's final engineering rules. Breaking one is a bu
 ### UI & accessibility
 
 - **Tailwind driven by shared design tokens and shadcn/ui primitives** — no hardcoded one-off colours or sizes.
+- **Use pixels (`px`) for custom Tailwind size values, not `rem`.** Write `text-[14px]`, not `text-[0.875rem]`. For fluid type, write `clamp()` with px for the minimum and maximum and `vw` only for the middle (scaling) value, e.g. `text-[clamp(26px,2.6vw,33px)]`. Keep the minimum smaller than the maximum and never put spaces inside the brackets.
 - Visual direction: clean, modern, spacious, premium SaaS. Restrained colour, rounded cards, subtle shadows, clear typography, meaningful (not decorative) animation via Framer Motion. Avoid an overloaded enterprise-CRM look.
 - **Accessibility is not optional** — AA contrast, visible focus states, full keyboard support, adequate tap targets, labelled form fields, and plain language. Accessible by construction, not retrofitted.
 - Large lists (leads, clients, proposals, projects, invoices, files, messages, activity) must paginate.

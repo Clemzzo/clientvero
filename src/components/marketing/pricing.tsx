@@ -84,7 +84,7 @@ export function Pricing() {
             <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-brand-600">Pricing</p>
             <h1
               id="pricing-heading"
-              className="mt-4 font-display text-[clamp(2.2rem,4.5vw,3.25rem)] font-extrabold leading-[1.05] tracking-[-0.035em] text-ink-900"
+              className="mt-4 font-display text-[clamp(35px,4.5vw,52px)] font-extrabold leading-[1.05] tracking-[-0.035em] text-ink-900"
             >
               Simple pricing that grows with you.
             </h1>

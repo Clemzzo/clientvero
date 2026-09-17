@@ -1929,6 +1929,7 @@ Platform admins only.
 ```text
 /
 /pricing
+/product/leads
 ```
 
 Landing page (`/`) sections:
@@ -1952,6 +1953,8 @@ Footer
 FAQ answers common buying questions and must only describe capabilities within MVP scope.
 
 Pricing lives on its own page (`/pricing`), linked from the main navigation, and renders the plans from the pricing configuration (see §95), followed by the same FAQ used on the landing page.
+
+Product pages (`/product/*`) explain one capability in depth, are linked from the Product menu, and may only describe MVP-scope features. Other Product menu items link to their landing-page section until their page exists.
 
 Hero message:
 

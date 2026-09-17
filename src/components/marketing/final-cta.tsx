@@ -30,7 +30,7 @@ export function FinalCta() {
 
             <h2
               id="final-cta-heading"
-              className="mx-auto max-w-[20ch] font-display text-[clamp(1.9rem,3.6vw,2.75rem)] font-extrabold leading-[1.1] tracking-[-0.035em] text-white"
+              className="mx-auto max-w-[20ch] font-display text-[clamp(30px,3.6vw,44px)] font-extrabold leading-[1.1] tracking-[-0.035em] text-white"
             >
               Run your entire client business from one place.
             </h2>

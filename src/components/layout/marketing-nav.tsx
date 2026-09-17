@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import type { FocusEvent, KeyboardEvent, PointerEvent } from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 
@@ -9,34 +10,32 @@ import { cn } from "@/lib/utils";
 
 const CLOSE_DELAY_MS = 120;
 
+const triggerClassName =
+  "flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-[13px] font-medium transition-colors duration-200";
+
 export function MarketingNav() {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
-  const navRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLElement>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const finePointer = useRef<MediaQueryList | null>(null);
 
   useEffect(() => {
-    finePointer.current = window.matchMedia("(pointer: fine)");
-  }, []);
+    if (!openMenu) return;
 
-  useEffect(() => {
-    function onPointerDown(event: MouseEvent) {
-      if (navRef.current && !navRef.current.contains(event.target as Node)) {
-        setOpenMenu(null);
-      }
+    function onPointerDown(event: globalThis.PointerEvent) {
+      if (!navRef.current?.contains(event.target as Node)) setOpenMenu(null);
     }
 
-    function onKeyDown(event: KeyboardEvent) {
+    function onKeyDown(event: globalThis.KeyboardEvent) {
       if (event.key === "Escape") setOpenMenu(null);
     }
 
-    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("pointerdown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
     return () => {
-      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, []);
+  }, [openMenu]);
 
   useEffect(() => {
     return () => {
@@ -51,78 +50,136 @@ export function MarketingNav() {
     }
   }
 
-  function handlePointerEnter(label: string) {
-    if (!finePointer.current?.matches) return;
+  function openOnHover(label: string) {
     cancelPendingClose();
     setOpenMenu(label);
   }
 
-  function handlePointerLeave() {
-    if (!finePointer.current?.matches) return;
+  function closeAfterHover() {
     cancelPendingClose();
     closeTimer.current = setTimeout(() => setOpenMenu(null), CLOSE_DELAY_MS);
   }
 
+  function closeMenu(label: string) {
+    cancelPendingClose();
+    setOpenMenu((current) => (current === label ? null : current));
+  }
+
+  function toggleMenu(label: string) {
+    cancelPendingClose();
+    setOpenMenu((current) => (current === label ? null : label));
+  }
+
   return (
-    <div ref={navRef} className="hidden items-center gap-1 lg:flex">
-      {navigation.map((item) => {
-        if (!item.items) {
-          return (
-            <Link
-              key={item.label}
-              href={item.href ?? "#"}
-              className="rounded-lg px-3.5 py-2 text-[15px] font-medium text-ink-700 transition-colors hover:text-brand-600"
-            >
-              {item.label}
-            </Link>
-          );
-        }
-
-        const isOpen = openMenu === item.label;
-
-        return (
-          <div
+    <nav ref={navRef} aria-label="Main" className="hidden items-center gap-1 lg:flex">
+      {navigation.map((item) =>
+        item.items ? (
+          <NavDropdown
             key={item.label}
-            className="relative"
-            onPointerEnter={() => handlePointerEnter(item.label)}
-            onPointerLeave={handlePointerLeave}
+            label={item.label}
+            links={item.items}
+            isOpen={openMenu === item.label}
+            onToggle={() => toggleMenu(item.label)}
+            onClose={() => closeMenu(item.label)}
+            onHoverStart={() => openOnHover(item.label)}
+            onHoverEnd={closeAfterHover}
+          />
+        ) : (
+          <Link
+            key={item.label}
+            href={item.href}
+            className={cn(triggerClassName, "text-ink-700 hover:text-brand-600")}
           >
-            <button
-              type="button"
-              aria-haspopup="true"
-              aria-expanded={isOpen}
-              onClick={() => setOpenMenu(isOpen ? null : item.label)}
-              className={cn(
-                "flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-[15px] font-medium transition-colors duration-200",
-                isOpen ? "text-brand-600" : "text-ink-700 hover:text-brand-600",
-              )}
-            >
-              {item.label}
-              <ChevronDown
-                aria-hidden
-                className={cn(
-                  "size-4 transition-transform duration-200",
-                  isOpen ? "rotate-180 text-brand-600" : "text-ink-400",
-                )}
-              />
-            </button>
+            {item.label}
+          </Link>
+        ),
+      )}
+    </nav>
+  );
+}
 
-            {isOpen && (
-              <div className="absolute left-1/2 top-full w-80 -translate-x-1/2 pt-3">
-                <div className="menu-in rounded-2xl border border-ink-200 bg-white p-2 shadow-[0_24px_60px_-20px_rgba(7,11,24,0.22)]">
-                  {item.items.map((link) => (
-                    <NavPanelLink
-                      key={link.label}
-                      link={link}
-                      onNavigate={() => setOpenMenu(null)}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      })}
+type NavDropdownProps = {
+  label: string;
+  links: NavLink[];
+  isOpen: boolean;
+  onToggle: () => void;
+  onClose: () => void;
+  onHoverStart: () => void;
+  onHoverEnd: () => void;
+};
+
+function NavDropdown({
+  label,
+  links,
+  isOpen,
+  onToggle,
+  onClose,
+  onHoverStart,
+  onHoverEnd,
+}: NavDropdownProps) {
+  const panelId = useId();
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  function handlePointerEnter(event: PointerEvent<HTMLDivElement>) {
+    if (event.pointerType === "mouse") onHoverStart();
+  }
+
+  function handlePointerLeave(event: PointerEvent<HTMLDivElement>) {
+    if (event.pointerType === "mouse") onHoverEnd();
+  }
+
+  function handleBlur(event: FocusEvent<HTMLDivElement>) {
+    if (!event.currentTarget.contains(event.relatedTarget)) onClose();
+  }
+
+  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key !== "Escape" || !isOpen) return;
+    onClose();
+    triggerRef.current?.focus();
+  }
+
+  return (
+    <div
+      className="relative"
+      onPointerEnter={handlePointerEnter}
+      onPointerLeave={handlePointerLeave}
+      onBlur={handleBlur}
+      onKeyDown={handleKeyDown}
+    >
+      <button
+        ref={triggerRef}
+        type="button"
+        aria-expanded={isOpen}
+        aria-controls={panelId}
+        onClick={onToggle}
+        className={cn(
+          triggerClassName,
+          isOpen ? "text-brand-600" : "text-ink-700 hover:text-brand-600",
+        )}
+      >
+        {label}
+        <ChevronDown
+          aria-hidden
+          className={cn(
+            "size-4 transition-transform duration-200",
+            isOpen ? "rotate-180 text-brand-600" : "text-ink-400",
+          )}
+        />
+      </button>
+
+      <div
+        id={panelId}
+        hidden={!isOpen}
+        className="absolute left-1/2 top-full w-80 -translate-x-1/2 pt-3"
+      >
+        <ul className="menu-in rounded-2xl border border-ink-200 bg-white p-2 shadow-[0_24px_60px_-20px_rgba(7,11,24,0.22)]">
+          {links.map((link) => (
+            <li key={link.label}>
+              <NavPanelLink link={link} onNavigate={onClose} />
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }

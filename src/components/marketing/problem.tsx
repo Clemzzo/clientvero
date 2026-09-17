@@ -82,7 +82,7 @@ function Column({
 
       <h2
         id={headingId}
-        className="mt-3.5 max-w-[16ch] font-display text-[clamp(1.6rem,2.6vw,2.05rem)] font-extrabold leading-[1.15] tracking-[-0.03em] text-ink-900"
+        className="mt-3.5 max-w-[16ch] font-display text-[clamp(26px,2.6vw,33px)] font-extrabold leading-[1.15] tracking-[-0.03em] text-ink-900"
       >
         {heading}
       </h2>

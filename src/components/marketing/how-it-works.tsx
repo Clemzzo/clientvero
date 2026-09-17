@@ -36,7 +36,7 @@ function StepItem({ step, index }: { step: Step; index: number }) {
     <li className="flex flex-col gap-5">
       <span
         aria-hidden
-        className="font-display text-[clamp(3.5rem,5vw,4.5rem)] font-medium leading-none tracking-[-0.04em] text-brand-200"
+        className="font-display text-[clamp(56px,5vw,72px)] font-medium leading-none tracking-[-0.04em] text-brand-200"
       >
         {String(index + 1).padStart(2, "0")}
       </span>
@@ -77,7 +77,7 @@ export function HowItWorks() {
             <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-brand-600">How it works</p>
             <h2
               id="how-it-works-heading"
-              className="mt-3.5 max-w-[20ch] font-display text-[clamp(1.6rem,2.6vw,2.05rem)] font-extrabold leading-[1.15] tracking-[-0.03em] text-ink-900"
+              className="mt-3.5 max-w-[20ch] font-display text-[clamp(26px,2.6vw,33px)] font-extrabold leading-[1.15] tracking-[-0.03em] text-ink-900"
             >
               From sign-up to first payment in four steps.
             </h2>

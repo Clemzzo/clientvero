@@ -1,11 +1,13 @@
 export type NavLink = { label: string; href: string; description?: string };
-export type NavItem = { label: string; href?: string; items?: NavLink[] };
+export type NavItem =
+  | { label: string; href: string; items?: never }
+  | { label: string; items: NavLink[]; href?: never };
 
 export const navigation: NavItem[] = [
   {
     label: "Product",
     items: [
-      { label: "Leads", href: "/#leads", description: "Capture and qualify new work" },
+      { label: "Leads", href: "/product/leads", description: "Capture and qualify new work" },
       { label: "Clients", href: "/#clients", description: "One record per relationship" },
       { label: "Proposals", href: "/#proposals", description: "Send, track, get accepted" },
       { label: "Projects", href: "/#projects", description: "Milestones your clients can follow" },
