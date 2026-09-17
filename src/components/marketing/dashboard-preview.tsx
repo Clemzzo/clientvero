@@ -21,6 +21,7 @@ import type { LucideIcon } from "lucide-react";
 
 import sarahAvatar from "@/assets/images/sarah.png";
 import { Logo } from "@/components/layout/logo";
+import { CountUp, ProgressFill, StaggerItem, StaggerList } from "@/components/marketing/dashboard-motion";
 import { TiltCard } from "@/components/marketing/tilt-card";
 import { cn } from "@/lib/utils";
 
@@ -41,10 +42,10 @@ const sidebarFooterItems: { label: string; icon: LucideIcon }[] = [
 ];
 
 const stats = [
-  { label: "Total revenue", value: "$24,500", delta: "12%", up: true, icon: Wallet, tint: "text-emerald-600 bg-emerald-50" },
-  { label: "Active clients", value: "18", delta: "3", up: true, icon: Users, tint: "text-brand-600 bg-brand-50" },
-  { label: "Projects in progress", value: "7", delta: "2", up: true, icon: FolderKanban, tint: "text-violet-600 bg-violet-50" },
-  { label: "Outstanding invoices", value: "$6,200", delta: "8%", up: false, icon: ReceiptText, tint: "text-amber-600 bg-amber-50" },
+  { label: "Total revenue", amount: 24500, prefix: "$", delta: "12%", up: true, icon: Wallet, tint: "text-emerald-600 bg-emerald-50" },
+  { label: "Active clients", amount: 18, prefix: "", delta: "3", up: true, icon: Users, tint: "text-brand-600 bg-brand-50" },
+  { label: "Projects in progress", amount: 7, prefix: "", delta: "2", up: true, icon: FolderKanban, tint: "text-violet-600 bg-violet-50" },
+  { label: "Outstanding invoices", amount: 6200, prefix: "$", delta: "8%", up: false, icon: ReceiptText, tint: "text-amber-600 bg-amber-50" },
 ];
 
 const projects = [
@@ -160,17 +161,25 @@ export function DashboardPreview() {
 
             <div className="mt-3 grid grid-cols-2 gap-2.5 lg:grid-cols-4">
               {stats.map((stat) => (
-                <div key={stat.label} className="rounded-xl border border-ink-200 bg-white p-2.5">
+                <div
+                  key={stat.label}
+                  className="group rounded-xl border border-ink-200 bg-white p-2.5 transition-colors duration-200 hover:border-brand-200"
+                >
                   <div className="flex items-start justify-between gap-2">
                     <p className="min-h-[2.4em] text-[10.5px] leading-tight text-ink-500">
                       {stat.label}
                     </p>
-                    <span className={cn("grid size-5 shrink-0 place-items-center rounded-md", stat.tint)}>
+                    <span
+                      className={cn(
+                        "grid size-5 shrink-0 place-items-center rounded-md transition-transform duration-200 group-hover:scale-110",
+                        stat.tint,
+                      )}
+                    >
                       <stat.icon className="size-3" />
                     </span>
                   </div>
                   <p className="mt-1.5 font-display text-lg font-bold tracking-tight text-ink-900">
-                    {stat.value}
+                    <CountUp value={stat.amount} prefix={stat.prefix} />
                   </p>
                   <p
                     className={cn(
@@ -192,9 +201,12 @@ export function DashboardPreview() {
                   <span className="text-[10px] text-brand-600">View all projects</span>
                 </div>
 
-                <ul className="mt-2.5 space-y-2.5">
-                  {projects.map((project) => (
-                    <li key={project.name} className="flex items-center gap-2.5">
+                <ul className="mt-2 space-y-1">
+                  {projects.map((project, index) => (
+                    <li
+                      key={project.name}
+                      className="-mx-1.5 flex items-center gap-2.5 rounded-lg px-1.5 py-1 transition-colors duration-200 hover:bg-ink-50"
+                    >
                       <span className={cn("size-1.5 shrink-0 rounded-full", project.dot)} />
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[11px] font-medium text-ink-900">
@@ -203,9 +215,10 @@ export function DashboardPreview() {
                         <span className="block truncate text-[10px] text-ink-400">{project.client}</span>
                       </span>
                       <span className="h-1.5 w-12 shrink-0 overflow-hidden rounded-full bg-ink-100 sm:w-14">
-                        <span
-                          className={cn("block h-full rounded-full", project.bar)}
-                          style={{ width: `${project.progress}%` }}
+                        <ProgressFill
+                          value={project.progress}
+                          delay={index * 0.12}
+                          className={project.bar}
                         />
                       </span>
                       <span className="w-7 shrink-0 text-right text-[10px] font-semibold text-ink-500">
@@ -222,9 +235,12 @@ export function DashboardPreview() {
                   <span className="text-[10px] text-brand-600">View all</span>
                 </div>
 
-                <ul className="mt-2.5 space-y-2.5">
+                <StaggerList className="mt-2 space-y-1">
                   {activity.map((entry) => (
-                    <li key={entry.title} className="flex items-start gap-2.5">
+                    <StaggerItem
+                      key={entry.title}
+                      className="-mx-1.5 flex items-start gap-2.5 rounded-lg px-1.5 py-1 transition-colors duration-200 hover:bg-ink-50"
+                    >
                       <span className={cn("grid size-6 shrink-0 place-items-center rounded-md", entry.tint)}>
                         <entry.icon className="size-3" />
                       </span>
@@ -235,9 +251,9 @@ export function DashboardPreview() {
                         <span className="block truncate text-[10px] text-ink-400">{entry.detail}</span>
                       </span>
                       <span className="shrink-0 text-[10px] text-ink-400">{entry.time}</span>
-                    </li>
+                    </StaggerItem>
                   ))}
-                </ul>
+                </StaggerList>
               </div>
             </div>
           </div>
