@@ -1944,6 +1944,9 @@ Platform admins only.
 /pricing
 /product/leads
 /product/clients
+/product/proposals
+/product/invoices
+/product/client-portal
 ```
 
 Landing page (`/`) sections:

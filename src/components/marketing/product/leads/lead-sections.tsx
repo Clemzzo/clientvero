@@ -1,9 +1,10 @@
-import { ArrowRight, Filter, Search, UserPlus } from "lucide-react";
+import { Filter, Search, UserPlus } from "lucide-react";
 
-import { LeadsPreview, StatusPill } from "@/components/marketing/feature-previews";
+import { LeadsPreview } from "@/components/marketing/feature-previews";
 import {
   CheckList,
   FeatureCards,
+  HandoffPreview,
   ProductSection,
   type FeatureCard,
 } from "@/components/marketing/product/product-section";
@@ -48,37 +49,6 @@ const conversionSteps = [
   "If anything fails, nothing is half-converted",
 ];
 
-function ConversionPreview() {
-  return (
-    <div
-      aria-hidden
-      className="flex flex-col items-stretch gap-3 rounded-2xl border border-white/10 bg-white/5 p-5 sm:flex-row sm:items-center"
-    >
-      <div className="flex-1 rounded-xl border border-ink-200 bg-white p-4">
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-[11px] text-ink-400">Lead</span>
-          <StatusPill tone="emerald">Won</StatusPill>
-        </div>
-        <p className="mt-2 font-display text-[15px] font-bold text-ink-900">Olivia Park</p>
-        <p className="text-[12px] text-ink-500">Park &amp; Co.</p>
-      </div>
-
-      <span className="grid size-8 shrink-0 place-items-center self-center rounded-full bg-brand-500 text-white">
-        <ArrowRight className="size-4 rotate-90 sm:rotate-0" />
-      </span>
-
-      <div className="flex-1 rounded-xl border border-ink-200 bg-white p-4">
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-[11px] text-ink-400">Client</span>
-          <StatusPill tone="brand">Active</StatusPill>
-        </div>
-        <p className="mt-2 font-display text-[15px] font-bold text-ink-900">Park &amp; Co.</p>
-        <p className="text-[12px] text-ink-500">Olivia Park, primary contact</p>
-      </div>
-    </div>
-  );
-}
-
 export function LeadConversion() {
   return (
     <ProductSection
@@ -92,7 +62,16 @@ export function LeadConversion() {
           <CheckList title="What carries over" items={carriedOver} />
           <CheckList title="What happens" items={conversionSteps} />
         </div>
-        <ConversionPreview />
+        <HandoffPreview
+          from={{ label: "Lead", status: "Won", tone: "emerald", title: "Olivia Park", detail: "Park & Co." }}
+          to={{
+            label: "Client",
+            status: "Active",
+            tone: "brand",
+            title: "Park & Co.",
+            detail: "Olivia Park, primary contact",
+          }}
+        />
       </div>
     </ProductSection>
   );

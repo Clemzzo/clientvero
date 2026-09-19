@@ -23,7 +23,10 @@ export default function LeadsProductPage() {
       <LeadPipeline />
       <LeadConversion />
       <LeadSearch />
-      <FinalCta />
+      <FinalCta
+        title="Turn your next enquiry into a client."
+        description="Start free and keep every enquiry in one list, from first message to new client. No credit card required."
+      />
     </>
   );
 }

@@ -4,6 +4,15 @@ import { FinalCta } from "@/components/marketing/final-cta";
 import { ClientRecordPreview } from "@/components/marketing/product/clients/client-record-preview";
 import { ClientAccess, ClientRecord } from "@/components/marketing/product/clients/client-sections";
 import { ProductHero } from "@/components/marketing/product/product-hero";
+import { plans } from "@/features/subscriptions/plans";
+
+function freeClientsLine() {
+  const clients = plans.find((plan) => plan.id === "free")?.limits.clients;
+
+  return clients
+    ? `Manage up to ${clients} clients on the Free plan, with a client portal included. No credit card required.`
+    : "Manage your clients free, with a client portal included. No credit card required.";
+}
 
 export const metadata: Metadata = {
   title: "Client management",
@@ -22,7 +31,7 @@ export default function ClientsProductPage() {
       />
       <ClientRecord />
       <ClientAccess />
-      <FinalCta />
+      <FinalCta title="Give every client one clear record." description={freeClientsLine()} />
     </>
   );
 }

@@ -9,10 +9,10 @@ export const navigation: NavItem[] = [
     items: [
       { label: "Leads", href: "/product/leads", description: "Capture and qualify new work" },
       { label: "Clients", href: "/product/clients", description: "One record per relationship" },
-      { label: "Proposals", href: "/#proposals", description: "Send, track, get accepted" },
+      { label: "Proposals", href: "/product/proposals", description: "Send, track, get accepted" },
       { label: "Projects", href: "/#projects", description: "Milestones your clients can follow" },
-      { label: "Invoices", href: "/#invoices", description: "Bill and get paid on time" },
-      { label: "Client portal", href: "/#portal", description: "A shared space for every client" },
+      { label: "Invoices", href: "/product/invoices", description: "Bill and get paid on time" },
+      { label: "Client portal", href: "/product/client-portal", description: "A shared space for every client" },
     ],
   },
   {

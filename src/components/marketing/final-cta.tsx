@@ -14,7 +14,15 @@ function freePlanLine() {
     : "Start free today. No credit card required.";
 }
 
-export function FinalCta() {
+type FinalCtaProps = {
+  title?: string;
+  description?: string;
+};
+
+export function FinalCta({
+  title = "Run your entire client business from one place.",
+  description = freePlanLine(),
+}: FinalCtaProps) {
   return (
     <section aria-labelledby="final-cta-heading" className="pb-12 pt-20 lg:pb-16 lg:pt-28">
       <div className="mx-auto max-w-360 px-5 sm:px-8 lg:px-10">
@@ -32,11 +40,9 @@ export function FinalCta() {
               id="final-cta-heading"
               className="mx-auto max-w-[20ch] font-display text-[clamp(30px,3.6vw,44px)] font-extrabold leading-[1.1] tracking-[-0.035em] text-white"
             >
-              Run your entire client business from one place.
+              {title}
             </h2>
-            <p className="mx-auto mt-5 max-w-[46ch] text-[16px] leading-[1.6] text-brand-100">
-              {freePlanLine()}
-            </p>
+            <p className="mx-auto mt-5 max-w-[46ch] text-[16px] leading-[1.6] text-brand-100">{description}</p>
 
             <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
               <Button

@@ -3,13 +3,14 @@ import { Check, Eye, Send } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-type Tone = "brand" | "emerald" | "amber" | "violet" | "ink";
+export type Tone = "brand" | "emerald" | "amber" | "violet" | "rose" | "ink";
 
 const toneClasses: Record<Tone, string> = {
   brand: "bg-brand-50 text-brand-700",
   emerald: "bg-emerald-50 text-emerald-700",
   amber: "bg-amber-50 text-amber-700",
   violet: "bg-violet-50 text-violet-700",
+  rose: "bg-rose-50 text-rose-700",
   ink: "bg-ink-100 text-ink-500",
 };
 
