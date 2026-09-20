@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 
 import { FinalCta } from "@/components/marketing/final-cta";
+import { LeadConversion } from "@/components/marketing/product/leads/lead-conversion";
+import { LeadPipeline } from "@/components/marketing/product/leads/lead-pipeline";
 import { LeadRecordPreview } from "@/components/marketing/product/leads/lead-record-preview";
-import { LeadConversion, LeadPipeline, LeadSearch } from "@/components/marketing/product/leads/lead-sections";
+import { LeadSearch } from "@/components/marketing/product/leads/lead-search";
 import { ProductHero } from "@/components/marketing/product/product-hero";
 
 export const metadata: Metadata = {
