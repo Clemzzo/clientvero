@@ -18,7 +18,7 @@ export const navigation: NavItem[] = [
   {
     label: "Solutions",
     items: [
-      { label: "Freelancers", href: "/#freelancers", description: "Run solo without the admin" },
+      { label: "Freelancers", href: "/solutions/freelancers", description: "Run solo without the admin" },
       { label: "Consultants", href: "/#consultants", description: "Look established from day one" },
       { label: "Small agencies", href: "/#agencies", description: "Keep a team of 2–20 aligned" },
     ],
