@@ -1935,6 +1935,8 @@ Platform admins only.
 /product/invoices
 /product/client-portal
 /solutions/freelancers
+/solutions/consultants
+/solutions/agencies
 ```
 
 Landing page (`/`) sections:

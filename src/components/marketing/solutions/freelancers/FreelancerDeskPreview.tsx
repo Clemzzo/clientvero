@@ -21,15 +21,15 @@ export function FreelancerDeskPreview() {
     <div aria-hidden className="rounded-3xl bg-ink-100 p-4 sm:p-6">
       <div className="overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-[0_24px_60px_-36px_rgba(7,11,24,0.35)]">
         <div className="flex items-center justify-between gap-3 border-b border-ink-200 px-5 py-4">
-          <span className="flex min-w-0 items-center gap-2.5">
-            <span className="grid size-8 shrink-0 place-items-center rounded-full bg-brand-600 text-[12px] font-bold text-white">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="grid size-8 shrink-0 place-items-center rounded-full bg-brand-600 text-[12px] font-bold text-white">
               MR
-            </span>
-            <span className="min-w-0">
-              <span className="block truncate text-[14px] font-semibold text-ink-900">Maya Reyes Studio</span>
-              <span className="block truncate text-[12px] text-ink-400">Your week at a glance</span>
-            </span>
-          </span>
+            </div>
+            <div className="min-w-0">
+              <div className="truncate text-[14px] font-semibold text-ink-900">Maya Reyes Studio</div>
+              <div className="truncate text-[12px] text-ink-400">Your week at a glance</div>
+            </div>
+          </div>
           <StatusPill tone="brand">Solo</StatusPill>
         </div>
 
@@ -52,13 +52,13 @@ export function FreelancerDeskPreview() {
                 key={item.title}
                 className="flex items-center gap-3 rounded-xl border border-ink-200 px-3 py-2.5"
               >
-                <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-600">
+                <div className="grid size-8 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-600">
                   <item.icon className="size-4" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[12px] font-semibold text-ink-900">{item.title}</span>
-                  <span className="block truncate text-[10.5px] text-ink-400">{item.detail}</span>
-                </span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[12px] font-semibold text-ink-900">{item.title}</div>
+                  <div className="truncate text-[10.5px] text-ink-400">{item.detail}</div>
+                </div>
                 <StatusPill tone={item.tone}>{item.status}</StatusPill>
               </li>
             ))}
@@ -73,9 +73,9 @@ export function FreelancerDeskPreview() {
             </span>
             <span className="shrink-0 font-semibold tabular-nums text-ink-700">60%</span>
           </div>
-          <span className="mt-2 block h-1.5 overflow-hidden rounded-full bg-ink-200">
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-ink-200">
             <ProgressFill value={60} className="bg-brand-600" />
-          </span>
+          </div>
           <p className="mt-2 text-[10.5px] text-ink-400">3 of 5 milestones complete · visible in their portal</p>
         </div>
       </div>

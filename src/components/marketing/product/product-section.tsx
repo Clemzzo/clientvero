@@ -87,6 +87,21 @@ export function CheckList({
   );
 }
 
+export function CheckItems({ items, className }: { items: string[]; className?: string }) {
+  return (
+    <ul className={cn("space-y-3.5", className)}>
+      {items.map((item) => (
+        <li key={item} className="flex items-center gap-2.5 text-[14px] text-ink-700">
+          <div className="grid size-5 shrink-0 place-items-center rounded-full bg-brand-50 text-brand-600">
+            <Check aria-hidden className="size-3" strokeWidth={3} />
+          </div>
+          {item}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function DocumentLinkBar({ url }: { url: string }) {
   return (
     <div className="flex items-center gap-2 border-b border-ink-200 bg-ink-50 px-4 py-2.5">

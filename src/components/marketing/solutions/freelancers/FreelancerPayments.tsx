@@ -1,7 +1,5 @@
-import { Check } from "lucide-react";
-
 import { StatusPill, type Tone } from "@/components/marketing/feature-previews";
-import { ProductSection } from "@/components/marketing/product/product-section";
+import { CheckItems, ProductSection } from "@/components/marketing/product/product-section";
 
 const paymentPoints = [
   "See every invoice's status at a glance",
@@ -29,10 +27,10 @@ function InvoiceLedgerPreview() {
         <ul className="divide-y divide-ink-200">
           {invoices.map((invoice) => (
             <li key={invoice.number} className="flex items-center gap-3 px-5 py-3">
-              <span className="min-w-0 flex-1">
-                <span className="block text-[12.5px] font-semibold tabular-nums text-ink-900">{invoice.number}</span>
-                <span className="block truncate text-[11px] text-ink-400">{invoice.client}</span>
-              </span>
+              <div className="min-w-0 flex-1">
+                <div className="text-[12.5px] font-semibold tabular-nums text-ink-900">{invoice.number}</div>
+                <div className="truncate text-[11px] text-ink-400">{invoice.client}</div>
+              </div>
               <StatusPill tone={invoice.tone}>{invoice.status}</StatusPill>
               <span className="w-16 shrink-0 text-right text-[12.5px] font-semibold tabular-nums text-ink-700">
                 {invoice.amount}
@@ -62,16 +60,7 @@ export function FreelancerPayments() {
       <div className="grid gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:items-center lg:gap-16">
         <div>
           <h3 className="text-[14px] font-semibold text-ink-900">Stay on top of cash flow</h3>
-          <ul className="mt-5 space-y-3.5">
-            {paymentPoints.map((point) => (
-              <li key={point} className="flex items-center gap-2.5 text-[14px] text-ink-700">
-                <span className="grid size-5 shrink-0 place-items-center rounded-full bg-brand-50 text-brand-600">
-                  <Check aria-hidden className="size-3" strokeWidth={3} />
-                </span>
-                {point}
-              </li>
-            ))}
-          </ul>
+          <CheckItems items={paymentPoints} className="mt-5" />
 
           <p className="mt-8 rounded-xl border border-ink-200 p-4 text-[13.5px] leading-normal text-ink-500">
             <span className="font-semibold text-ink-900">Paid your way.</span> Clients pay you however you already

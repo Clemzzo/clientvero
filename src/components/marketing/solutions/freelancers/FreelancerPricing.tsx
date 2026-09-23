@@ -48,14 +48,14 @@ function FreelancerPlanCard({ plan }: { plan: Plan }) {
             key={feature}
             className={cn("flex items-start gap-2.5 text-[14px] leading-normal", featured ? "text-brand-100" : "text-ink-700")}
           >
-            <span
+            <div
               className={cn(
                 "mt-0.5 grid size-4.5 shrink-0 place-items-center rounded-full",
                 featured ? "bg-brand-500 text-white" : "bg-brand-50 text-brand-600",
               )}
             >
               <Check aria-hidden className="size-3" strokeWidth={3} />
-            </span>
+            </div>
             {feature}
           </li>
         ))}

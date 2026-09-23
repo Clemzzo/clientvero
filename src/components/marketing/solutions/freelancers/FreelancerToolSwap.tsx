@@ -18,7 +18,7 @@ function SwapRow({ swap }: { swap: Swap }) {
   return (
     <li className="grid gap-3 px-5 py-4 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center sm:gap-4 sm:px-6">
       <span className="text-[14px] font-semibold text-ink-900">{swap.job}</span>
-      <span className="flex items-center gap-3 sm:contents">
+      <div className="flex items-center gap-3 sm:contents">
         <span className="inline-flex w-fit items-center rounded-full bg-ink-100 px-3 py-1 text-[14px] text-ink-400 line-through decoration-ink-400/60">
           <span className="sr-only">Instead of </span>
           {swap.before}
@@ -29,7 +29,7 @@ function SwapRow({ swap }: { swap: Swap }) {
           <span className="sr-only">use </span>
           {swap.after}
         </span>
-      </span>
+      </div>
     </li>
   );
 }
@@ -49,7 +49,7 @@ export function FreelancerToolSwap() {
         >
           <span>The job</span>
           <span>Today</span>
-          <span className="w-4" />
+          <div className="w-4" />
           <span>In ClientVero</span>
         </div>
         <ul className="divide-y divide-ink-200">

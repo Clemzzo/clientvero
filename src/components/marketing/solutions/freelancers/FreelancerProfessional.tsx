@@ -45,12 +45,12 @@ function ProposalMockup() {
       <div className="rounded-3xl bg-white/5 p-3 ring-1 ring-white/10 sm:p-4">
         <div className="overflow-hidden rounded-2xl bg-white shadow-[0_30px_70px_-40px_rgba(0,0,0,0.6)]">
           <div className="flex items-center justify-between gap-3 border-b border-ink-200 px-5 py-4">
-            <span className="flex min-w-0 items-center gap-2.5">
-              <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-brand-600 text-[11px] font-bold text-white">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <div className="grid size-8 shrink-0 place-items-center rounded-lg bg-brand-600 text-[11px] font-bold text-white">
                 MR
-              </span>
+              </div>
               <span className="truncate text-[13px] font-semibold text-ink-900">Maya Reyes Studio</span>
-            </span>
+            </div>
             <StatusPill tone="emerald">Accepted</StatusPill>
           </div>
 
@@ -65,7 +65,7 @@ function ProposalMockup() {
               {proposalLines.map((line) => (
                 <div key={line.label} className="flex items-baseline gap-2 text-[12.5px]">
                   <span className="shrink-0 text-ink-500">{line.label}</span>
-                  <span className="min-w-4 flex-1 border-b border-dotted border-ink-200" />
+                  <div className="min-w-4 flex-1 border-b border-dotted border-ink-200" />
                   <span className="truncate font-medium text-ink-700">{line.value}</span>
                 </div>
               ))}
@@ -80,22 +80,22 @@ function ProposalMockup() {
           </div>
 
           <div className="flex items-center gap-2 bg-emerald-50 px-5 py-3 text-[12.5px] font-semibold text-emerald-700">
-            <span className="grid size-5 place-items-center rounded-full bg-emerald-500 text-white">
+            <div className="grid size-5 place-items-center rounded-full bg-emerald-500 text-white">
               <Check className="size-3" strokeWidth={3} />
-            </span>
+            </div>
             Accepted online · 12 Sep
           </div>
         </div>
       </div>
 
       <div className="mt-3 flex items-center gap-3 rounded-xl bg-white px-4 py-3 shadow-[0_20px_40px_-20px_rgba(0,0,0,0.5)] lg:absolute lg:-bottom-6 lg:-right-6 lg:mt-0 lg:max-w-65">
-        <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-600">
+        <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-600">
           <FolderKanban className="size-4.5" />
-        </span>
-        <span className="min-w-0">
-          <span className="block text-[12.5px] font-semibold text-ink-900">Project created</span>
-          <span className="block text-[11px] text-ink-500">5 milestones in their portal</span>
-        </span>
+        </div>
+        <div className="min-w-0">
+          <div className="text-[12.5px] font-semibold text-ink-900">Project created</div>
+          <div className="text-[11px] text-ink-500">5 milestones in their portal</div>
+        </div>
       </div>
     </div>
   );
@@ -113,16 +113,16 @@ function BenefitTile({ benefit }: { benefit: Benefit }) {
           : "border-white/10 bg-white/5 hover:bg-white/8",
       )}
     >
-      <span className="flex items-center justify-between gap-3">
-        <span className="grid size-10 place-items-center rounded-xl bg-brand-500/15 text-brand-200">
+      <div className="flex items-center justify-between gap-3">
+        <div className="grid size-10 place-items-center rounded-xl bg-brand-500/15 text-brand-200">
           <benefit.icon aria-hidden className="size-4.5" />
-        </span>
+        </div>
         {benefit.badge && (
           <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-[11px] font-semibold text-white">
             {benefit.badge}
           </span>
         )}
-      </span>
+      </div>
       <h3 className="mt-5 font-display text-[16px] font-bold tracking-[-0.02em] text-white">{benefit.title}</h3>
       <p className="mt-1.5 text-[13.5px] leading-[1.6] text-brand-100">{benefit.detail}</p>
     </li>
