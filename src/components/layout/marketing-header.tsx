@@ -84,8 +84,12 @@ export function MarketingHeader() {
                         key={`${item.label}-${link.label}`}
                         href={link.href}
                         onClick={() => setMobileOpen(false)}
-                        className="rounded-lg px-2 py-2.5 text-[15px] font-medium text-ink-700"
+                        className="flex items-center gap-3 rounded-lg px-2 py-2.5 text-[15px] font-medium text-ink-700"
                       >
+                        <link.icon
+                          aria-hidden
+                          className="size-4 text-ink-400"
+                        />
                         {link.label}
                       </Link>
                     )),

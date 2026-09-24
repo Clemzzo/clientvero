@@ -45,7 +45,7 @@ function PermissionTable() {
           <span className="mt-0.5 block text-[13px] text-ink-500">Set by role when you invite someone.</span>
         </caption>
         <thead>
-          <tr className="bg-ink-50 text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-400">
+          <tr className="bg-ink-50 text-[11px] font-semibold uppercase tracking-widest text-ink-400">
             <th scope="col" className="px-5 py-3 font-semibold">
               Access
             </th>

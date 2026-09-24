@@ -1937,6 +1937,8 @@ Platform admins only.
 /solutions/freelancers
 /solutions/consultants
 /solutions/agencies
+/guides
+/guides/[slug]
 ```
 
 Landing page (`/`) sections:
@@ -1964,6 +1966,8 @@ Pricing lives on its own page (`/pricing`), linked from the main navigation, and
 Product pages (`/product/*`) explain one capability in depth, are linked from the Product menu, and may only describe MVP-scope features. Other Product menu items link to their landing-page section until their page exists.
 
 Solutions pages (`/solutions/*`) explain how one audience uses the MVP, are linked from the Solutions menu, and may only describe MVP-scope features. Other Solutions menu items link to their landing-page section until their page exists.
+
+Guides (`/guides`, `/guides/[slug]`) are static playbooks, one per step of the core loop, linked from the Resources menu. They are marketing content, not tenant data, are statically generated, and may only describe MVP-scope features.
 
 Hero message:
 

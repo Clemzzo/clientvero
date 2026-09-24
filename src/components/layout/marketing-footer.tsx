@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Logo } from "@/components/layout/logo";
 import { navigation, type NavLink } from "@/components/layout/navigation";
 
-type FooterColumn = { label: string; links: NavLink[] };
+type FooterColumn = { label: string; links: Pick<NavLink, "label" | "href">[] };
 
 function footerColumns(): FooterColumn[] {
   const topLevelLinks = navigation.flatMap((item) =>
