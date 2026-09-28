@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Check, Eye, Send } from "lucide-react";
+import { Check, CreditCard, Eye, FileText, Send, Sparkles } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -27,144 +27,146 @@ export function StatusPill({ tone, children }: { tone: Tone; children: ReactNode
   );
 }
 
-function Frame({ children, className }: { children: ReactNode; className?: string }) {
+const row = "rounded-xl bg-white ring-1 ring-ink-200/70";
+const highlightedRow = "rounded-xl bg-emerald-50 ring-1 ring-emerald-200";
+
+function Frame({ children }: { children: ReactNode }) {
   return (
-    <div
-      aria-hidden
-      className={cn(
-        "rounded-xl border border-ink-200 bg-white p-3 shadow-[0_18px_40px_-28px_rgba(7,11,24,0.35)]",
-        className,
-      )}
-    >
+    <div aria-hidden className="w-full">
       {children}
     </div>
   );
 }
 
-const pipeline: { stage: string; tone: Tone; leads: { name: string; service: string; value: string }[] }[] = [
-  {
-    stage: "New",
-    tone: "brand",
-    leads: [
-      { name: "Olivia Park", service: "Website", value: "$3,200" },
-      { name: "Marco Silva", service: "SEO audit", value: "$900" },
-    ],
-  },
-  {
-    stage: "Qualified",
-    tone: "amber",
-    leads: [{ name: "Lumen Labs", service: "Brand identity", value: "$5,400" }],
-  },
-  {
-    stage: "Proposal sent",
-    tone: "violet",
-    leads: [{ name: "BrightPath", service: "Campaign", value: "$4,800" }],
-  },
+function PreviewHeader({ title, meta }: { title: ReactNode; meta: ReactNode }) {
+  return (
+    <div className="mb-3 flex items-center justify-between gap-2">
+      <span className="flex min-w-0 items-center gap-2 text-[13px] font-semibold text-ink-900">{title}</span>
+      <span className="shrink-0 text-[11.5px] text-ink-400">{meta}</span>
+    </div>
+  );
+}
+
+function Initials({ children, className }: { children: string; className?: string }) {
+  return (
+    <span
+      className={cn(
+        "grid size-7 shrink-0 place-items-center rounded-full bg-ink-100 text-[9.5px] font-bold text-ink-500",
+        className,
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+const leads: { name: string; initials: string; service: string; value: string; stage: string; tone: Tone }[] = [
+  { name: "Olivia Park", initials: "OP", service: "Website", value: "$3,200", stage: "New", tone: "brand" },
+  { name: "Lumen Labs", initials: "LL", service: "Brand identity", value: "$5,400", stage: "Qualified", tone: "amber" },
+  { name: "BrightPath", initials: "BP", service: "Campaign", value: "$4,800", stage: "Proposal sent", tone: "violet" },
 ];
 
 export function LeadsPreview() {
   return (
-    <Frame className="grid gap-2.5 sm:grid-cols-3">
-      {pipeline.map((column) => (
-        <div key={column.stage} className="min-w-0 rounded-lg bg-ink-50 p-2">
-          <div className="flex items-center justify-between gap-2 px-0.5">
-            <StatusPill tone={column.tone}>{column.stage}</StatusPill>
-            <span className="text-[10px] font-semibold text-ink-400">{column.leads.length}</span>
-          </div>
-          <ul className="mt-2 space-y-1.5">
-            {column.leads.map((lead) => (
-              <li key={lead.name} className="rounded-md border border-ink-200 bg-white px-2 py-1.5">
-                <span className="block truncate text-[11px] font-semibold text-ink-900">{lead.name}</span>
-                <span className="mt-0.5 flex items-center justify-between gap-2 text-[10px] text-ink-400">
-                  <span className="truncate">{lead.service}</span>
-                  <span className="shrink-0 font-semibold text-ink-700">{lead.value}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
+    <Frame>
+      <PreviewHeader title="Pipeline" meta="3 leads" />
+      <ul className="space-y-2">
+        {leads.map((lead) => (
+          <li key={lead.name} className={cn(row, "flex items-center gap-2.5 px-3 py-2.5")}>
+            <Initials>{lead.initials}</Initials>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[12px] font-semibold text-ink-900">{lead.name}</span>
+              <span className="block truncate text-[10.5px] text-ink-400">
+                {lead.service} · {lead.value}
+              </span>
+            </span>
+            <StatusPill tone={lead.tone}>{lead.stage}</StatusPill>
+          </li>
+        ))}
+      </ul>
     </Frame>
   );
 }
 
-const clientTabs = ["Overview", "Projects", "Invoices", "Files"];
+const clientStats = [
+  { label: "Projects", value: "2" },
+  { label: "Invoiced", value: "$7,300" },
+  { label: "Outstanding", value: "$0" },
+];
 
 export function ClientPreview() {
   return (
     <Frame>
-      <div className="flex items-center gap-2.5">
-        <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-brand-600 text-[11px] font-bold text-white">
-          AC
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-[12px] font-semibold text-ink-900">Acme Co.</span>
-          <span className="block truncate text-[10px] text-ink-400">Client since March</span>
-        </span>
-        <StatusPill tone="emerald">Active</StatusPill>
-      </div>
+      <PreviewHeader
+        title={
+          <>
+            <span className="grid size-6 shrink-0 place-items-center rounded-md bg-brand-600 text-[9px] font-bold text-white">
+              AC
+            </span>
+            <span className="truncate">Acme Co.</span>
+          </>
+        }
+        meta={<StatusPill tone="emerald">Active</StatusPill>}
+      />
 
-      <div className="mt-3 flex gap-3 overflow-hidden border-b border-ink-200 text-[10.5px]">
-        {clientTabs.map((tab, index) => (
-          <span
-            key={tab}
-            className={cn(
-              "-mb-px shrink-0 border-b-2 pb-1.5",
-              index === 0 ? "border-brand-600 font-semibold text-ink-900" : "border-transparent text-ink-400",
-            )}
-          >
-            {tab}
-          </span>
+      <dl className="grid grid-cols-3 gap-2">
+        {clientStats.map((stat) => (
+          <div key={stat.label} className={cn(row, "min-w-0 px-2.5 py-2")}>
+            <dt className="truncate text-[10px] text-ink-400">{stat.label}</dt>
+            <dd className="mt-0.5 truncate font-display text-[14px] font-bold tabular-nums tracking-tight text-ink-900">
+              {stat.value}
+            </dd>
+          </div>
         ))}
-      </div>
+      </dl>
 
-      <div className="mt-2.5 flex items-center gap-2 rounded-lg bg-ink-50 px-2 py-1.5">
-        <span className="grid size-6 shrink-0 place-items-center rounded-full bg-violet-100 text-[9px] font-semibold text-violet-700">
-          JM
-        </span>
-        <span className="min-w-0 flex-1 truncate text-[10.5px] text-ink-700">James Miller</span>
-        <span className="shrink-0 text-[10px] text-ink-400">Primary contact</span>
+      <div className={cn(row, "mt-2 flex items-center gap-2.5 px-3 py-2.5")}>
+        <Initials className="bg-violet-100 text-violet-700">JM</Initials>
+        <span className="min-w-0 flex-1 truncate text-[12px] font-semibold text-ink-900">James Miller</span>
+        <span className="shrink-0 text-[10.5px] text-ink-400">Primary contact</span>
       </div>
     </Frame>
   );
 }
 
 const proposalTrail = [
-  { label: "Sent", icon: Send },
-  { label: "Viewed", icon: Eye },
-  { label: "Accepted", icon: Check },
+  { label: "Sent", time: "Mon, 9:12", icon: Send },
+  { label: "Viewed", time: "Tue, 14:30", icon: Eye },
+  { label: "Accepted", time: "Wed, 10:05", icon: Check },
 ];
 
 export function ProposalPreview() {
   return (
     <Frame>
-      <div className="flex items-start justify-between gap-2">
-        <span className="min-w-0">
-          <span className="block truncate text-[12px] font-semibold text-ink-900">Campaign proposal</span>
-          <span className="block truncate text-[10px] text-ink-400">BrightPath</span>
-        </span>
-        <span className="shrink-0 font-display text-[15px] font-bold tracking-tight text-ink-900">$4,800</span>
-      </div>
-
-      <ol className="mt-3 flex items-center">
+      <PreviewHeader
+        title={<span className="truncate">Campaign proposal</span>}
+        meta={<span className="font-semibold tabular-nums text-ink-900">$4,800</span>}
+      />
+      <ol className="space-y-2">
         {proposalTrail.map((step, index) => {
-          const last = index === proposalTrail.length - 1;
+          const accepted = index === proposalTrail.length - 1;
           return (
-            <li key={step.label} className={cn("flex items-center", !last && "flex-1")}>
-              <span className="flex items-center gap-1">
-                <span
-                  className={cn(
-                    "grid size-5 place-items-center rounded-full",
-                    last ? "bg-emerald-500 text-white" : "bg-ink-100 text-ink-500",
-                  )}
-                >
-                  <step.icon className="size-2.5" strokeWidth={2.5} />
-                </span>
-                <span className={cn("text-[10px]", last ? "font-semibold text-emerald-700" : "text-ink-500")}>
-                  {step.label}
-                </span>
+            <li
+              key={step.label}
+              className={cn(accepted ? highlightedRow : row, "flex items-center gap-2.5 px-3 py-2.5")}
+            >
+              <span
+                className={cn(
+                  "grid size-6 shrink-0 place-items-center rounded-full",
+                  accepted ? "bg-emerald-500 text-white" : "bg-ink-100 text-ink-500",
+                )}
+              >
+                <step.icon className="size-3" strokeWidth={2.5} />
               </span>
-              {!last && <span className="mx-1.5 h-px flex-1 bg-ink-200" />}
+              <span
+                className={cn(
+                  "min-w-0 flex-1 truncate text-[12px] font-semibold",
+                  accepted ? "text-emerald-700" : "text-ink-900",
+                )}
+              >
+                {step.label}
+              </span>
+              <span className="shrink-0 text-[10.5px] tabular-nums text-ink-400">{step.time}</span>
             </li>
           );
         })}
@@ -174,10 +176,10 @@ export function ProposalPreview() {
 }
 
 const milestones = [
-  { name: "Discovery", done: true },
-  { name: "Wireframes", done: true },
-  { name: "Visual design", done: true },
-  { name: "Launch", done: false },
+  { name: "Discovery", due: "Aug 4", done: true },
+  { name: "Wireframes", due: "Aug 18", done: true },
+  { name: "Visual design", due: "Sep 1", done: true },
+  { name: "Launch", due: "Sep 22", done: false },
 ];
 
 export function ProjectPreview() {
@@ -186,17 +188,17 @@ export function ProjectPreview() {
 
   return (
     <Frame>
-      <div className="flex items-center justify-between gap-2">
-        <span className="truncate text-[12px] font-semibold text-ink-900">Website redesign</span>
-        <span className="shrink-0 text-[10px] font-semibold text-ink-500">{progress}%</span>
-      </div>
-      <span className="mt-2 block h-1.5 overflow-hidden rounded-full bg-ink-100">
+      <PreviewHeader
+        title={<span className="truncate">Website redesign</span>}
+        meta={<span className="font-semibold tabular-nums text-ink-700">{progress}%</span>}
+      />
+      <span className="mb-3 block h-1.5 overflow-hidden rounded-full bg-ink-200/70">
         <span className="block h-full rounded-full bg-brand-600" style={{ width: `${progress}%` }} />
       </span>
 
-      <ul className="mt-3 space-y-1.5">
+      <ul className={cn(row, "divide-y divide-ink-200/70")}>
         {milestones.map((milestone) => (
-          <li key={milestone.name} className="flex items-center gap-2 text-[10.5px]">
+          <li key={milestone.name} className="flex items-center gap-2.5 px-3 py-2 text-[11.5px]">
             <span
               className={cn(
                 "grid size-4 shrink-0 place-items-center rounded-full",
@@ -205,9 +207,15 @@ export function ProjectPreview() {
             >
               {milestone.done && <Check className="size-2.5" strokeWidth={3} />}
             </span>
-            <span className={milestone.done ? "text-ink-400 line-through" : "font-medium text-ink-900"}>
+            <span
+              className={cn(
+                "min-w-0 flex-1 truncate",
+                milestone.done ? "text-ink-400 line-through" : "font-semibold text-ink-900",
+              )}
+            >
               {milestone.name}
             </span>
+            <span className="shrink-0 text-[10.5px] tabular-nums text-ink-400">{milestone.due}</span>
           </li>
         ))}
       </ul>
@@ -223,31 +231,112 @@ const invoiceLines = [
 export function InvoicePreview() {
   return (
     <Frame>
-      <div className="flex items-center justify-between gap-2">
-        <span className="min-w-0">
-          <span className="block truncate text-[12px] font-semibold text-ink-900">INV-0042</span>
-          <span className="block truncate text-[10px] text-ink-400">Acme Co.</span>
-        </span>
-        <StatusPill tone="emerald">
-          <Check className="size-2.5" strokeWidth={3} />
-          Paid
-        </StatusPill>
+      <PreviewHeader
+        title={<span className="truncate">INV-0042</span>}
+        meta={
+          <StatusPill tone="emerald">
+            <Check className="size-2.5" strokeWidth={3} />
+            Paid
+          </StatusPill>
+        }
+      />
+
+      <div className={cn(row, "px-3 py-2.5")}>
+        <ul className="space-y-1 border-b border-dashed border-ink-200 pb-2">
+          {invoiceLines.map((line) => (
+            <li key={line.description} className="flex justify-between gap-2 text-[11px] text-ink-500">
+              <span className="truncate">{line.description}</span>
+              <span className="shrink-0 tabular-nums">{line.amount}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-2 flex items-baseline justify-between gap-2">
+          <span className="text-[11px] text-ink-500">Amount due</span>
+          <span className="font-display text-[15px] font-bold tabular-nums tracking-tight text-ink-900">
+            $0.00
+          </span>
+        </div>
       </div>
 
-      <ul className="mt-3 space-y-1 border-b border-dashed border-ink-200 pb-2">
-        {invoiceLines.map((line) => (
-          <li key={line.description} className="flex justify-between gap-2 text-[10.5px] text-ink-500">
-            <span className="truncate">{line.description}</span>
-            <span className="shrink-0 tabular-nums">{line.amount}</span>
+      <div className={cn(highlightedRow, "mt-2 flex items-center gap-2 px-3 py-2.5 text-[11px] text-emerald-700")}>
+        <CreditCard className="size-3.5 shrink-0" strokeWidth={2.25} />
+        <span className="min-w-0 flex-1 truncate font-medium">Paid by card on Sep 12</span>
+        <span className="shrink-0 font-semibold tabular-nums">$2,500.00</span>
+      </div>
+    </Frame>
+  );
+}
+
+const sharedFiles = [
+  { name: "Brand guidelines", meta: "PDF · 2.4 MB", fresh: true },
+  { name: "Homepage mockups", meta: "PNG · 5.1 MB", fresh: false },
+  { name: "Logo pack", meta: "ZIP · 12 MB", fresh: false },
+];
+
+export function FilesPreview() {
+  return (
+    <Frame>
+      <PreviewHeader title="Shared files" meta="4 files" />
+      <ul className="space-y-2">
+        {sharedFiles.map((file) => (
+          <li key={file.name} className={cn(row, "flex items-center gap-2.5 px-3 py-2.5")}>
+            <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-ink-100 text-ink-500">
+              <FileText className="size-3.5" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[12px] font-semibold text-ink-900">{file.name}</span>
+              <span className="block truncate text-[10.5px] text-ink-400">{file.meta}</span>
+            </span>
+            <span className={cn("size-2 shrink-0 rounded-full", file.fresh ? "bg-emerald-500" : "bg-ink-200")} />
           </li>
         ))}
       </ul>
+    </Frame>
+  );
+}
 
-      <div className="mt-2 flex items-baseline justify-between gap-2">
-        <span className="text-[10.5px] text-ink-500">Amount due</span>
-        <span className="font-display text-[15px] font-bold tabular-nums tracking-tight text-ink-900">
-          $0.00
-        </span>
+export function MessagesPreview() {
+  return (
+    <Frame>
+      <PreviewHeader title="Website redesign" meta={<StatusPill tone="violet">2 new</StatusPill>} />
+      <div className="space-y-2">
+        <div className="flex items-end gap-2">
+          <Initials className="bg-violet-100 text-violet-700">JM</Initials>
+          <p className={cn(row, "rounded-bl-md px-3 py-2 text-[11.5px] leading-normal text-ink-700")}>
+            Love the new homepage. Could we try a shorter hero headline?
+          </p>
+        </div>
+        <p className="ml-auto w-fit max-w-[85%] rounded-xl rounded-br-md bg-brand-600 px-3 py-2 text-[11.5px] leading-normal text-white">
+          Done. The updated version is in Files.
+        </p>
+        <p className="text-right text-[10px] text-ink-400">Seen 2 min ago</p>
+      </div>
+    </Frame>
+  );
+}
+
+export function AiAssistPreview() {
+  return (
+    <Frame>
+      <PreviewHeader
+        title={
+          <>
+            <span className="grid size-6 shrink-0 place-items-center rounded-full bg-brand-50 text-brand-600">
+              <Sparkles className="size-3.5" />
+            </span>
+            AI assist
+          </>
+        }
+        meta={<span className="font-medium text-emerald-600">Draft ready</span>}
+      />
+      <div className="space-y-2">
+        <p className={cn(row, "px-3 py-2.5 text-[11.5px] leading-normal text-ink-700")}>
+          I drafted a 3-phase proposal for BrightPath: 6 weeks, totalling{" "}
+          <span className="font-semibold text-emerald-600">$4,800</span>.
+        </p>
+        <p className="rounded-xl bg-ink-100 px-3 py-2.5 text-[11.5px] text-ink-700 ring-1 ring-ink-200">
+          Add a discovery workshop to phase one.
+        </p>
       </div>
     </Frame>
   );

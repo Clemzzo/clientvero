@@ -43,7 +43,7 @@ function BoundaryList({
 
 export function PortalShowcase() {
   return (
-    <section id="portal" aria-labelledby="portal-heading" className="bg-brand-950 py-20 lg:py-28">
+    <section aria-labelledby="portal-heading" className="bg-brand-950 py-20 lg:py-28">
       <div className="mx-auto grid max-w-360 gap-14 px-5 sm:px-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-center lg:gap-16 lg:px-10">
         <Reveal>
           <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-brand-300">Client portal</p>

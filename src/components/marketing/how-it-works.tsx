@@ -70,7 +70,7 @@ function StepItem({ step, index }: { step: Step; index: number }) {
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" aria-labelledby="how-it-works-heading" className="py-20 lg:py-28">
+    <section aria-labelledby="how-it-works-heading" className="py-20 lg:py-28">
       <div className="mx-auto max-w-360 px-5 sm:px-8 lg:px-10">
         <Reveal className="grid gap-6 lg:grid-cols-2 lg:items-end lg:gap-12">
           <div>

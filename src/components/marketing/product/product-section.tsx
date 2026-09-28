@@ -27,7 +27,6 @@ export function ProductSection({
 
   return (
     <section
-      id={id}
       aria-labelledby={headingId}
       className={cn("py-20 lg:py-28", dark && "bg-brand-950", className)}
     >

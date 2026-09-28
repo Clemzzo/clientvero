@@ -19,10 +19,10 @@ export type Plan = {
 };
 
 const freeLimits: PlanLimits = {
-  clients: 3,
-  activeProjects: 3,
-  proposalsPerMonth: 5,
-  invoicesPerMonth: 5,
+  clients: 2,
+  activeProjects: 2,
+  proposalsPerMonth: 2,
+  invoicesPerMonth: 2,
 };
 
 const unlimited: PlanLimits = {

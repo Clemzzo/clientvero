@@ -210,7 +210,7 @@ export const planProjectsInMilestones: Guide = {
       ],
     },
   ],
-  product: { label: "See how projects work", href: "/#projects" },
+  product: { label: "See how projects work", href: "/product/projects" },
 };
 
 export const setUpClientPortal: Guide = {

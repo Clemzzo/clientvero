@@ -25,7 +25,13 @@
   --color-ink-50: #f8f9fc;
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-bricolage), var(--font-inter), ui-sans-serif, sans-serif;}
+  --font-display: var(--font-bricolage), var(--font-inter), ui-sans-serif, sans-serif;
+
+  --text-section-title: clamp(28px, 2.6vw, 30px);
+  --text-section-title--line-height: 1.15;
+  --text-section-title--letter-spacing: -0.03em;
+  --text-section-title--font-weight: 800;
+}
 
 :root {
   color-scheme: light;
@@ -146,6 +152,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .marquee {
+    overflow-x: auto;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
   .marquee-track {
     animation: none;
     transform: none;

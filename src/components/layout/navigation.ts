@@ -61,7 +61,7 @@ export const navigation: NavItem[] = [
       },
       {
         label: "Projects",
-        href: "/#projects",
+        href: "/product/projects",
         description: "Milestones your clients can follow",
         icon: FolderKanban,
         tone: "violet",

@@ -125,7 +125,6 @@ export function GuidesLibrary() {
 
   return (
     <section
-      id="library"
       aria-labelledby="library-heading"
       className="border-t border-ink-100 bg-ink-50/60 py-20 lg:py-28"
     >

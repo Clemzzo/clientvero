@@ -75,7 +75,7 @@ function FaqItem({ entry }: { entry: FaqEntry }) {
 
 export function Faq({ showPricingLink = true }: { showPricingLink?: boolean }) {
   return (
-    <section id="faq" aria-labelledby="faq-heading" className="bg-ink-50 py-20 lg:py-28">
+    <section aria-labelledby="faq-heading" className="bg-ink-50 py-20 lg:py-28">
       <div className="mx-auto grid max-w-360 gap-10 px-5 sm:px-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:items-start lg:gap-16 lg:px-10">
         <Reveal className="lg:sticky lg:top-28">
           <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-brand-600">FAQ</p>

@@ -1945,6 +1945,7 @@ Platform admins only.
 /product/leads
 /product/clients
 /product/proposals
+/product/projects
 /product/invoices
 /product/client-portal
 /solutions/freelancers
