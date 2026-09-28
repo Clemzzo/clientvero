@@ -207,23 +207,37 @@ This journey is the primary MVP success path.
 
 # 9. Authentication
 
-Authentication is handled by **Clerk**.
+Authentication is handled by **Neon Auth** — managed Better Auth, provided by Neon and accessed through the `@neondatabase/auth` SDK.
 
-Clerk is responsible for:
+Neon Auth is responsible for:
 
-- sign-in
-- sign-up
+- sign-up and user creation
+- sign-in (email/password, email OTP, and Google/GitHub social sign-in where configured)
 - sessions
 - identity
-- email verification
-- social authentication where configured
+- email verification and password-reset emails
+
+Neon Auth stores its users and sessions in the `neon_auth` schema of the same Neon database branch, so auth state branches together with application data. Application code reads identity through the SDK and never writes to the `neon_auth` schema directly.
 
 The local `users` table stores:
 
-- Clerk user ID
+- Neon Auth user ID (`auth_user_id`)
 - application profile
 - user preferences
 - organization membership relationships
+
+A local `users` row is provisioned on the first authenticated request after sign-up, using an idempotent insert keyed by `auth_user_id`.
+
+Organizations, memberships, roles, and permissions remain ClientVero's own tables and capability map (§11, §23, §49). The Neon Auth Organization plugin is not used: it is in beta and does not support custom roles or permissions.
+
+Client portal identity is separate from Neon Auth (see §53).
+
+Constraints:
+
+- The Neon project must be in an AWS region that supports both Neon Auth and Neon Object Storage (`aws-us-east-1`, `aws-us-east-2`, `aws-eu-central-1`, or `aws-ap-southeast-1`).
+- Neon Auth cannot be enabled on a project that uses IP Allow or Private Networking.
+- Production requires custom SMTP for auth emails. Use Resend's SMTP so auth and transactional email share one sender domain.
+- Every app origin that auth redirects to (production and preview) must be registered as a Neon Auth trusted domain.
 
 ---
 
@@ -277,7 +291,7 @@ Every protected request follows:
 ```text
 Request
   ↓
-Clerk authentication
+Neon Auth session check
   ↓
 Resolve current user
   ↓
@@ -335,7 +349,7 @@ Neon
 
 ## Authentication
 
-- Clerk
+- Neon Auth (managed Better Auth)
 
 ## Payments
 
@@ -343,7 +357,7 @@ Neon
 
 ## Storage
 
-- Cloudflare R2
+- Neon Object Storage (S3-compatible)
 
 ## Cache / Rate Limiting
 
@@ -369,20 +383,18 @@ Neon
 
 # 14. Why Neon PostgreSQL
 
-Neon is the database-first PostgreSQL choice for the architecture.
+Neon is the database-first PostgreSQL choice for the architecture. It also provides the MVP's authentication (Neon Auth) and file storage (Neon Object Storage), so identity, relational data, and files live on one platform.
 
-The product already has dedicated systems for:
+The product uses dedicated external systems for:
 
-- authentication
-- file storage
 - subscriptions
 - email
 - analytics
 - caching
 
-Therefore PostgreSQL should primarily focus on relational application data.
+PostgreSQL primarily focuses on relational application data. Neon Auth keeps identity in the same database (`neon_auth` schema), and Neon Object Storage keeps file objects on the same branch as the rows that reference them.
 
-Neon's branching, serverless PostgreSQL architecture, and compatibility with Drizzle fit the intended development model.
+Every Neon branch gets its own isolated database, auth state, and storage buckets, so development, preview, and staging environments stay consistent. Neon's serverless PostgreSQL architecture and compatibility with Drizzle fit the intended development model.
 
 ---
 
@@ -407,10 +419,12 @@ Drizzle ORM
         ↓
 Neon PostgreSQL
 
+Neon platform:
+Neon Auth
+Neon Object Storage
+
 External infrastructure:
-Clerk
 Stripe
-Cloudflare R2
 Upstash
 Resend
 OpenAI
@@ -474,9 +488,9 @@ src/
 │   └── migrations/
 │
 ├── lib/
-│   ├── clerk/
+│   ├── auth/
 │   ├── stripe/
-│   ├── r2/
+│   ├── storage/
 │   ├── redis/
 │   ├── resend/
 │   ├── openai/
@@ -675,7 +689,7 @@ The schema starter implements:
 users
 -----
 id
-clerk_user_id
+auth_user_id
 email
 first_name
 last_name
@@ -685,7 +699,7 @@ created_at
 updated_at
 ```
 
-`clerk_user_id` is unique.
+`auth_user_id` is unique and holds the Neon Auth user ID.
 
 ---
 
@@ -1079,7 +1093,7 @@ updated_at
 
 # 37. Files
 
-Metadata lives in PostgreSQL; binary objects live in Cloudflare R2.
+Metadata lives in PostgreSQL; binary objects live in a private Neon Object Storage bucket on the same branch. `object_key` stores the bucket key, never the file bytes.
 
 ```text
 files
@@ -1391,7 +1405,7 @@ requireOrganizationContext(organizationId)
 
 These helpers:
 
-- verify Clerk authentication
+- verify the Neon Auth session
 - resolve the local user
 - verify organization membership
 - return user, organization, and membership context
@@ -1588,9 +1602,9 @@ Server authorization
  ↓
 Validate size/type
  ↓
-Generate signed R2 upload URL
+Generate presigned Neon Object Storage upload URL
  ↓
-Browser uploads directly to R2
+Browser uploads directly to the bucket
  ↓
 Save file metadata in Neon
 ```
@@ -1602,10 +1616,12 @@ Request file
  ↓
 Authorize
  ↓
-Generate signed R2 URL
+Generate presigned download URL
  ↓
 Return temporary URL
 ```
+
+Neon Object Storage is S3-compatible. Use the AWS S3 SDK with path-style addressing (`forcePathStyle: true`) and the branch credentials Neon injects (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_ENDPOINT_URL_S3`, `AWS_REGION`). Store the object key in PostgreSQL, never the bytes.
 
 ---
 
@@ -2246,12 +2262,12 @@ Financial records should generally remain auditable rather than being physically
 Before launch:
 
 ```text
-[ ] Clerk authentication
+[ ] Neon Auth authentication
 [ ] organization membership checks
 [ ] role permissions
 [ ] tenant-scoped reads
 [ ] tenant-scoped mutations
-[ ] signed R2 URLs
+[ ] presigned storage URLs
 [ ] public opaque IDs
 [ ] webhook verification
 [ ] webhook idempotency
@@ -2294,9 +2310,9 @@ Requested Resource
 
 # 89. File Security
 
-R2 object keys are private by default.
+Storage buckets are private. Objects are never publicly readable.
 
-Use signed URLs with expiration.
+Use presigned URLs with expiration.
 
 Validate:
 
@@ -2316,7 +2332,7 @@ Priorities:
 - indexed tenant queries
 - pagination
 - optimized images
-- direct R2 uploads
+- direct-to-storage uploads
 - selective caching
 - minimal unnecessary client JavaScript
 
@@ -2354,7 +2370,7 @@ Production
 
 Use separate database and provider credentials per environment.
 
-Neon branches can support safe development/staging workflows.
+Neon branches can support safe development/staging workflows. Each branch has its own Neon Auth URL, auth state, and storage buckets, so preview environments never touch production users or files.
 
 ---
 
@@ -2560,8 +2576,9 @@ Core positioning:
 ## Week 1 — Foundation
 
 - Next.js
-- Clerk
 - Neon
+- Neon Auth
+- Neon Object Storage
 - Drizzle
 - schema
 - migrations
@@ -2785,7 +2802,7 @@ Rate Limiting
 
 ```text
 [ ] Next.js app deployed
-[ ] Clerk configured
+[ ] Neon Auth configured
 [ ] Neon configured
 [ ] Drizzle migrations working
 [ ] multi-tenancy implemented
@@ -2800,7 +2817,7 @@ Rate Limiting
 [ ] invoices implemented
 [ ] payments implemented
 [ ] Stripe subscriptions implemented
-[ ] R2 file storage implemented
+[ ] Neon Object Storage file flows implemented
 [ ] messages implemented
 [ ] notifications implemented
 [ ] Resend emails implemented
@@ -2852,15 +2869,13 @@ Rate Limiting
                                 │
                              Drizzle
                                 │
-                         Neon PostgreSQL
+                  Neon: PostgreSQL + Auth + Object Storage
                                 │
-       ┌─────────────┬──────────┼──────────┬─────────────┐
-       │             │          │          │             │
-     Clerk        Stripe       R2       Upstash       Resend
-                                              │
-                                           OpenAI
-                                              │
-                                           PostHog
+          ┌─────────────┬───────┴──────┬─────────────┐
+          │             │              │             │
+       Stripe        Upstash        Resend        OpenAI
+                                                     │
+                                                  PostHog
 
                               Vercel
 ```
@@ -2980,6 +2995,17 @@ src/server/auth/
 ├── current-user.ts
 └── organization.ts
 
+src/lib/auth/
+├── server.ts
+└── client.ts
+
+src/lib/storage/
+└── client.ts
+
+src/app/api/auth/[...path]/route.ts
+src/proxy.ts
+neon.ts
+
 src/server/authorization/
 └── permissions.ts
 
@@ -3032,11 +3058,11 @@ Route Handlers
 Zod
 
 Neon PostgreSQL
+Neon Auth
+Neon Object Storage
 Drizzle ORM
 
-Clerk
 Stripe
-Cloudflare R2
 Upstash Redis
 Resend
 PostHog
@@ -3069,12 +3095,12 @@ Build ClientVero as a production-ready, polished SaaS MVP according to Part I. P
 ## 2. Non-Negotiable Rules
 - Use Next.js + TypeScript and keep the MVP as a modular monolith.
 - Use Neon PostgreSQL as the source of truth and Drizzle ORM for database access.
-- Use Clerk for authentication, with a local users table and organization memberships.
+- Use Neon Auth (managed Better Auth via `@neondatabase/auth`) for authentication, with a local users table and ClientVero-owned organization memberships.
 - Every organization-owned record must be scoped by organization_id and checked server-side.
 - Every protected mutation must authenticate, resolve organization, authorize, validate, execute service logic, and then trigger side effects.
 - Never authorize a resource solely from a client-supplied ID without tenant validation.
 - Keep ClientVero subscription billing separate from client project invoice payments.
-- Keep R2 private by default and use signed URLs for file access.
+- Keep Neon Object Storage buckets private and use presigned URLs for file access.
 - Keep OpenAI calls server-side and rate-limited; track AI usage.
 - Use idempotency for Stripe webhooks and other retriable workflow operations.
 - Do not move the entire application state into a global client store.
@@ -3084,7 +3110,7 @@ Build ClientVero as a production-ready, polished SaaS MVP according to Part I. P
 
 1. Foundation and environment configuration
 2. Database schema and migrations
-3. Clerk user/org provisioning and authorization
+3. Neon Auth user provisioning, organizations, and authorization
 4. Application shell and onboarding
 5. Leads and clients
 6. Proposals and public proposal acceptance
@@ -3113,17 +3139,21 @@ The following source files are included as starter implementation patterns. Pres
 DATABASE_URL=
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 
-CLERK_SECRET_KEY=
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+# Neon Auth — NEON_AUTH_BASE_URL is written by `neon env pull`.
+# Generate the cookie secret with: openssl rand -base64 32
+NEON_AUTH_BASE_URL=
+NEON_AUTH_COOKIE_SECRET=
 
 STRIPE_SECRET_KEY=
 STRIPE_WEBHOOK_SECRET=
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
 
-R2_ACCOUNT_ID=
-R2_ACCESS_KEY_ID=
-R2_SECRET_ACCESS_KEY=
-R2_BUCKET_NAME=
+# Neon Object Storage — branch credentials are written by `neon env pull`.
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_ENDPOINT_URL_S3=
+AWS_REGION=
+STORAGE_BUCKET_NAME=files
 
 UPSTASH_REDIS_REST_URL=
 UPSTASH_REDIS_REST_TOKEN=
@@ -3149,12 +3179,12 @@ This starter is the implementation appendix for the ClientVero PRD.
 - Next.js App Router
 - TypeScript
 - Neon PostgreSQL
+- Neon Auth (managed Better Auth)
+- Neon Object Storage (S3-compatible)
 - Drizzle ORM
-- Clerk
 - Tailwind CSS
 - shadcn/ui
 - Stripe
-- Cloudflare R2
 - Upstash Redis
 - Resend
 - PostHog
@@ -3164,7 +3194,9 @@ This starter is the implementation appendix for the ClientVero PRD.
 
 ```bash
 npm install
-cp .env.example .env.local
+neon link
+neon deploy        # enables Neon Auth and creates the storage bucket from neon.ts
+neon env pull      # writes Neon Auth and storage credentials to .env.local
 npm run db:generate
 npm run db:migrate
 npm run dev
@@ -3214,7 +3246,9 @@ export default defineConfig({
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
-    "@clerk/nextjs": "latest",
+    "@aws-sdk/client-s3": "latest",
+    "@aws-sdk/s3-request-presigner": "latest",
+    "@neondatabase/auth": "latest",
     "@neondatabase/serverless": "latest",
     "@opentelemetry/api": "latest",
     "@radix-ui/react-slot": "latest",
@@ -3233,6 +3267,7 @@ export default defineConfig({
     "zod": "latest"
   },
   "devDependencies": {
+    "@neon/config": "latest",
     "drizzle-kit": "latest",
     "typescript": "latest"
   }
@@ -4169,7 +4204,7 @@ import { id, timestamps } from "./common";
 
 export const users = pgTable("users", {
   id: id(),
-  clerkUserId: varchar("clerk_user_id", { length: 255 }).notNull().unique(),
+  authUserId: text("auth_user_id").notNull().unique(),
   email: varchar("email", { length: 320 }).notNull(),
   firstName: varchar("first_name", { length: 120 }),
   lastName: varchar("last_name", { length: 120 }),
@@ -4226,30 +4261,135 @@ export async function createLeadAction(input: unknown) {
 }
 ```
 
+## `neon.ts`
+
+```typescript
+import { defineConfig } from "@neon/config/v1";
+
+export default defineConfig({
+  auth: true,
+  buckets: {
+    files: {},
+  },
+});
+```
+
+## `src/lib/auth/server.ts`
+
+```typescript
+import { createNeonAuth } from "@neondatabase/auth/next/server";
+
+export const auth = createNeonAuth({
+  baseUrl: process.env.NEON_AUTH_BASE_URL!,
+  cookies: { secret: process.env.NEON_AUTH_COOKIE_SECRET! },
+});
+```
+
+## `src/lib/auth/client.ts`
+
+```typescript
+"use client";
+
+import { createAuthClient } from "@neondatabase/auth/next";
+
+export const authClient = createAuthClient();
+```
+
+## `src/app/api/auth/[...path]/route.ts`
+
+```typescript
+import { auth } from "@/lib/auth/server";
+
+export const { GET, POST, PUT, DELETE, PATCH } = auth.handler();
+```
+
+## `src/proxy.ts`
+
+Page redirects only. Every Server Action and Route Handler still authenticates on its own through `requireCurrentUser()` / `requireOrganizationContext()`.
+
+```typescript
+import { auth } from "@/lib/auth/server";
+
+export default auth.middleware({ loginUrl: "/sign-in" });
+
+export const config = {
+  matcher: ["/app/:path*", "/onboarding/:path*", "/admin/:path*"],
+};
+```
+
+## `src/lib/storage/client.ts`
+
+```typescript
+import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+
+const bucket = process.env.STORAGE_BUCKET_NAME!;
+const expiresIn = 300;
+
+const s3 = new S3Client({ forcePathStyle: true });
+
+export function createUploadUrl(objectKey: string, contentType: string) {
+  return getSignedUrl(
+    s3,
+    new PutObjectCommand({ Bucket: bucket, Key: objectKey, ContentType: contentType }),
+    { expiresIn },
+  );
+}
+
+export function createDownloadUrl(objectKey: string) {
+  return getSignedUrl(s3, new GetObjectCommand({ Bucket: bucket, Key: objectKey }), { expiresIn });
+}
+```
+
 ## `src/server/auth/current-user.ts`
 
 ```typescript
-import { auth } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { users } from "@/db/schema";
+import { auth } from "@/lib/auth/server";
+
+function findUserByAuthId(authUserId: string) {
+  return db.query.users.findFirst({
+    where: eq(users.authUserId, authUserId),
+  });
+}
 
 export async function requireCurrentUser() {
-  const { userId } = await auth();
+  const { data: session } = await auth.getSession();
+  const authUser = session?.user;
 
-  if (!userId) {
+  if (!authUser) {
     throw new Error("UNAUTHENTICATED");
   }
 
-  const existing = await db.query.users.findFirst({
-    where: eq(users.clerkUserId, userId),
-  });
+  const existing = await findUserByAuthId(authUser.id);
 
-  if (!existing) {
+  if (existing) {
+    return existing;
+  }
+
+  const [created] = await db
+    .insert(users)
+    .values({
+      authUserId: authUser.id,
+      email: authUser.email,
+      avatarUrl: authUser.image ?? null,
+    })
+    .onConflictDoNothing({ target: users.authUserId })
+    .returning();
+
+  if (created) {
+    return created;
+  }
+
+  const provisioned = await findUserByAuthId(authUser.id);
+
+  if (!provisioned) {
     throw new Error("USER_NOT_PROVISIONED");
   }
 
-  return existing;
+  return provisioned;
 }
 ```
 
@@ -4257,25 +4397,12 @@ export async function requireCurrentUser() {
 
 ```typescript
 import { and, eq } from "drizzle-orm";
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
-import { organizationMembers, organizations } from "@/db/schema";
-import { users } from "@/db/schema/users";
+import { organizationMembers } from "@/db/schema";
+import { requireCurrentUser } from "./current-user";
 
 export async function requireOrganizationContext(organizationId: string) {
-  const { userId: clerkUserId } = await auth();
-
-  if (!clerkUserId) {
-    throw new Error("UNAUTHENTICATED");
-  }
-
-  const user = await db.query.users.findFirst({
-    where: eq(users.clerkUserId, clerkUserId),
-  });
-
-  if (!user) {
-    throw new Error("USER_NOT_PROVISIONED");
-  }
+  const user = await requireCurrentUser();
 
   const membership = await db.query.organizationMembers.findFirst({
     where: and(
@@ -4454,12 +4581,12 @@ export const createLeadSchema = z.object({
 - [ ] Use the existing starter schema and relation patterns as the baseline.
 - [ ] Implement the remaining schema/service/action/UI domains in the same conventions.
 - [ ] Add database migrations and seed data.
-- [ ] Implement Clerk provisioning and organization onboarding.
+- [ ] Implement Neon Auth sign-up/sign-in, local user provisioning, and organization onboarding.
 - [ ] Implement server-side permissions for every domain.
 - [ ] Build the complete primary workflow end-to-end before polishing secondary features.
 - [ ] Add tenant-isolation tests before production deployment.
 - [ ] Add Stripe webhook idempotency and subscription synchronization.
-- [ ] Add signed R2 file upload/download flows.
+- [ ] Add presigned Neon Object Storage upload/download flows.
 - [ ] Add Resend transactional email templates.
 - [ ] Add Upstash rate limiting and caching where specified.
 - [ ] Add PostHog business events without sending unnecessary sensitive client data.

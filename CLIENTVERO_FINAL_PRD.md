@@ -195,23 +195,37 @@ This journey is the primary MVP success path.
 
 # 9. Authentication
 
-Authentication is handled by **Clerk**.
+Authentication is handled by **Neon Auth** — managed Better Auth, provided by Neon and accessed through the `@neondatabase/auth` SDK.
 
-Clerk is responsible for:
+Neon Auth is responsible for:
 
-- sign-in
-- sign-up
+- sign-up and user creation
+- sign-in (email/password, email OTP, and Google/GitHub social sign-in where configured)
 - sessions
 - identity
-- email verification
-- social authentication where configured
+- email verification and password-reset emails
+
+Neon Auth stores its users and sessions in the `neon_auth` schema of the same Neon database branch, so auth state branches together with application data. Application code reads identity through the SDK and never writes to the `neon_auth` schema directly.
 
 The local `users` table stores:
 
-- Clerk user ID
+- Neon Auth user ID (`auth_user_id`)
 - application profile
 - user preferences
 - organization membership relationships
+
+A local `users` row is provisioned on the first authenticated request after sign-up, using an idempotent insert keyed by `auth_user_id`.
+
+Organizations, memberships, roles, and permissions remain ClientVero's own tables and capability map (§11, §23, §49). The Neon Auth Organization plugin is not used: it is in beta and does not support custom roles or permissions.
+
+Client portal identity is separate from Neon Auth (see §53).
+
+Constraints:
+
+- The Neon project must be in an AWS region that supports both Neon Auth and Neon Object Storage (`aws-us-east-1`, `aws-us-east-2`, `aws-eu-central-1`, or `aws-ap-southeast-1`).
+- Neon Auth cannot be enabled on a project that uses IP Allow or Private Networking.
+- Production requires custom SMTP for auth emails. Use Resend's SMTP so auth and transactional email share one sender domain.
+- Every app origin that auth redirects to (production and preview) must be registered as a Neon Auth trusted domain.
 
 ---
 
@@ -265,7 +279,7 @@ Every protected request follows:
 ```text
 Request
   ↓
-Clerk authentication
+Neon Auth session check
   ↓
 Resolve current user
   ↓
@@ -323,7 +337,7 @@ Neon
 
 ## Authentication
 
-- Clerk
+- Neon Auth (managed Better Auth)
 
 ## Payments
 
@@ -331,7 +345,7 @@ Neon
 
 ## Storage
 
-- Cloudflare R2
+- Neon Object Storage (S3-compatible)
 
 ## Cache / Rate Limiting
 
@@ -357,20 +371,18 @@ Neon
 
 # 14. Why Neon PostgreSQL
 
-Neon is the database-first PostgreSQL choice for the architecture.
+Neon is the database-first PostgreSQL choice for the architecture. It also provides the MVP's authentication (Neon Auth) and file storage (Neon Object Storage), so identity, relational data, and files live on one platform.
 
-The product already has dedicated systems for:
+The product uses dedicated external systems for:
 
-- authentication
-- file storage
 - subscriptions
 - email
 - analytics
 - caching
 
-Therefore PostgreSQL should primarily focus on relational application data.
+PostgreSQL primarily focuses on relational application data. Neon Auth keeps identity in the same database (`neon_auth` schema), and Neon Object Storage keeps file objects on the same branch as the rows that reference them.
 
-Neon's branching, serverless PostgreSQL architecture, and compatibility with Drizzle fit the intended development model.
+Every Neon branch gets its own isolated database, auth state, and storage buckets, so development, preview, and staging environments stay consistent. Neon's serverless PostgreSQL architecture and compatibility with Drizzle fit the intended development model.
 
 ---
 
@@ -395,10 +407,12 @@ Drizzle ORM
         ↓
 Neon PostgreSQL
 
+Neon platform:
+Neon Auth
+Neon Object Storage
+
 External infrastructure:
-Clerk
 Stripe
-Cloudflare R2
 Upstash
 Resend
 OpenAI
@@ -462,9 +476,9 @@ src/
 │   └── migrations/
 │
 ├── lib/
-│   ├── clerk/
+│   ├── auth/
 │   ├── stripe/
-│   ├── r2/
+│   ├── storage/
 │   ├── redis/
 │   ├── resend/
 │   ├── openai/
@@ -662,7 +676,7 @@ The schema starter implements:
 users
 -----
 id
-clerk_user_id
+auth_user_id
 email
 first_name
 last_name
@@ -672,7 +686,7 @@ created_at
 updated_at
 ```
 
-`clerk_user_id` is unique.
+`auth_user_id` is unique and holds the Neon Auth user ID.
 
 ---
 
@@ -1066,7 +1080,7 @@ updated_at
 
 # 37. Files
 
-Metadata lives in PostgreSQL; binary objects live in Cloudflare R2.
+Metadata lives in PostgreSQL; binary objects live in a private Neon Object Storage bucket on the same branch. `object_key` stores the bucket key, never the file bytes.
 
 ```text
 files
@@ -1378,7 +1392,7 @@ requireOrganizationContext(organizationId)
 
 These helpers:
 
-- verify Clerk authentication
+- verify the Neon Auth session
 - resolve the local user
 - verify organization membership
 - return user, organization, and membership context
@@ -1575,9 +1589,9 @@ Server authorization
  ↓
 Validate size/type
  ↓
-Generate signed R2 upload URL
+Generate presigned Neon Object Storage upload URL
  ↓
-Browser uploads directly to R2
+Browser uploads directly to the bucket
  ↓
 Save file metadata in Neon
 ```
@@ -1589,10 +1603,12 @@ Request file
  ↓
 Authorize
  ↓
-Generate signed R2 URL
+Generate presigned download URL
  ↓
 Return temporary URL
 ```
+
+Neon Object Storage is S3-compatible. Use the AWS S3 SDK with path-style addressing (`forcePathStyle: true`) and the branch credentials Neon injects (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_ENDPOINT_URL_S3`, `AWS_REGION`). Store the object key in PostgreSQL, never the bytes.
 
 ---
 
@@ -2237,12 +2253,12 @@ Financial records should generally remain auditable rather than being physically
 Before launch:
 
 ```text
-[ ] Clerk authentication
+[ ] Neon Auth authentication
 [ ] organization membership checks
 [ ] role permissions
 [ ] tenant-scoped reads
 [ ] tenant-scoped mutations
-[ ] signed R2 URLs
+[ ] presigned storage URLs
 [ ] public opaque IDs
 [ ] webhook verification
 [ ] webhook idempotency
@@ -2285,9 +2301,9 @@ Requested Resource
 
 # 89. File Security
 
-R2 object keys are private by default.
+Storage buckets are private. Objects are never publicly readable.
 
-Use signed URLs with expiration.
+Use presigned URLs with expiration.
 
 Validate:
 
@@ -2307,7 +2323,7 @@ Priorities:
 - indexed tenant queries
 - pagination
 - optimized images
-- direct R2 uploads
+- direct-to-storage uploads
 - selective caching
 - minimal unnecessary client JavaScript
 
@@ -2345,7 +2361,7 @@ Production
 
 Use separate database and provider credentials per environment.
 
-Neon branches can support safe development/staging workflows.
+Neon branches can support safe development/staging workflows. Each branch has its own Neon Auth URL, auth state, and storage buckets, so preview environments never touch production users or files.
 
 ---
 
@@ -2551,8 +2567,9 @@ Core positioning:
 ## Week 1 — Foundation
 
 - Next.js
-- Clerk
 - Neon
+- Neon Auth
+- Neon Object Storage
 - Drizzle
 - schema
 - migrations
@@ -2776,7 +2793,7 @@ Rate Limiting
 
 ```text
 [ ] Next.js app deployed
-[ ] Clerk configured
+[ ] Neon Auth configured
 [ ] Neon configured
 [ ] Drizzle migrations working
 [ ] multi-tenancy implemented
@@ -2791,7 +2808,7 @@ Rate Limiting
 [ ] invoices implemented
 [ ] payments implemented
 [ ] Stripe subscriptions implemented
-[ ] R2 file storage implemented
+[ ] Neon Object Storage file flows implemented
 [ ] messages implemented
 [ ] notifications implemented
 [ ] Resend emails implemented
@@ -2843,15 +2860,13 @@ Rate Limiting
                                 │
                              Drizzle
                                 │
-                         Neon PostgreSQL
+                  Neon: PostgreSQL + Auth + Object Storage
                                 │
-       ┌─────────────┬──────────┼──────────┬─────────────┐
-       │             │          │          │             │
-     Clerk        Stripe       R2       Upstash       Resend
-                                              │
-                                           OpenAI
-                                              │
-                                           PostHog
+          ┌─────────────┬───────┴──────┬─────────────┐
+          │             │              │             │
+       Stripe        Upstash        Resend        OpenAI
+                                                     │
+                                                  PostHog
 
                               Vercel
 ```
@@ -2970,6 +2985,17 @@ src/server/auth/
 ├── current-user.ts
 └── organization.ts
 
+src/lib/auth/
+├── server.ts
+└── client.ts
+
+src/lib/storage/
+└── client.ts
+
+src/app/api/auth/[...path]/route.ts
+src/proxy.ts
+neon.ts
+
 src/server/authorization/
 └── permissions.ts
 
@@ -3022,11 +3048,11 @@ Route Handlers
 Zod
 
 Neon PostgreSQL
+Neon Auth
+Neon Object Storage
 Drizzle ORM
 
-Clerk
 Stripe
-Cloudflare R2
 Upstash Redis
 Resend
 PostHog

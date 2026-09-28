@@ -89,12 +89,12 @@ These come straight from the PRD's final engineering rules. Breaking one is a bu
 
 ### Performance
 
-- Server-side data fetching, indexed tenant queries, aggregated dashboard queries instead of dozens of sequential calls, optimized images, direct-to-R2 uploads, selective caching, minimal client JavaScript.
+- Server-side data fetching, indexed tenant queries, aggregated dashboard queries instead of dozens of sequential calls, optimized images, direct-to-storage uploads, selective caching, minimal client JavaScript.
 - Do not aggressively cache messages, payment status, or proposal acceptance state.
 
 ### Stack boundaries
 
-Stay within the agreed stack: **Next.js App Router · React · TypeScript · Tailwind · shadcn/ui · Framer Motion · Server Actions & Route Handlers · Zod · Neon PostgreSQL · Drizzle ORM · Clerk · Stripe · Cloudflare R2 · Upstash Redis · Resend · PostHog · OpenAI · Vercel.**
+Stay within the agreed stack: **Next.js App Router · React · TypeScript · Tailwind · shadcn/ui · Framer Motion · Server Actions & Route Handlers · Zod · Neon PostgreSQL · Drizzle ORM · Neon Auth (managed Better Auth) · Neon Object Storage · Stripe · Upstash Redis · Resend · PostHog · OpenAI · Vercel.**
 
 Architecture is a **modular monolith**. Do not introduce microservices, alternative ORMs, or a global client store holding the application data model.
 

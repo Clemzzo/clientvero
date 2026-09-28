@@ -29,9 +29,20 @@ Positioning: simpler than a CRM, more connected than a project-management tool, 
 
 ## Current state
 
-The repository is **pre-implementation**: only the specification documents exist. There is no `package.json`, `src/`, or migration history yet. Scaffold from the PRD's repository structure and the Part III starter code rather than from a generic Next.js template.
+Built so far:
 
-Once scaffolded, the expected commands are:
+- **Marketing site** (`src/app/(marketing)`): landing, pricing, product, solutions, and guides pages.
+- **Auth backend** (no pages yet):
+  - Neon Auth instance: `src/lib/auth/server.ts`
+  - API route: `src/app/api/auth/[...path]`
+  - Route protection for `/app`, `/onboarding`, `/admin`: `src/proxy.ts`
+  - Sign-up, sign-in, sign-out, and email-verification (OTP) server actions: `src/server/actions/auth.ts`. Neon sends the code on sign-up and sign-in; the app only sends one for "resend".
+  - Current-user helper that provisions the local `users` row: `src/server/auth/current-user.ts`
+- **Database**: only the `users` table exists (`src/db/schema`). Add other tables with their features, following the Part III starter code.
+
+Local development uses the Neon `development` branch; see `.env.example` for the required variables. Never point `.env.local` at the `production` branch.
+
+Commands:
 
 ```bash
 npm run dev            # Next.js dev server
@@ -39,18 +50,16 @@ npm run build          # production build
 npm run lint
 npm run typecheck
 npm run db:generate    # drizzle-kit generate
-npm run db:migrate     # apply migrations
+npm run db:migrate     # apply migrations to the branch in DATABASE_URL
 npm run db:studio      # drizzle studio
 ```
-
-Verify against `package.json` before relying on these.
 
 ## Stack
 
 **Frontend:** Next.js (App Router) · React · TypeScript · Tailwind CSS · shadcn/ui · Framer Motion
 **Backend:** Server Actions · Route Handlers · Zod · domain service layer · optional repository layer
 **Data:** Neon PostgreSQL · Drizzle ORM · Drizzle Kit
-**Infra:** Clerk (auth) · Stripe (subscriptions) · Cloudflare R2 (files) · Upstash Redis (rate limit/cache) · Resend (email) · PostHog (analytics) · OpenAI (AI) · Vercel (deploy)
+**Infra:** Neon Auth — managed Better Auth (auth) · Neon Object Storage, S3-compatible (files) · Stripe (subscriptions) · Upstash Redis (rate limit/cache) · Resend (email) · PostHog (analytics) · OpenAI (AI) · Vercel (deploy)
 
 **Architecture: modular monolith.** No microservices for the MVP. No alternative ORM. No global client store holding the application data model.
 
@@ -63,7 +72,7 @@ src/
 ├── features/     leads clients proposals projects invoices payments files messages notifications ai subscriptions
 ├── server/       auth authorization services repositories actions
 ├── db/           index.ts schema/ migrations/
-├── lib/          clerk stripe r2 redis resend openai posthog utils
+├── lib/          auth storage stripe redis resend openai posthog utils
 ├── validators/
 └── types/
 ```
@@ -124,7 +133,7 @@ Always implement **loading, empty, and error states** — not just the happy pat
 
 ## Security checklist before launch
 
-Clerk auth · org membership checks · role permissions · tenant-scoped reads and mutations · signed R2 URLs · opaque public IDs · webhook signature verification · webhook idempotency · server-side validation · rate limiting · secrets in env vars · XSS protections · parameterized queries · destructive-operation confirmation · activity/audit trail.
+Neon Auth · org membership checks · role permissions · tenant-scoped reads and mutations · presigned storage URLs · opaque public IDs · webhook signature verification · webhook idempotency · server-side validation · rate limiting · secrets in env vars · XSS protections · parameterized queries · destructive-operation confirmation · activity/audit trail.
 
 **Mandatory tenant tests:** Org A cannot read Org B's client or project (expect not-found/denied) · Client A cannot reach Client B's resources · only the intentionally public proposal resolves by public ID.
 
