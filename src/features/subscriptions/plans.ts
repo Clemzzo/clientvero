@@ -90,3 +90,13 @@ export function formatPlanPrice(plan: Plan) {
     maximumFractionDigits: 0,
   }).format(plan.priceCents / 100);
 }
+
+export function getPlan(id: PlanId): Plan {
+  const plan = plans.find((candidate) => candidate.id === id);
+
+  if (!plan) {
+    throw new Error(`Unknown plan: ${id}`);
+  }
+
+  return plan;
+}

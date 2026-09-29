@@ -7,6 +7,8 @@ const envSchema = z.object({
   NEXT_PUBLIC_APP_URL: z.url(),
   NEON_AUTH_BASE_URL: z.url(),
   NEON_AUTH_COOKIE_SECRET: z.string().min(32, "must be at least 32 characters"),
+  UPSTASH_REDIS_REST_URL: z.url(),
+  UPSTASH_REDIS_REST_TOKEN: z.string().min(1),
 });
 
 const parsed = envSchema.safeParse(process.env);

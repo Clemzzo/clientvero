@@ -140,6 +140,11 @@
   .marquee:hover .marquee-track {
     animation-play-state: paused;
   }
+
+  .dot-grid {
+    background-image: radial-gradient(#ffffff 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
 }
 
 @keyframes marquee {

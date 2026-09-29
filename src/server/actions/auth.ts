@@ -5,8 +5,10 @@ import { z } from "zod";
 
 import type { PlanId } from "@/features/subscriptions/plans";
 import { auth } from "@/lib/auth/server";
+import { authLimits, withinLimits } from "@/lib/redis/rate-limit";
 import { safeRedirectPath } from "@/lib/utils/safe-redirect";
 import { authErrorMessage } from "@/server/auth/auth-error-message";
+import { getClientIp } from "@/server/auth/client-ip";
 import {
   clearPendingVerificationEmail,
   getPendingVerificationEmail,
@@ -25,6 +27,7 @@ type AuthApiError = { code?: string; status?: number };
 const invalidForm = "Check the highlighted fields and try again.";
 const verificationExpired = "Your verification session has expired. Sign in again to get a new code.";
 const codeResent = "If your email still needs verifying, we've sent a new code.";
+const rateLimited = authErrorMessage({ status: 429 });
 
 function readForm(formData: FormData, keys: readonly string[]) {
   return Object.fromEntries(
@@ -48,6 +51,12 @@ export async function signUpAction(_previous: AuthFormState, formData: FormData)
 
   if (!parsed.success) {
     return { error: invalidForm, fieldErrors: z.flattenError(parsed.error).fieldErrors };
+  }
+
+  const ip = await getClientIp();
+
+  if (!(await withinLimits([authLimits.signUpPerIp, ip]))) {
+    return { error: rateLimited };
   }
 
   const { plan, ...credentials } = parsed.data;
@@ -74,6 +83,17 @@ export async function signInAction(_previous: AuthFormState, formData: FormData)
   }
 
   const { next, ...credentials } = parsed.data;
+  const ip = await getClientIp();
+
+  const allowed = await withinLimits(
+    [authLimits.signInPerIp, ip],
+    [authLimits.signInPerEmail, credentials.email],
+  );
+
+  if (!allowed) {
+    return { error: rateLimited };
+  }
+
   const { error } = await auth.signIn.email(credentials);
 
   if (error?.code?.startsWith("EMAIL_NOT_VERIFIED")) {
@@ -102,6 +122,17 @@ export async function verifyEmailAction(_previous: AuthFormState, formData: Form
     return { error: verificationExpired };
   }
 
+  const ip = await getClientIp();
+
+  const allowed = await withinLimits(
+    [authLimits.verifyPerIp, ip],
+    [authLimits.verifyPerEmail, email],
+  );
+
+  if (!allowed) {
+    return { error: rateLimited };
+  }
+
   const { otp, plan } = parsed.data;
   const { data, error } = await auth.emailOtp.verifyEmail({ email, otp });
 
@@ -119,6 +150,18 @@ export async function resendVerificationAction(): Promise<AuthFormState> {
 
   if (!email) {
     return { error: verificationExpired };
+  }
+
+  const ip = await getClientIp();
+
+  const allowed = await withinLimits(
+    [authLimits.resendPerIp, ip],
+    [authLimits.resendPerEmailBurst, email],
+    [authLimits.resendPerEmail, email],
+  );
+
+  if (!allowed) {
+    return { error: rateLimited };
   }
 
   const { error } = await auth.emailOtp.sendVerificationOtp({ email, type: "email-verification" });

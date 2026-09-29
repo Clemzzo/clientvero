@@ -32,7 +32,9 @@ Positioning: simpler than a CRM, more connected than a project-management tool, 
 Built so far:
 
 - **Marketing site** (`src/app/(marketing)`): landing, pricing, product, solutions, and guides pages.
-- **Auth backend** (no pages yet):
+- **Auth pages** (`src/app/(auth)`): `/sign-up`, `/sign-in`, `/verify-email` (6-digit OTP), built from shared parts in `src/components/auth` and `src/components/shared` (`TextField`, `FormField`, `SubmitButton`, `FormAlert`).
+- **Rate limiting**: Upstash limits on every auth action (`src/lib/redis/rate-limit.ts`); fails open if Upstash is unreachable.
+- **Auth backend**:
   - Neon Auth instance: `src/lib/auth/server.ts`
   - API route: `src/app/api/auth/[...path]`
   - Route protection for `/app`, `/onboarding`, `/admin`: `src/proxy.ts`

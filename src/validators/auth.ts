@@ -4,7 +4,7 @@ import type { PlanId } from "@/features/subscriptions/plans";
 
 const planIds = ["free", "pro", "agency"] as const satisfies readonly PlanId[];
 
-const plan = z.enum(planIds).optional().catch(undefined);
+export const planIdSchema = z.enum(planIds).optional().catch(undefined);
 
 export const emailSchema = z
   .string({ error: "Enter your email address." })
@@ -23,7 +23,7 @@ export const signUpSchema = z.object({
     .string({ error: "Enter a password." })
     .min(8, "Use at least 8 characters.")
     .max(128, "Use 128 characters or fewer."),
-  plan,
+  plan: planIdSchema,
 });
 
 export const signInSchema = z.object({
@@ -37,7 +37,7 @@ export const verifyEmailSchema = z.object({
     .string({ error: "Enter the 6-digit code from your email." })
     .trim()
     .regex(/^\d{6}$/, "Enter the 6-digit code from your email."),
-  plan,
+  plan: planIdSchema,
 });
 
 export type SignUpInput = z.infer<typeof signUpSchema>;
