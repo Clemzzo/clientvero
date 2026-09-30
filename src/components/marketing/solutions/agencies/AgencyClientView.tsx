@@ -1,7 +1,7 @@
 import { Building2, Eye, Lock } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-import { ProductSection } from "@/components/marketing/product/product-section";
+import { ProductSection } from "@/components/marketing/product/ProductSection";
 import { cn } from "@/lib/utils";
 
 type Side = { title: string; caption: string; icon: LucideIcon; items: string[]; tone: "private" | "shared" };

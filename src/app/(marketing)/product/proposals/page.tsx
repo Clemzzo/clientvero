@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 
-import { FinalCta } from "@/components/marketing/final-cta";
-import { ProductHero } from "@/components/marketing/product/product-hero";
-import { ProposalDocumentPreview } from "@/components/marketing/product/proposals/proposal-document-preview";
+import { FinalCta } from "@/components/marketing/FinalCta";
+import { ProductHero } from "@/components/marketing/product/ProductHero";
+import { ProposalDocumentPreview } from "@/components/marketing/product/proposals/ProposalDocumentPreview";
 import {
   ProposalAcceptance,
   ProposalBuilder,
   ProposalTracking,
-} from "@/components/marketing/product/proposals/proposal-sections";
+} from "@/components/marketing/product/proposals/ProposalSections";
 import { plans } from "@/features/subscriptions/plans";
 
 function freeProposalsLine() {

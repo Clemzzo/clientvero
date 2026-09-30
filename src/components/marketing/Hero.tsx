@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Check } from "lucide-react";
 
 import danielAvatar from "@/assets/images/dk.png";
-import { DashboardPreview } from "@/components/marketing/dashboard-preview";
+import { DashboardPreview } from "@/components/marketing/DashboardPreview";
 import { Button } from "@/components/ui/button";
 
 const assurances = ["No credit card required", "Set up in minutes", "Cancel anytime"];

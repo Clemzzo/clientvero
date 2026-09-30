@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { FinalCta } from "@/components/marketing/final-cta";
+import { FinalCta } from "@/components/marketing/FinalCta";
 import { GuideArticle } from "@/components/marketing/resources/guides/GuideArticle";
 import { GuideHeader } from "@/components/marketing/resources/guides/GuideHeader";
 import { GuideNext } from "@/components/marketing/resources/guides/GuideNext";

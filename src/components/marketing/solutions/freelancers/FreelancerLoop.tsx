@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
 import { navigation, type NavLink } from "@/components/layout/navigation";
-import { ProductSection } from "@/components/marketing/product/product-section";
+import { ProductSection } from "@/components/marketing/product/ProductSection";
 
 const loopSteps: NavLink[] = navigation.find((item) => item.label === "Product")?.items ?? [];
 

@@ -3,7 +3,7 @@ import Image from "next/image";
 import { Check, FileText, ReceiptText } from "lucide-react";
 
 import sarahAvatar from "@/assets/images/sarah.png";
-import { StatusPill } from "@/components/marketing/feature-previews";
+import { StatusPill } from "@/components/marketing/FeaturePreviews";
 import { cn } from "@/lib/utils";
 
 const milestones = [

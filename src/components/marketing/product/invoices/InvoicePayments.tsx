@@ -1,7 +1,7 @@
 import { Check, Eye, Send } from "lucide-react";
 
-import { StatusPill } from "@/components/marketing/feature-previews";
-import { CheckList, ProductSection } from "@/components/marketing/product/product-section";
+import { StatusPill } from "@/components/marketing/FeaturePreviews";
+import { CheckList, ProductSection } from "@/components/marketing/product/ProductSection";
 import { cn } from "@/lib/utils";
 
 const recording = [

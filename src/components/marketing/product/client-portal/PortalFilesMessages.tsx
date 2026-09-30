@@ -4,7 +4,7 @@ import { Download, FileImage, FileText, Lock, MessageSquare, Paperclip, Send } f
 import type { LucideIcon } from "lucide-react";
 
 import sarahAvatar from "@/assets/images/sarah.png";
-import { ProductSection } from "@/components/marketing/product/product-section";
+import { ProductSection } from "@/components/marketing/product/ProductSection";
 import { cn } from "@/lib/utils";
 
 const sharedFiles = [

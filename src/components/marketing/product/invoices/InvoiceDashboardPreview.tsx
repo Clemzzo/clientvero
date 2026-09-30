@@ -1,6 +1,6 @@
 import { Plus } from "lucide-react";
 
-import { StatusPill, type Tone } from "@/components/marketing/feature-previews";
+import { StatusPill, type Tone } from "@/components/marketing/FeaturePreviews";
 import { cn } from "@/lib/utils";
 
 const stats = [

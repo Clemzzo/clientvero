@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { FinalCta } from "@/components/marketing/final-cta";
+import { FinalCta } from "@/components/marketing/FinalCta";
 import { GuidesHero } from "@/components/marketing/resources/guides/GuidesHero";
 import { GuidesLibrary } from "@/components/marketing/resources/guides/GuidesLibrary";
 import { GuidesLoop } from "@/components/marketing/resources/guides/GuidesLoop";

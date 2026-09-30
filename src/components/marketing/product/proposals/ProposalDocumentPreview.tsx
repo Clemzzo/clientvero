@@ -1,6 +1,6 @@
 import { Check } from "lucide-react";
 
-import { DocumentLinkBar } from "@/components/marketing/product/product-section";
+import { DocumentLinkBar } from "@/components/marketing/product/ProductSection";
 import { cn } from "@/lib/utils";
 
 const sections = ["Introduction", "Scope", "Deliverables", "Timeline", "Pricing", "Terms"];

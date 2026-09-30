@@ -1,7 +1,7 @@
 import { Check, Lock } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-import { PortalPreview } from "@/components/marketing/portal-preview";
+import { PortalPreview } from "@/components/marketing/PortalPreview";
 import { Reveal } from "@/components/shared/reveal";
 import { cn } from "@/lib/utils";
 

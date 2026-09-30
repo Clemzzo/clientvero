@@ -1,7 +1,7 @@
 import { GripVertical, Plus, Sparkles } from "lucide-react";
 
-import { StatusPill, type Tone } from "@/components/marketing/feature-previews";
-import { CheckItems, ProductSection } from "@/components/marketing/product/product-section";
+import { StatusPill, type Tone } from "@/components/marketing/FeaturePreviews";
+import { CheckItems, ProductSection } from "@/components/marketing/product/ProductSection";
 
 const milestoneRules = [
   "Give each milestone a due date",

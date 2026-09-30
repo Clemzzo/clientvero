@@ -9,7 +9,7 @@ import {
   MessagesPreview,
   ProjectPreview,
   ProposalPreview,
-} from "@/components/marketing/feature-previews";
+} from "@/components/marketing/FeaturePreviews";
 import { Marquee } from "@/components/shared/marquee";
 
 type Feature = {

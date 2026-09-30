@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import type { Tone } from "@/components/marketing/feature-previews";
+import type { Tone } from "@/components/marketing/FeaturePreviews";
 import {
   focusRing,
   GuideIcon,

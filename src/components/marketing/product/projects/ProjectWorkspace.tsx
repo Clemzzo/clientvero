@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Activity, ArrowRight, LayoutDashboard, ListChecks, MessageSquare, Paperclip, Settings } from "lucide-react";
 
-import { FeatureCards, ProductSection, type FeatureCard } from "@/components/marketing/product/product-section";
+import { FeatureCards, ProductSection, type FeatureCard } from "@/components/marketing/product/ProductSection";
 
 const projectSections: FeatureCard[] = [
   { title: "Overview", detail: "Client, budget, dates, and progress at a glance.", icon: LayoutDashboard },

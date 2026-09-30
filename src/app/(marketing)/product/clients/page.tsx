@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
-import { FinalCta } from "@/components/marketing/final-cta";
-import { ClientRecordPreview } from "@/components/marketing/product/clients/client-record-preview";
-import { ClientAccess, ClientRecord } from "@/components/marketing/product/clients/client-sections";
-import { ProductHero } from "@/components/marketing/product/product-hero";
+import { FinalCta } from "@/components/marketing/FinalCta";
+import { ClientRecordPreview } from "@/components/marketing/product/clients/ClientRecordPreview";
+import { ClientAccess, ClientRecord } from "@/components/marketing/product/clients/ClientSections";
+import { ProductHero } from "@/components/marketing/product/ProductHero";
 import { plans } from "@/features/subscriptions/plans";
 
 function freeClientsLine() {

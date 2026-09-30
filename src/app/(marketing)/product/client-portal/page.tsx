@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 
-import { FinalCta } from "@/components/marketing/final-cta";
-import { PortalFilesMessages } from "@/components/marketing/product/client-portal/portal-files-messages";
-import { PortalHomePreview } from "@/components/marketing/product/client-portal/portal-home-preview";
-import { PortalOverview } from "@/components/marketing/product/client-portal/portal-overview";
-import { PortalPrivacy } from "@/components/marketing/product/client-portal/portal-privacy";
-import { PortalProgress } from "@/components/marketing/product/client-portal/portal-progress";
-import { ProductHero } from "@/components/marketing/product/product-hero";
+import { FinalCta } from "@/components/marketing/FinalCta";
+import { PortalFilesMessages } from "@/components/marketing/product/client-portal/PortalFilesMessages";
+import { PortalHomePreview } from "@/components/marketing/product/client-portal/PortalHomePreview";
+import { PortalOverview } from "@/components/marketing/product/client-portal/PortalOverview";
+import { PortalPrivacy } from "@/components/marketing/product/client-portal/PortalPrivacy";
+import { PortalProgress } from "@/components/marketing/product/client-portal/PortalProgress";
+import { ProductHero } from "@/components/marketing/product/ProductHero";
 import { plans } from "@/features/subscriptions/plans";
 
 function freePortalLine() {

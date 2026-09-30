@@ -1,6 +1,6 @@
 import { LayoutDashboard, Lock, Mail, ShieldCheck } from "lucide-react";
 
-import { CheckList, ProductSection } from "@/components/marketing/product/product-section";
+import { CheckList, ProductSection } from "@/components/marketing/product/ProductSection";
 
 const clientSees = ["Their projects and milestones", "Project progress", "Their invoices", "Shared files and messages"];
 

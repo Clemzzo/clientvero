@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
-import { FinalCta } from "@/components/marketing/final-cta";
-import { ProductHero } from "@/components/marketing/product/product-hero";
+import { FinalCta } from "@/components/marketing/FinalCta";
+import { ProductHero } from "@/components/marketing/product/ProductHero";
 import { ConsultantAiAssist } from "@/components/marketing/solutions/consultants/ConsultantAiAssist";
 import { ConsultantBilling } from "@/components/marketing/solutions/consultants/ConsultantBilling";
 import { ConsultantEngagementPreview } from "@/components/marketing/solutions/consultants/ConsultantEngagementPreview";

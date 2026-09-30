@@ -3,7 +3,7 @@ import { Globe } from "lucide-react";
 
 import oliviaAvatar from "@/assets/images/olivia.png";
 import tomAvatar from "@/assets/images/tom.png";
-import { StatusPill } from "@/components/marketing/feature-previews";
+import { StatusPill } from "@/components/marketing/FeaturePreviews";
 import { cn } from "@/lib/utils";
 
 const tabs = ["Overview", "Projects", "Invoices", "Files"];

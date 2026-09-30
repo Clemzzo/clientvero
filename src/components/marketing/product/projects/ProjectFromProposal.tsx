@@ -1,7 +1,7 @@
 import { ArrowDown, Check, ChevronRight } from "lucide-react";
 
-import { StatusPill } from "@/components/marketing/feature-previews";
-import { ProductSection } from "@/components/marketing/product/product-section";
+import { StatusPill } from "@/components/marketing/FeaturePreviews";
+import { ProductSection } from "@/components/marketing/product/ProductSection";
 
 const carriedFields = [
   { from: "Client", to: "Client", value: "BrightPath Studio" },

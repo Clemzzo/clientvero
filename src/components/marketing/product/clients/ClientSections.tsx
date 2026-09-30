@@ -16,7 +16,7 @@ import {
   FeatureCards,
   ProductSection,
   type FeatureCard,
-} from "@/components/marketing/product/product-section";
+} from "@/components/marketing/product/ProductSection";
 
 const recordTabs: FeatureCard[] = [
   { title: "Overview", detail: "Company, website, address, and your private notes.", icon: LayoutDashboard },

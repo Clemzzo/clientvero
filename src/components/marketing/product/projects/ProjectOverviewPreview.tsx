@@ -1,7 +1,7 @@
 import { Check } from "lucide-react";
 
-import { ProgressFill } from "@/components/marketing/dashboard-motion";
-import { StatusPill } from "@/components/marketing/feature-previews";
+import { ProgressFill } from "@/components/marketing/DashboardMotion";
+import { StatusPill } from "@/components/marketing/FeaturePreviews";
 import { cn } from "@/lib/utils";
 
 const tabs =

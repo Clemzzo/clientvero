@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Check } from "lucide-react";
 
-import { Faq } from "@/components/marketing/faq";
+import { Faq } from "@/components/marketing/Faq";
 import { Reveal } from "@/components/shared/reveal";
 import { Button } from "@/components/ui/button";
 import { formatPlanPrice, plans } from "@/features/subscriptions/plans";

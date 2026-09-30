@@ -1,7 +1,7 @@
 import { ArrowRight, FileText, FolderOpen, LayoutDashboard, ReceiptText, UserPlus, Wallet } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-import { ProductSection } from "@/components/marketing/product/product-section";
+import { ProductSection } from "@/components/marketing/product/ProductSection";
 
 type Swap = { job: string; before: string; after: string; icon: LucideIcon };
 

@@ -21,8 +21,8 @@ import type { LucideIcon } from "lucide-react";
 
 import sarahAvatar from "@/assets/images/sarah.png";
 import { Logo } from "@/components/layout/logo";
-import { CountUp, ProgressFill, StaggerItem, StaggerList } from "@/components/marketing/dashboard-motion";
-import { TiltCard } from "@/components/marketing/tilt-card";
+import { CountUp, ProgressFill, StaggerItem, StaggerList } from "@/components/marketing/DashboardMotion";
+import { TiltCard } from "@/components/marketing/TiltCard";
 import { cn } from "@/lib/utils";
 
 const sidebarItems: { label: string; icon: LucideIcon }[] = [

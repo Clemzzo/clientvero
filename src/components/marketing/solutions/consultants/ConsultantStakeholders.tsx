@@ -5,8 +5,8 @@ import type { LucideIcon } from "lucide-react";
 import holandAvatar from "@/assets/images/holand.png";
 import jamesAvatar from "@/assets/images/james.png";
 import mikeAvatar from "@/assets/images/mike.png";
-import { StatusPill } from "@/components/marketing/feature-previews";
-import { ProductSection } from "@/components/marketing/product/product-section";
+import { StatusPill } from "@/components/marketing/FeaturePreviews";
+import { ProductSection } from "@/components/marketing/product/ProductSection";
 import { cn } from "@/lib/utils";
 
 const contacts = [

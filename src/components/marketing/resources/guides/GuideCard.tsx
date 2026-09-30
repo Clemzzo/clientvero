@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Clock } from "lucide-react";
 
-import { StatusPill, type Tone } from "@/components/marketing/feature-previews";
+import { StatusPill, type Tone } from "@/components/marketing/FeaturePreviews";
 import {
   guideHref,
   stageLabel,

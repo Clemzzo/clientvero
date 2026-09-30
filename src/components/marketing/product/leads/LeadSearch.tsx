@@ -4,7 +4,7 @@ import {
   FeatureCards,
   ProductSection,
   type FeatureCard,
-} from "@/components/marketing/product/product-section";
+} from "@/components/marketing/product/ProductSection";
 
 const tools: FeatureCard[] = [
   { title: "Search", detail: "Look up any lead by name, company, or email.", icon: Search },

@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 
-import { FinalCta } from "@/components/marketing/final-cta";
-import { InvoiceBuilder } from "@/components/marketing/product/invoices/invoice-builder";
-import { InvoiceClientView } from "@/components/marketing/product/invoices/invoice-client-view";
-import { InvoiceDashboardPreview } from "@/components/marketing/product/invoices/invoice-dashboard-preview";
-import { InvoicePayments } from "@/components/marketing/product/invoices/invoice-payments";
-import { ProductHero } from "@/components/marketing/product/product-hero";
+import { FinalCta } from "@/components/marketing/FinalCta";
+import { InvoiceBuilder } from "@/components/marketing/product/invoices/InvoiceBuilder";
+import { InvoiceClientView } from "@/components/marketing/product/invoices/InvoiceClientView";
+import { InvoiceDashboardPreview } from "@/components/marketing/product/invoices/InvoiceDashboardPreview";
+import { InvoicePayments } from "@/components/marketing/product/invoices/InvoicePayments";
+import { ProductHero } from "@/components/marketing/product/ProductHero";
 import { plans } from "@/features/subscriptions/plans";
 
 function freeInvoicesLine() {

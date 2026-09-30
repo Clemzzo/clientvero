@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
-import { FinalCta } from "@/components/marketing/final-cta";
-import { ProductHero } from "@/components/marketing/product/product-hero";
+import { FinalCta } from "@/components/marketing/FinalCta";
+import { ProductHero } from "@/components/marketing/product/ProductHero";
 import { FreelancerDeskPreview } from "@/components/marketing/solutions/freelancers/FreelancerDeskPreview";
 import { FreelancerLoop } from "@/components/marketing/solutions/freelancers/FreelancerLoop";
 import { FreelancerPayments } from "@/components/marketing/solutions/freelancers/FreelancerPayments";

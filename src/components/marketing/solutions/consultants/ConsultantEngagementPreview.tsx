@@ -4,8 +4,8 @@ import { Check, ReceiptText } from "lucide-react";
 import holandAvatar from "@/assets/images/holand.png";
 import jamesAvatar from "@/assets/images/james.png";
 import mikeAvatar from "@/assets/images/mike.png";
-import { ProgressFill } from "@/components/marketing/dashboard-motion";
-import { StatusPill } from "@/components/marketing/feature-previews";
+import { ProgressFill } from "@/components/marketing/DashboardMotion";
+import { StatusPill } from "@/components/marketing/FeaturePreviews";
 import { cn } from "@/lib/utils";
 
 type PhaseState = "done" | "active" | "pending";

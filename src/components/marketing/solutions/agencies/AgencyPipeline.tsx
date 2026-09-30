@@ -1,5 +1,5 @@
-import { StatusPill, type Tone } from "@/components/marketing/feature-previews";
-import { CheckItems, ProductSection } from "@/components/marketing/product/product-section";
+import { StatusPill, type Tone } from "@/components/marketing/FeaturePreviews";
+import { CheckItems, ProductSection } from "@/components/marketing/product/ProductSection";
 import { teamMember, type TeamMember } from "@/components/marketing/solutions/agencies/agencyTeam";
 import { TeamAvatar } from "@/components/marketing/solutions/agencies/TeamAvatar";
 

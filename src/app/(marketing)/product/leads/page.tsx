@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 
-import { FinalCta } from "@/components/marketing/final-cta";
-import { LeadConversion } from "@/components/marketing/product/leads/lead-conversion";
-import { LeadPipeline } from "@/components/marketing/product/leads/lead-pipeline";
-import { LeadRecordPreview } from "@/components/marketing/product/leads/lead-record-preview";
-import { LeadSearch } from "@/components/marketing/product/leads/lead-search";
-import { ProductHero } from "@/components/marketing/product/product-hero";
+import { FinalCta } from "@/components/marketing/FinalCta";
+import { LeadConversion } from "@/components/marketing/product/leads/LeadConversion";
+import { LeadPipeline } from "@/components/marketing/product/leads/LeadPipeline";
+import { LeadRecordPreview } from "@/components/marketing/product/leads/LeadRecordPreview";
+import { LeadSearch } from "@/components/marketing/product/leads/LeadSearch";
+import { ProductHero } from "@/components/marketing/product/ProductHero";
 
 export const metadata: Metadata = {
   title: "Lead management",

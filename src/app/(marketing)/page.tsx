@@ -1,10 +1,10 @@
-import { Faq } from "@/components/marketing/faq";
-import { Features } from "@/components/marketing/features";
-import { FinalCta } from "@/components/marketing/final-cta";
-import { Hero } from "@/components/marketing/hero";
-import { HowItWorks } from "@/components/marketing/how-it-works";
-import { PortalShowcase } from "@/components/marketing/portal-showcase";
-import { Problem } from "@/components/marketing/problem";
+import { Faq } from "@/components/marketing/Faq";
+import { Features } from "@/components/marketing/Features";
+import { FinalCta } from "@/components/marketing/FinalCta";
+import { Hero } from "@/components/marketing/Hero";
+import { HowItWorks } from "@/components/marketing/HowItWorks";
+import { PortalShowcase } from "@/components/marketing/PortalShowcase";
+import { Problem } from "@/components/marketing/Problem";
 
 export default function HomePage() {
   return (

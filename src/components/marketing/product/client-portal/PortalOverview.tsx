@@ -1,6 +1,6 @@
 import { ChartNoAxesColumn, Flag, FolderKanban, MessageSquare, Paperclip, ReceiptText } from "lucide-react";
 
-import { FeatureCards, ProductSection, type FeatureCard } from "@/components/marketing/product/product-section";
+import { FeatureCards, ProductSection, type FeatureCard } from "@/components/marketing/product/ProductSection";
 
 const portalAreas: FeatureCard[] = [
   { title: "Projects", detail: "Every project you're working on for them, with its current status.", icon: FolderKanban },

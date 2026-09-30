@@ -1,7 +1,7 @@
 import { Bell, History, UsersRound } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-import { ProductSection } from "@/components/marketing/product/product-section";
+import { ProductSection } from "@/components/marketing/product/ProductSection";
 import { teamMember, type TeamMember } from "@/components/marketing/solutions/agencies/agencyTeam";
 import { TeamAvatar } from "@/components/marketing/solutions/agencies/TeamAvatar";
 

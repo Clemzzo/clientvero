@@ -1,13 +1,13 @@
 import { Calculator, CalendarClock, Eye, LayoutList, Sparkles, Users } from "lucide-react";
 
-import { StatusPill, type Tone } from "@/components/marketing/feature-previews";
+import { StatusPill, type Tone } from "@/components/marketing/FeaturePreviews";
 import {
   CheckList,
   FeatureCards,
   HandoffPreview,
   ProductSection,
   type FeatureCard,
-} from "@/components/marketing/product/product-section";
+} from "@/components/marketing/product/ProductSection";
 import { cn } from "@/lib/utils";
 
 const builderTools: FeatureCard[] = [

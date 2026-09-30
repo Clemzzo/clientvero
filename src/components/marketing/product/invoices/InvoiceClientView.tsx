@@ -1,7 +1,7 @@
 import { Check, LayoutDashboard, Link2 } from "lucide-react";
 
-import { StatusPill } from "@/components/marketing/feature-previews";
-import { DocumentLinkBar, ProductSection } from "@/components/marketing/product/product-section";
+import { StatusPill } from "@/components/marketing/FeaturePreviews";
+import { DocumentLinkBar, ProductSection } from "@/components/marketing/product/ProductSection";
 import { cn } from "@/lib/utils";
 
 const invoiceContents = [

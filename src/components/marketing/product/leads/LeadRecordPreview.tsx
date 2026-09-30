@@ -2,7 +2,7 @@ import Image from "next/image";
 import { Building2, CircleDot, PhoneCall, Plus, UserCheck } from "lucide-react";
 
 import oliviaAvatar from "@/assets/images/sarah.png";
-import { StatusPill } from "@/components/marketing/feature-previews";
+import { StatusPill } from "@/components/marketing/FeaturePreviews";
 
 const details = [
   { label: "Source", value: "Referral" },

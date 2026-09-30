@@ -1,8 +1,8 @@
 import { CircleCheck, Eye, Flag } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-import { ProgressFill } from "@/components/marketing/dashboard-motion";
-import { StatusPill, type Tone } from "@/components/marketing/feature-previews";
+import { ProgressFill } from "@/components/marketing/DashboardMotion";
+import { StatusPill, type Tone } from "@/components/marketing/FeaturePreviews";
 
 const stats = [
   { label: "Active clients", value: "4" },

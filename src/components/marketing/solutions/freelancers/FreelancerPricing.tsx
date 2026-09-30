@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Check } from "lucide-react";
 
-import { ProductSection } from "@/components/marketing/product/product-section";
+import { ProductSection } from "@/components/marketing/product/ProductSection";
 import { Button } from "@/components/ui/button";
 import { formatPlanPrice, plans, type Plan, type PlanId } from "@/features/subscriptions/plans";
 import { cn } from "@/lib/utils";

@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { ArrowRight, Check, Lock } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-import { StatusPill, type Tone } from "@/components/marketing/feature-previews";
+import { StatusPill, type Tone } from "@/components/marketing/FeaturePreviews";
 import { Reveal } from "@/components/shared/reveal";
 import { cn } from "@/lib/utils";
 

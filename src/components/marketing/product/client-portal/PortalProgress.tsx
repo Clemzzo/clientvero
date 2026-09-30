@@ -1,8 +1,8 @@
 import { Check } from "lucide-react";
 
-import { ProgressFill } from "@/components/marketing/dashboard-motion";
-import { StatusPill, type Tone } from "@/components/marketing/feature-previews";
-import { ProductSection } from "@/components/marketing/product/product-section";
+import { ProgressFill } from "@/components/marketing/DashboardMotion";
+import { StatusPill, type Tone } from "@/components/marketing/FeaturePreviews";
+import { ProductSection } from "@/components/marketing/product/ProductSection";
 import { cn } from "@/lib/utils";
 
 const progressRules = [

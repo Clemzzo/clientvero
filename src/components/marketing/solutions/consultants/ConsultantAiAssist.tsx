@@ -1,7 +1,7 @@
 import { FileText, Flag, MessageSquareText, NotebookPen, Sparkles } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-import { ProductSection } from "@/components/marketing/product/product-section";
+import { ProductSection } from "@/components/marketing/product/ProductSection";
 
 const rawNotes = [
   "james ok w/ 2 site pilot first",

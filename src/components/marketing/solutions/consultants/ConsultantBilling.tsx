@@ -1,5 +1,5 @@
-import { StatusPill, type Tone } from "@/components/marketing/feature-previews";
-import { CheckItems, ProductSection } from "@/components/marketing/product/product-section";
+import { StatusPill, type Tone } from "@/components/marketing/FeaturePreviews";
+import { CheckItems, ProductSection } from "@/components/marketing/product/ProductSection";
 import { cn } from "@/lib/utils";
 
 const segments: { label: string; share: string; className: string }[] = [

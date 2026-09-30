@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 
-import { StatusPill } from "@/components/marketing/feature-previews";
+import { StatusPill } from "@/components/marketing/FeaturePreviews";
 import {
   GuideIcon,
   ReadTime,

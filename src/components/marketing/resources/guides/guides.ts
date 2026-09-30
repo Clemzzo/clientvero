@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 
-import type { Tone } from "@/components/marketing/feature-previews";
+import type { Tone } from "@/components/marketing/FeaturePreviews";
 import {
   convertLeadToClient,
   invoiceAndGetPaid,
@@ -8,7 +8,7 @@ import {
   qualifyALead,
   setUpClientPortal,
   writeAWinningProposal,
-} from "@/components/marketing/resources/guides/guide-content";
+} from "@/components/marketing/resources/guides/guideContent";
 
 export const guideStages = [
   { id: "leads", label: "Leads" },
