@@ -6,6 +6,7 @@ import { AuthShell } from "@/components/auth/AuthShell";
 import { SignUpForm } from "@/components/auth/SignUpForm";
 import { formatPlanPrice, getPlan, type Plan } from "@/features/subscriptions/plans";
 import { auth } from "@/lib/auth/server";
+import { pathAfterSignIn } from "@/server/auth/redirect-after-sign-in";
 import { planIdSchema } from "@/validators/auth";
 
 export const metadata: Metadata = {
@@ -25,7 +26,7 @@ export default async function SignUpPage(props: PageProps<"/sign-up">) {
   const { data: session } = await auth.getSession();
 
   if (session?.user) {
-    redirect("/app");
+    redirect(await pathAfterSignIn(session.user.id));
   }
 
   const { plan: requestedPlan } = await props.searchParams;

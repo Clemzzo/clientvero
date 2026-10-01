@@ -17,7 +17,7 @@ export function Logo({
       src={logo}
       alt="ClientVero"
       loading="eager"
-      className={cn("h-8 w-auto", className)}
+      className={cn("h-12 w-auto", className)}
       sizes="120px"
     />
   );

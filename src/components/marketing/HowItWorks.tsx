@@ -1,6 +1,5 @@
 import { CornerDownRight } from "lucide-react";
 
-import { Reveal } from "@/components/shared/reveal";
 
 type Step = { title: string; detail: string; outcome: string };
 
@@ -72,28 +71,26 @@ export function HowItWorks() {
   return (
     <section aria-labelledby="how-it-works-heading" className="py-20 lg:py-28">
       <div className="mx-auto max-w-360 px-5 sm:px-8 lg:px-10">
-        <Reveal className="grid gap-6 lg:grid-cols-2 lg:items-end lg:gap-12">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-brand-600">How it works</p>
-            <h2
-              id="how-it-works-heading"
-              className="mt-3.5 max-w-[20ch] font-display text-[clamp(26px,2.6vw,33px)] font-extrabold leading-[1.15] tracking-[-0.03em] text-ink-900"
-            >
-              From sign-up to first payment in four steps.
-            </h2>
-          </div>
-          <p className="max-w-[46ch] text-[14.5px] leading-[1.6] text-ink-500 lg:justify-self-end">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-brand-600">How it works</p>
+          <h2
+            id="how-it-works-heading"
+            className="mt-3.5 max-w-[20ch] font-display text-[clamp(26px,2.6vw,33px)] font-extrabold leading-[1.15] tracking-[-0.03em] text-ink-900"
+          >
+            From sign-up to first payment in four steps.
+          </h2>
+          <p className="mt-4 max-w-[46ch] text-[14.5px] leading-[1.6] text-ink-500">
             No setup project, no migration. Start with one client and add the rest as you go.
           </p>
-        </Reveal>
+        </div>
 
-        <Reveal delay={0.1} className="mt-12 lg:mt-14">
+        <div className="mt-12 lg:mt-14">
           <ol className="grid gap-x-5 gap-y-10 md:grid-cols-2 lg:grid-cols-4">
             {steps.map((step, index) => (
               <StepItem key={step.title} step={step} index={index} />
             ))}
           </ol>
-        </Reveal>
+        </div>
       </div>
     </section>
   );

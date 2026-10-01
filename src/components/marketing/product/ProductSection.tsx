@@ -3,7 +3,6 @@ import { ArrowRight, Check, Lock } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 import { StatusPill, type Tone } from "@/components/marketing/FeaturePreviews";
-import { Reveal } from "@/components/shared/reveal";
 import { cn } from "@/lib/utils";
 
 type ProductSectionProps = {
@@ -31,7 +30,7 @@ export function ProductSection({
       className={cn("py-20 lg:py-28", dark && "bg-brand-950", className)}
     >
       <div className="mx-auto max-w-360 px-5 sm:px-8 lg:px-10">
-        <Reveal>
+        <div>
           <h2
             id={headingId}
             className={cn(
@@ -49,10 +48,10 @@ export function ProductSection({
           >
             {intro}
           </p>
-        </Reveal>
-        <Reveal delay={0.1} className="mt-12">
+        </div>
+        <div className="mt-12">
           {children}
-        </Reveal>
+        </div>
       </div>
     </section>
   );

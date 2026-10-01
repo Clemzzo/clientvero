@@ -9,6 +9,12 @@ const envSchema = z.object({
   NEON_AUTH_COOKIE_SECRET: z.string().min(32, "must be at least 32 characters"),
   UPSTASH_REDIS_REST_URL: z.url(),
   UPSTASH_REDIS_REST_TOKEN: z.string().min(1),
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().min(1),
+  TURNSTILE_SECRET: z.string().min(1),
+  TURNSTILE_HOSTNAMES: z
+    .string()
+    .transform((value) => value.split(",").map((hostname) => hostname.trim()).filter(Boolean))
+    .pipe(z.array(z.string()).min(1, "must list at least one hostname")),
 });
 
 const parsed = envSchema.safeParse(process.env);

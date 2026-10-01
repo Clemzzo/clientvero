@@ -2,16 +2,18 @@ import type { ReactNode } from "react";
 import { LoaderCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type SubmitButtonProps = {
   pending: boolean;
   pendingLabel: string;
   children: ReactNode;
+  className?: string;
 };
 
-export function SubmitButton({ pending, pendingLabel, children }: SubmitButtonProps) {
+export function SubmitButton({ pending, pendingLabel, children, className }: SubmitButtonProps) {
   return (
-    <Button type="submit" disabled={pending} className="mt-2 h-12 w-full rounded-md text-[15px] font-semibold">
+    <Button type="submit" disabled={pending} className={cn("mt-2 h-12 w-full rounded-md text-[15px] font-semibold", className)}>
       {pending && <LoaderCircle aria-hidden className="size-4.5 animate-spin" />}
       {pending ? pendingLabel : children}
     </Button>

@@ -3,7 +3,6 @@ import { LayoutGrid, MessageSquare, ReceiptText, Shuffle, Users, Wallet } from "
 import type { LucideIcon } from "lucide-react";
 
 import solutionDiagram from "@/assets/images/solution.png";
-import { Reveal } from "@/components/shared/reveal";
 
 type Point = { title: string; detail: string; icon: LucideIcon };
 
@@ -112,29 +111,25 @@ export function Problem() {
     <section aria-labelledby="problem-heading" className="bg-ink-50 py-20 lg:py-28">
       <div className="mx-auto max-w-360 px-5 sm:px-8 lg:px-10">
         <div className="grid gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.08fr)_minmax(0,1fr)] lg:items-start lg:gap-8 xl:gap-12">
-          <Reveal>
-            <Column
-              headingId="problem-heading"
-              eyebrow="The problem"
-              heading="Managing clients shouldn't be this hard."
-              intro="Scattered conversations, missed follow-ups, and invoices tracked by hand slow you down and wear on the client relationship."
-              items={problems}
-            />
-          </Reveal>
+          <Column
+            headingId="problem-heading"
+            eyebrow="The problem"
+            heading="Managing clients shouldn't be this hard."
+            intro="Scattered conversations, missed follow-ups, and invoices tracked by hand slow you down and wear on the client relationship."
+            items={problems}
+          />
 
-          <Reveal delay={0.12} className="lg:self-center">
+          <div className="lg:self-center">
             <Diagram />
-          </Reveal>
+          </div>
 
-          <Reveal delay={0.24}>
-            <Column
-              headingId="solution-heading"
-              eyebrow="The solution"
-              heading="Everything together. Finally."
-              intro="ClientVero brings your whole client workflow into one place, from first enquiry to final payment."
-              items={solutions}
-            />
-          </Reveal>
+          <Column
+            headingId="solution-heading"
+            eyebrow="The solution"
+            heading="Everything together. Finally."
+            intro="ClientVero brings your whole client workflow into one place, from first enquiry to final payment."
+            items={solutions}
+          />
         </div>
       </div>
     </section>

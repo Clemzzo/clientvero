@@ -6,7 +6,7 @@ type AuthApiError = {
 const messages = {
   network: "We couldn't reach the sign-in service. Please try again in a moment.",
   invalidCredentials: "Email or password is incorrect.",
-  accountExists: "An account with this email already exists. Try signing in instead.",
+  accountExists: "An account with this email already exists.",
   emailNotVerified: "Verify your email address before signing in.",
   passwordLength: "Use a password between 8 and 128 characters.",
   invalidCode: "That code isn't right. Check your email and try again.",

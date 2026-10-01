@@ -4,7 +4,7 @@ import { Logo } from "@/components/layout/logo";
 
 type AuthShellProps = {
   title: string;
-  description: string;
+  description: ReactNode;
   aside: ReactNode;
   children: ReactNode;
 };
@@ -19,7 +19,7 @@ export function AuthShell({ title, description, aside, children }: AuthShellProp
           <h1 className="font-display text-[clamp(28px,2.4vw,34px)] font-extrabold leading-[1.1] tracking-[-0.03em] text-ink-900">
             {title}
           </h1>
-          <p className="mt-2 text-[15px] leading-normal text-ink-500">{description}</p>
+          <div className="mt-2 text-[15px] leading-normal text-ink-500">{description}</div>
           <div className="mt-8">{children}</div>
         </div>
       </div>

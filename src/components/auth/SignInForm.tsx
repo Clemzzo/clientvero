@@ -4,6 +4,8 @@ import { startTransition, useActionState, type SubmitEvent } from "react";
 import Link from "next/link";
 
 import { PasswordField } from "@/components/auth/PasswordField";
+import { TurnstileWidget } from "@/components/auth/TurnstileWidget";
+import { CheckboxField } from "@/components/shared/CheckboxField";
 import { FormAlert } from "@/components/shared/FormAlert";
 import { SubmitButton } from "@/components/shared/SubmitButton";
 import { TextField } from "@/components/shared/TextField";
@@ -48,7 +50,11 @@ export function SignInForm({ next }: SignInFormProps) {
           error={errorFor("password")}
         />
 
+        <CheckboxField name="rememberMe" label="Remember me" />
+
         {next && <input type="hidden" name="next" value={next} />}
+
+        <TurnstileWidget action="login" resetKey={state} />
 
         <SubmitButton pending={isPending} pendingLabel="Signing in…">
           Sign in

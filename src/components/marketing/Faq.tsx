@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 
-import { Reveal } from "@/components/shared/reveal";
 import { plans } from "@/features/subscriptions/plans";
 
 type FaqEntry = { question: string; answer: string };
@@ -77,7 +76,7 @@ export function Faq({ showPricingLink = true }: { showPricingLink?: boolean }) {
   return (
     <section aria-labelledby="faq-heading" className="bg-ink-50 py-20 lg:py-28">
       <div className="mx-auto grid max-w-360 gap-10 px-5 sm:px-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:items-start lg:gap-16 lg:px-10">
-        <Reveal className="lg:sticky lg:top-28">
+        <div className="lg:sticky lg:top-28">
           <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-brand-600">FAQ</p>
           <h2
             id="faq-heading"
@@ -100,15 +99,13 @@ export function Faq({ showPricingLink = true }: { showPricingLink?: boolean }) {
               </>
             )}
           </p>
-        </Reveal>
+        </div>
 
-        <Reveal delay={0.1}>
-          <div className="divide-y divide-ink-200 rounded-2xl border border-ink-200 bg-white">
-            {faqs.map((entry) => (
-              <FaqItem key={entry.question} entry={entry} />
-            ))}
-          </div>
-        </Reveal>
+        <div className="divide-y divide-ink-200 rounded-2xl border border-ink-200 bg-white">
+          {faqs.map((entry) => (
+            <FaqItem key={entry.question} entry={entry} />
+          ))}
+        </div>
       </div>
     </section>
   );

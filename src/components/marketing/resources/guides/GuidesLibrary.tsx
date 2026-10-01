@@ -13,7 +13,6 @@ import {
   type Guide,
   type GuideStage,
 } from "@/components/marketing/resources/guides/guides";
-import { Reveal } from "@/components/shared/reveal";
 import { cn } from "@/lib/utils";
 
 type Filter = GuideStage | "all";
@@ -129,18 +128,18 @@ export function GuidesLibrary() {
       className="border-t border-ink-100 bg-ink-50/60 py-20 lg:py-28"
     >
       <div className="mx-auto max-w-360 px-5 sm:px-8 lg:px-10">
-        <Reveal className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <LibraryIntro />
           <FilterBar active={active} onChange={setActive} />
-        </Reveal>
+        </div>
 
-        <Reveal delay={0.1} className="mt-12">
+        <div className="mt-12">
           {visible.length > 0 ? (
             <GuideGrid items={visible} />
           ) : (
             <EmptyLibrary onShowAll={() => setActive("all")} />
           )}
-        </Reveal>
+        </div>
       </div>
     </section>
   );

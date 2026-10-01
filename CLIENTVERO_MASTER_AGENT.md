@@ -217,7 +217,7 @@ Neon Auth is responsible for:
 - identity
 - email verification and password-reset emails
 
-Neon Auth stores its users and sessions in the `neon_auth` schema of the same Neon database branch, so auth state branches together with application data. Application code reads identity through the SDK and never writes to the `neon_auth` schema directly.
+Neon Auth stores its users and sessions in the `neon_auth` schema of the same Neon database branch, so auth state branches together with application data. Application code reads identity through the SDK and never writes to the `neon_auth` schema directly. Exception: sign-up reads `neon_auth.user` (read-only) to tell a user their email is already registered, because Neon's required-verification mode hides duplicate sign-ups.
 
 The local `users` table stores:
 

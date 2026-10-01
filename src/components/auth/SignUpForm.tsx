@@ -4,6 +4,7 @@ import { startTransition, useActionState, type SubmitEvent } from "react";
 import Link from "next/link";
 
 import { PasswordField } from "@/components/auth/PasswordField";
+import { TurnstileWidget } from "@/components/auth/TurnstileWidget";
 import { FormAlert } from "@/components/shared/FormAlert";
 import { SubmitButton } from "@/components/shared/SubmitButton";
 import { TextField } from "@/components/shared/TextField";
@@ -62,6 +63,8 @@ export function SignUpForm({ plan }: SignUpFormProps) {
         />
 
         {plan && <input type="hidden" name="plan" value={plan} />}
+
+        <TurnstileWidget action="signup" resetKey={state} />
 
         <SubmitButton pending={isPending} pendingLabel="Creating account…">
           Create account

@@ -6,15 +6,18 @@ import { z } from "zod";
 import type { PlanId } from "@/features/subscriptions/plans";
 import { auth } from "@/lib/auth/server";
 import { authLimits, withinLimits } from "@/lib/redis/rate-limit";
-import { safeRedirectPath } from "@/lib/utils/safe-redirect";
+import { verifyTurnstile } from "@/lib/turnstile/verify";
 import { authErrorMessage } from "@/server/auth/auth-error-message";
+import { emailHasAccount } from "@/server/auth/account-exists";
 import { getClientIp } from "@/server/auth/client-ip";
+import { pathAfterSignIn } from "@/server/auth/redirect-after-sign-in";
 import {
   clearPendingVerificationEmail,
   getPendingVerificationEmail,
   setPendingVerificationEmail,
 } from "@/server/auth/pending-verification";
-import { signInSchema, signUpSchema, verifyEmailSchema } from "@/validators/auth";
+import type { TurnstileAction } from "@/types/turnstile";
+import { signInSchema, signUpSchema, turnstileTokenSchema, verifyEmailSchema } from "@/validators/auth";
 
 export type AuthFormState = {
   error?: string;
@@ -28,6 +31,8 @@ const invalidForm = "Check the highlighted fields and try again.";
 const verificationExpired = "Your verification session has expired. Sign in again to get a new code.";
 const codeResent = "If your email still needs verifying, we've sent a new code.";
 const rateLimited = authErrorMessage({ status: 429 });
+const accountExists = authErrorMessage({ code: "USER_ALREADY_EXISTS" });
+const botCheckFailed = "We couldn't verify you're human. Please try again.";
 
 function readForm(formData: FormData, keys: readonly string[]) {
   return Object.fromEntries(
@@ -40,6 +45,20 @@ function readForm(formData: FormData, keys: readonly string[]) {
 
 function logAuthFailure(action: string, error: AuthApiError) {
   console.error(`[auth] ${action} failed`, { code: error.code, status: error.status });
+}
+
+async function accountAlreadyExists(email: string) {
+  try {
+    return await emailHasAccount(email);
+  } catch (error) {
+    console.error("[auth] existing-account check failed", error instanceof Error ? error.message : error);
+    return false;
+  }
+}
+
+async function passesBotCheck(formData: FormData, action: TurnstileAction, ip: string) {
+  const token = turnstileTokenSchema.safeParse(formData.get("cf-turnstile-response"));
+  return token.success && (await verifyTurnstile(token.data, action, ip));
 }
 
 function withPlan(path: string, plan: PlanId | undefined) {
@@ -59,7 +78,16 @@ export async function signUpAction(_previous: AuthFormState, formData: FormData)
     return { error: rateLimited };
   }
 
+  if (!(await passesBotCheck(formData, "signup", ip))) {
+    return { error: botCheckFailed };
+  }
+
   const { plan, ...credentials } = parsed.data;
+
+  if (await accountAlreadyExists(credentials.email)) {
+    return { error: accountExists };
+  }
+
   const { data, error } = await auth.signUp.email(credentials);
 
   if (error) {
@@ -76,7 +104,7 @@ export async function signUpAction(_previous: AuthFormState, formData: FormData)
 }
 
 export async function signInAction(_previous: AuthFormState, formData: FormData): Promise<AuthFormState> {
-  const parsed = signInSchema.safeParse(readForm(formData, ["email", "password", "next"]));
+  const parsed = signInSchema.safeParse(readForm(formData, ["email", "password", "rememberMe", "next"]));
 
   if (!parsed.success) {
     return { error: invalidForm, fieldErrors: z.flattenError(parsed.error).fieldErrors };
@@ -94,7 +122,11 @@ export async function signInAction(_previous: AuthFormState, formData: FormData)
     return { error: rateLimited };
   }
 
-  const { error } = await auth.signIn.email(credentials);
+  if (!(await passesBotCheck(formData, "login", ip))) {
+    return { error: botCheckFailed };
+  }
+
+  const { data, error } = await auth.signIn.email(credentials);
 
   if (error?.code?.startsWith("EMAIL_NOT_VERIFIED")) {
     await setPendingVerificationEmail(credentials.email);
@@ -106,7 +138,7 @@ export async function signInAction(_previous: AuthFormState, formData: FormData)
     return { error: authErrorMessage(error) };
   }
 
-  redirect(safeRedirectPath(next, "/app"));
+  redirect(await pathAfterSignIn(data.user.id, next));
 }
 
 export async function verifyEmailAction(_previous: AuthFormState, formData: FormData): Promise<AuthFormState> {

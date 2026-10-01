@@ -5,7 +5,7 @@ import { cache } from "react";
 import { z } from "zod";
 
 import { db } from "@/db";
-import { users, type User } from "@/db/schema";
+import { users, type Organization, type OrganizationMember, type User } from "@/db/schema";
 import { auth } from "@/lib/auth/server";
 import { AuthenticationError } from "@/server/errors";
 
@@ -18,6 +18,13 @@ const sessionUserSchema = z.object({
 
 type SessionUser = z.infer<typeof sessionUserSchema>;
 
+export type Membership = OrganizationMember & { organization: Organization };
+
+export type CurrentAccount = {
+  user: User;
+  membership: Membership | null;
+};
+
 function splitName(name: SessionUser["name"]) {
   const parts = name?.trim().split(/\s+/).filter(Boolean) ?? [];
   const [first, ...rest] = parts;
@@ -28,19 +35,26 @@ function splitName(name: SessionUser["name"]) {
   };
 }
 
-function findUserByAuthId(authUserId: string) {
-  return db.query.users.findFirst({
+async function findAccount(authUserId: string): Promise<CurrentAccount | null> {
+  const row = await db.query.users.findFirst({
     where: eq(users.authUserId, authUserId),
+    with: {
+      organizationMemberships: {
+        with: { organization: true },
+        limit: 1,
+      },
+    },
   });
-}
 
-async function findOrProvisionUser(sessionUser: SessionUser): Promise<User> {
-  const existing = await findUserByAuthId(sessionUser.id);
-
-  if (existing) {
-    return existing;
+  if (!row) {
+    return null;
   }
 
+  const { organizationMemberships, ...user } = row;
+  return { user, membership: organizationMemberships[0] ?? null };
+}
+
+async function provisionAccount(sessionUser: SessionUser): Promise<CurrentAccount> {
   const [created] = await db
     .insert(users)
     .values({
@@ -53,19 +67,19 @@ async function findOrProvisionUser(sessionUser: SessionUser): Promise<User> {
     .returning();
 
   if (created) {
-    return created;
+    return { user: created, membership: null };
   }
 
-  const provisioned = await findUserByAuthId(sessionUser.id);
+  const existing = await findAccount(sessionUser.id);
 
-  if (!provisioned) {
+  if (!existing) {
     throw new Error("User could not be provisioned");
   }
 
-  return provisioned;
+  return existing;
 }
 
-export const getCurrentUser = cache(async (): Promise<User | null> => {
+export const getCurrentAccount = cache(async (): Promise<CurrentAccount | null> => {
   const { data: session, error } = await auth.getSession();
 
   if (error) {
@@ -75,15 +89,19 @@ export const getCurrentUser = cache(async (): Promise<User | null> => {
 
   const parsed = sessionUserSchema.safeParse(session?.user);
 
-  return parsed.success ? findOrProvisionUser(parsed.data) : null;
+  if (!parsed.success) {
+    return null;
+  }
+
+  return (await findAccount(parsed.data.id)) ?? provisionAccount(parsed.data);
 });
 
-export async function requireCurrentUser(): Promise<User> {
-  const user = await getCurrentUser();
+export async function requireCurrentAccount(): Promise<CurrentAccount> {
+  const account = await getCurrentAccount();
 
-  if (!user) {
+  if (!account) {
     throw new AuthenticationError();
   }
 
-  return user;
+  return account;
 }

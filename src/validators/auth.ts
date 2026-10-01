@@ -12,6 +12,8 @@ export const emailSchema = z
   .toLowerCase()
   .pipe(z.email({ error: "Enter a valid email address." }).max(320));
 
+export const turnstileTokenSchema = z.string().min(1).max(2048);
+
 export const signUpSchema = z.object({
   name: z
     .string({ error: "Enter your name." })
@@ -29,6 +31,10 @@ export const signUpSchema = z.object({
 export const signInSchema = z.object({
   email: emailSchema,
   password: z.string({ error: "Enter your password." }).min(1, "Enter your password."),
+  rememberMe: z
+    .literal("on")
+    .optional()
+    .transform((value) => value === "on"),
   next: z.string().optional(),
 });
 

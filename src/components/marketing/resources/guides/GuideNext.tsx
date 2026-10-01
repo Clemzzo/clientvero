@@ -7,7 +7,6 @@ import {
   guides,
   type Guide,
 } from "@/components/marketing/resources/guides/guides";
-import { Reveal } from "@/components/shared/reveal";
 
 const RELATED_COUNT = 2;
 
@@ -22,7 +21,7 @@ function keepReadingGuides(current: Guide) {
 
 function KeepReadingHeader() {
   return (
-    <Reveal className="flex flex-wrap items-end justify-between gap-4">
+    <div className="flex flex-wrap items-end justify-between gap-4">
       <h2
         id="keep-reading-heading"
         className="font-display text-[clamp(24px,2.4vw,30px)] font-extrabold tracking-[-0.03em] text-ink-900"
@@ -39,7 +38,7 @@ function KeepReadingHeader() {
           className="size-4 transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none"
         />
       </Link>
-    </Reveal>
+    </div>
   );
 }
 
@@ -62,7 +61,7 @@ export function GuideNext({ guide }: { guide: Guide }) {
       <div className="mx-auto max-w-360 px-5 sm:px-8 lg:px-10">
         <KeepReadingHeader />
 
-        <Reveal delay={0.1} className="mt-10">
+        <div className="mt-10">
           <ul className="grid gap-5 md:grid-cols-3">
             {cards.map((card) => (
               <li key={card.slug} className="relative">
@@ -71,7 +70,7 @@ export function GuideNext({ guide }: { guide: Guide }) {
               </li>
             ))}
           </ul>
-        </Reveal>
+        </div>
       </div>
     </section>
   );

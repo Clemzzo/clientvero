@@ -2,7 +2,6 @@ import Link from "next/link";
 import { Check } from "lucide-react";
 
 import { Faq } from "@/components/marketing/Faq";
-import { Reveal } from "@/components/shared/reveal";
 import { Button } from "@/components/ui/button";
 import { formatPlanPrice, plans } from "@/features/subscriptions/plans";
 import type { Plan } from "@/features/subscriptions/plans";
@@ -93,7 +92,7 @@ export function Pricing() {
             </p>
           </div>
 
-          <Reveal delay={0.1} className="mt-12 lg:mt-14">
+          <div className="mt-12 lg:mt-14">
             <div className="grid gap-5 lg:grid-cols-3 lg:items-stretch">
               {plans.map((plan) => (
                 <PlanCard key={plan.id} plan={plan} />
@@ -102,7 +101,7 @@ export function Pricing() {
             <p className="mt-6 text-center text-[13px] text-ink-500">
               Prices in USD, billed monthly. Change or cancel your plan anytime.
             </p>
-          </Reveal>
+          </div>
         </div>
       </section>
 

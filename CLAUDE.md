@@ -39,8 +39,13 @@ Built so far:
   - API route: `src/app/api/auth/[...path]`
   - Route protection for `/app`, `/onboarding`, `/admin`: `src/proxy.ts`
   - Sign-up, sign-in, sign-out, and email-verification (OTP) server actions: `src/server/actions/auth.ts`. Neon sends the code on sign-up and sign-in; the app only sends one for "resend".
-  - Current-user helper that provisions the local `users` row: `src/server/auth/current-user.ts`
-- **Database**: only the `users` table exists (`src/db/schema`). Add other tables with their features, following the Part III starter code.
+  - Current-account helper: `getCurrentAccount()` / `requireCurrentAccount()` in `src/server/auth/current-user.ts` return the local user **and** their workspace membership in one query (provisioning the `users` row on first use). Cached per request.
+  - Sessions: signing in without "Remember me" creates a browser-session cookie (ends when the browser closes); ticked lasts 7 days. The automatic sign-in right after email verification uses Neon's default 7-day session.
+- **Onboarding** (`/onboarding`): two-step form that creates the user's organization and OWNER membership (`src/server/services/organization.service.ts`, `src/server/actions/onboarding.ts`). Users who already have a workspace are redirected to `/app`.
+- **Post-sign-in routing** (`src/server/auth/redirect-after-sign-in.ts`): signed-in users with a workspace go to the safe `next` path or `/app`; without one, to `/onboarding`. Used by `signInAction` and the sign-in/sign-up pages.
+- **`/app` placeholder** (`src/app/app`): a welcome card with the workspace details and sign-out. Its layout sends users without a workspace to `/onboarding`. Replaced by the real dashboard (PRD §64) later.
+- **Database**: `users`, `organizations`, and `organization_members` exist (`src/db/schema`). Add other tables with their features, following the Part III starter code.
+  - The db client is Neon's HTTP driver: `db.transaction()` is **not** supported. Use `db.batch([...])` for all-or-nothing writes.
 
 Local development uses the Neon `development` branch; see `.env.example` for the required variables. Never point `.env.local` at the `production` branch.
 
