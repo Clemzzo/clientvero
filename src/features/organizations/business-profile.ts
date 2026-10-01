@@ -31,3 +31,8 @@ export function currencyOptions(): Option[] {
   const names = new Intl.DisplayNames(["en"], { type: "currency" });
   return currencyCodes.map((code) => ({ value: code, label: `${code} · ${names.of(code) ?? code}` }));
 }
+
+export function countryName(code: string | null): string | null {
+  if (!code) return null;
+  return new Intl.DisplayNames(["en"], { type: "region" }).of(code) ?? code;
+}

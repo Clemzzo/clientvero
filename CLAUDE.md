@@ -33,18 +33,25 @@ Built so far:
 
 - **Marketing site** (`src/app/(marketing)`): landing, pricing, product, solutions, and guides pages.
 - **Auth pages** (`src/app/(auth)`): `/sign-up`, `/sign-in`, `/verify-email` (6-digit OTP), built from shared parts in `src/components/auth` and `src/components/shared` (`TextField`, `FormField`, `SubmitButton`, `FormAlert`).
-- **Rate limiting**: Upstash limits on every auth action (`src/lib/redis/rate-limit.ts`); fails open if Upstash is unreachable.
+- **Rate limiting**: Upstash limits on every auth action and every workspace write (`authLimits` / `workspaceLimits` in `src/lib/redis/rate-limit.ts`; actions call `requireWithinLimit()` from `src/server/actions/rate-limit-guard.ts` after the permission check). Fails open if Upstash is unreachable.
 - **Auth backend**:
   - Neon Auth instance: `src/lib/auth/server.ts`
   - API route: `src/app/api/auth/[...path]`
-  - Route protection for `/app`, `/onboarding`, `/admin`: `src/proxy.ts`
+  - Route protection for `/dashboard`, `/onboarding`, `/admin`: `src/proxy.ts`
   - Sign-up, sign-in, sign-out, and email-verification (OTP) server actions: `src/server/actions/auth.ts`. Neon sends the code on sign-up and sign-in; the app only sends one for "resend".
   - Current-account helper: `getCurrentAccount()` / `requireCurrentAccount()` in `src/server/auth/current-user.ts` return the local user **and** their workspace membership in one query (provisioning the `users` row on first use). Cached per request.
   - Sessions: signing in without "Remember me" creates a browser-session cookie (ends when the browser closes); ticked lasts 7 days. The automatic sign-in right after email verification uses Neon's default 7-day session.
-- **Onboarding** (`/onboarding`): two-step form that creates the user's organization and OWNER membership (`src/server/services/organization.service.ts`, `src/server/actions/onboarding.ts`). Users who already have a workspace are redirected to `/app`.
-- **Post-sign-in routing** (`src/server/auth/redirect-after-sign-in.ts`): signed-in users with a workspace go to the safe `next` path or `/app`; without one, to `/onboarding`. Used by `signInAction` and the sign-in/sign-up pages.
-- **`/app` placeholder** (`src/app/app`): a welcome card with the workspace details and sign-out. Its layout sends users without a workspace to `/onboarding`. Replaced by the real dashboard (PRD §64) later.
-- **Database**: `users`, `organizations`, and `organization_members` exist (`src/db/schema`). Add other tables with their features, following the Part III starter code.
+- **Onboarding** (`/onboarding`): two-step form that creates the user's organization and OWNER membership (`src/server/services/organization.service.ts`, `src/server/actions/onboarding.ts`). Users who already have a workspace are redirected to `/dashboard`.
+- **Post-sign-in routing** (`src/server/auth/redirect-after-sign-in.ts`): signed-in users with a workspace go to the safe `next` path or `/dashboard`; without one, to `/onboarding`. Used by `signInAction` and the sign-in/sign-up pages.
+- **Workspace** (`/dashboard`, `src/app/dashboard`): the signed-in app. Its layout sends users without a workspace to `/onboarding` and wraps every page in the app shell (`src/components/layout/app-shell.tsx`). Legacy `/app/*` URLs redirect here (`next.config.ts`).
+- **Authorization**: `requireOrganizationContext()` (`src/server/auth/organization.ts`) resolves user + organization + membership from the session — never from the browser. `requirePermission(ctx, permissions.x)` (`src/server/authorization/permissions.ts`) is the only role check. Errors: `src/server/errors.ts`.
+- **Activity log**: `activityInsert()` returns an unexecuted insert to put in `db.batch([...])` next to the main write; `listActivity()` / `listRecentActivity()` read it (`src/server/services/activity.service.ts`).
+- **Dashboard overview** (`/dashboard`): aggregates from `src/server/repositories/dashboard.repository.ts`; tiles for features not yet built return 0 until their feature replaces the zero.
+- **Leads** (`/dashboard/leads`): list (search, status filter, pagination) and pipeline views, create, detail with activity, edit, and "Move to…" status changes. WON is set only by "Convert to client", and a converted lead's status is locked. OWNER/ADMIN can delete a lead from the list table (soft delete, `leads.delete`). Code: `src/app/dashboard/leads`, `src/components/leads`, `src/validators/leads.ts`, `src/server/{repositories/lead.repository.ts,services/lead.service.ts,actions/leads.ts}`.
+- **Clients** (`/dashboard/clients`): list with search and pagination, create, edit, and a detail page with Overview / Contacts / Activity tabs. Contacts (add, edit, remove, one primary) are edited in dialogs. OWNER/ADMIN can delete a client from the list table (soft delete, `clients.delete`). Row delete menus use the shared `RowDeleteMenu`. Code: `src/app/dashboard/clients`, `src/components/clients`, `src/validators/clients.ts`, `src/server/{repositories/client.repository.ts,services/client.service.ts,services/client-contact.service.ts,actions/clients.ts}`.
+- **Lead conversion** (`src/server/services/lead-conversion.service.ts`): one `db.batch` with an advisory lock and guarded inserts — creates the client, marks the lead WON, and logs `LEAD_CONVERTED` + `CLIENT_CREATED`, or does nothing. Converting twice raises `ConflictError`.
+- **Tests**: Vitest (`npm test`). Integration tests run against the database in `.env.local` (the development branch) and clean up after themselves.
+- **Database**: `users`, `organizations`, `organization_members`, `activity_logs`, `leads`, `clients`, and `client_contacts` exist (`src/db/schema`). Add other tables with their features, following the Part III starter code.
   - The db client is Neon's HTTP driver: `db.transaction()` is **not** supported. Use `db.batch([...])` for all-or-nothing writes.
 
 Local development uses the Neon `development` branch; see `.env.example` for the required variables. Never point `.env.local` at the `production` branch.
@@ -56,6 +63,7 @@ npm run dev            # Next.js dev server
 npm run build          # production build
 npm run lint
 npm run typecheck
+npm test               # vitest (uses .env.local → development branch)
 npm run db:generate    # drizzle-kit generate
 npm run db:migrate     # apply migrations to the branch in DATABASE_URL
 npm run db:studio      # drizzle studio
@@ -74,7 +82,7 @@ npm run db:studio      # drizzle studio
 
 ```
 src/
-├── app/          (marketing) (auth) onboarding app portal proposal invoice admin api
+├── app/          (marketing) (auth) onboarding dashboard portal proposal invoice admin api
 ├── components/   ui layout dashboard leads clients proposals projects invoices portal shared
 ├── features/     leads clients proposals projects invoices payments files messages notifications ai subscriptions
 ├── server/       auth authorization services repositories actions

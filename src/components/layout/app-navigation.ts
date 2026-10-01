@@ -1,0 +1,14 @@
+import { LayoutDashboard, UserPlus, Users, type LucideIcon } from "lucide-react";
+
+export type AppNavItem = {
+  label: string;
+  href: string;
+  icon: LucideIcon;
+  exact?: boolean;
+};
+
+export const appNavigation: AppNavItem[] = [
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, exact: true },
+  { label: "Leads", href: "/dashboard/leads", icon: UserPlus },
+  { label: "Clients", href: "/dashboard/clients", icon: Users },
+];

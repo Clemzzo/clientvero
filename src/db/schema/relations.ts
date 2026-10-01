@@ -1,5 +1,8 @@
 import { relations } from "drizzle-orm";
 
+import { activityLogs } from "./activity";
+import { clientContacts, clients } from "./clients";
+import { leads } from "./leads";
 import { organizationMembers, organizations } from "./organizations";
 import { users } from "./users";
 
@@ -9,6 +12,8 @@ export const usersRelations = relations(users, ({ many }) => ({
 
 export const organizationsRelations = relations(organizations, ({ many }) => ({
   members: many(organizationMembers),
+  leads: many(leads),
+  clients: many(clients),
 }));
 
 export const organizationMembersRelations = relations(organizationMembers, ({ one }) => ({
@@ -19,5 +24,42 @@ export const organizationMembersRelations = relations(organizationMembers, ({ on
   user: one(users, {
     fields: [organizationMembers.userId],
     references: [users.id],
+  }),
+}));
+
+export const activityLogsRelations = relations(activityLogs, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [activityLogs.organizationId],
+    references: [organizations.id],
+  }),
+  actor: one(users, {
+    fields: [activityLogs.actorUserId],
+    references: [users.id],
+  }),
+}));
+
+export const leadsRelations = relations(leads, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [leads.organizationId],
+    references: [organizations.id],
+  }),
+  assignee: one(users, {
+    fields: [leads.assignedTo],
+    references: [users.id],
+  }),
+}));
+
+export const clientsRelations = relations(clients, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [clients.organizationId],
+    references: [organizations.id],
+  }),
+  contacts: many(clientContacts),
+}));
+
+export const clientContactsRelations = relations(clientContacts, ({ one }) => ({
+  client: one(clients, {
+    fields: [clientContacts.clientId],
+    references: [clients.id],
   }),
 }));

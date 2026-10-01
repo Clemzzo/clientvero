@@ -19,7 +19,7 @@ export default async function OnboardingPage() {
   }
 
   if (account.membership) {
-    redirect("/app");
+    redirect("/dashboard");
   }
 
   return (

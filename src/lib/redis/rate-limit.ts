@@ -24,6 +24,11 @@ export const authLimits = {
   resendPerEmail: limiter("resend:email", 5, "1 h"),
 };
 
+export const workspaceLimits = {
+  writesPerUser: limiter("workspace:writes:user", 10, "1 m"),
+  conversionsPerUser: limiter("workspace:convert:user", 5, "1 m"),
+};
+
 type LimitCheck = [Ratelimit, string];
 
 export async function withinLimits(...checks: LimitCheck[]): Promise<boolean> {

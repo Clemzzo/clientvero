@@ -2,4 +2,7 @@ export * from "./common";
 export * from "./enums";
 export * from "./users";
 export * from "./organizations";
+export * from "./activity";
+export * from "./leads";
+export * from "./clients";
 export * from "./relations";

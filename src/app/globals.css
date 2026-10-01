@@ -120,6 +120,10 @@
     animation: menu-in 0.14s ease-out both;
   }
 
+  .toast-in {
+    animation: toast-in 0.2s ease-out both;
+  }
+
   .sheet-fan {
     transform: rotate(var(--fan, 0deg));
     animation: sheet-fan 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both;
@@ -166,6 +170,23 @@
   .marquee-track {
     animation: none;
     transform: none;
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast-in {
+    animation: none;
   }
 }
 

@@ -31,7 +31,7 @@ export async function completeOnboardingAction(
   const { user, membership } = await requireCurrentAccount();
 
   if (membership) {
-    redirect("/app");
+    redirect("/dashboard");
   }
 
   const parsed = onboardingSchema.safeParse(readForm(formData));
@@ -47,5 +47,5 @@ export async function completeOnboardingAction(
     return { error: createFailed };
   }
 
-  redirect("/app");
+  redirect("/dashboard");
 }

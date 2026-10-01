@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 
+import { AppShell } from "@/components/layout/app-shell";
 import { getCurrentAccount } from "@/server/auth/current-user";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
@@ -14,5 +15,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     redirect("/onboarding");
   }
 
-  return <main className="min-h-dvh bg-ink-50">{children}</main>;
+  return (
+    <AppShell user={account.user} organization={account.membership.organization}>
+      {children}
+    </AppShell>
+  );
 }

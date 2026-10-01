@@ -443,7 +443,7 @@ src/
 │   ├── (marketing)/
 │   ├── (auth)/
 │   ├── onboarding/
-│   ├── app/
+│   ├── dashboard/
 │   ├── portal/
 │   ├── proposal/
 │   ├── invoice/
@@ -814,6 +814,7 @@ deleted_at
 client_contacts
 ---------------
 id
+organization_id
 client_id
 name
 email
@@ -825,6 +826,8 @@ updated_at
 ```
 
 Multiple contacts are supported so the client model can later accommodate agencies.
+
+`organization_id` follows the §10 tenant rule, so contact reads and writes are scoped directly. A client has at most one primary contact, enforced by a partial unique index on `(client_id) WHERE is_primary`.
 
 ---
 
@@ -1410,6 +1413,8 @@ These helpers:
 - verify organization membership
 - return user, organization, and membership context
 
+Implementation note (approved by the owner): `requireOrganizationContext()` takes no `organizationId` argument. It resolves the organization from the signed-in user's membership on the server, so the browser never supplies the tenant. When users can belong to several workspaces, the active one will come from a server-side value that is checked against membership.
+
 ---
 
 # 49. Permission Starter
@@ -1426,10 +1431,12 @@ team.manage
 leads.read
 leads.create
 leads.update
+leads.delete
 
 clients.read
 clients.create
 clients.update
+clients.delete
 
 proposals.read
 proposals.create
@@ -1447,7 +1454,7 @@ billing.read
 billing.manage
 ```
 
-Roles map to these capabilities.
+Roles map to these capabilities. Deleting (soft-deleting) leads and clients is limited to OWNER and ADMIN.
 
 ---
 
@@ -1650,6 +1657,10 @@ Messages: 60/minute/user
 Public document actions: 30/minute/IP
 
 Portal authentication: 10 attempts/15 minutes/IP
+
+Workspace writes (create, update, status changes, contacts): 10/minute/user
+
+Lead conversion: 5/minute/user
 ```
 
 These are configurable starting values.
@@ -1778,6 +1789,8 @@ Do not send unnecessary sensitive client data to analytics.
 
 # 64. Dashboard
 
+The signed-in workspace lives at `/dashboard` (`src/app/dashboard/`). The overview is `/dashboard`; every workspace screen nests under it (`/dashboard/leads`, `/dashboard/clients`, …). The legacy `/app/*` paths redirect to `/dashboard/*`.
+
 Primary dashboard metrics:
 
 - total leads
@@ -1803,10 +1816,10 @@ Use aggregated queries rather than dozens of sequential database calls.
 # 65. Lead Screens
 
 ```text
-/app/leads
-/app/leads/new
-/app/leads/[id]
-/app/leads/[id]/edit
+/dashboard/leads
+/dashboard/leads/new
+/dashboard/leads/[id]
+/dashboard/leads/[id]/edit
 ```
 
 Components:
@@ -1826,10 +1839,10 @@ Components:
 # 66. Client Screens
 
 ```text
-/app/clients
-/app/clients/new
-/app/clients/[id]
-/app/clients/[id]/edit
+/dashboard/clients
+/dashboard/clients/new
+/dashboard/clients/[id]
+/dashboard/clients/[id]/edit
 ```
 
 Client tabs:
@@ -1850,11 +1863,11 @@ Activity
 # 67. Proposal Screens
 
 ```text
-/app/proposals
-/app/proposals/new
-/app/proposals/[id]
-/app/proposals/[id]/edit
-/app/proposals/[id]/preview
+/dashboard/proposals
+/dashboard/proposals/new
+/dashboard/proposals/[id]
+/dashboard/proposals/[id]/edit
+/dashboard/proposals/[id]/preview
 ```
 
 Builder includes:
@@ -1875,10 +1888,10 @@ Builder includes:
 # 68. Project Screens
 
 ```text
-/app/projects
-/app/projects/new
-/app/projects/[id]
-/app/projects/[id]/settings
+/dashboard/projects
+/dashboard/projects/new
+/dashboard/projects/[id]
+/dashboard/projects/[id]/settings
 ```
 
 Project sections:
@@ -1895,10 +1908,10 @@ Project sections:
 # 69. Invoice Screens
 
 ```text
-/app/invoices
-/app/invoices/new
-/app/invoices/[id]
-/app/invoices/[id]/edit
+/dashboard/invoices
+/dashboard/invoices/new
+/dashboard/invoices/[id]
+/dashboard/invoices/[id]/edit
 ```
 
 Features:
@@ -1918,10 +1931,10 @@ Features:
 # 70. Other Application Screens
 
 ```text
-/app/payments
-/app/files
-/app/messages
-/app/notifications
+/dashboard/payments
+/dashboard/files
+/dashboard/messages
+/dashboard/notifications
 ```
 
 ---
@@ -1929,11 +1942,11 @@ Features:
 # 71. Settings
 
 ```text
-/app/settings/profile
-/app/settings/business
-/app/settings/team
-/app/settings/notifications
-/app/settings/billing
+/dashboard/settings/profile
+/dashboard/settings/business
+/dashboard/settings/team
+/dashboard/settings/notifications
+/dashboard/settings/billing
 ```
 
 ---
@@ -4313,7 +4326,7 @@ import { auth } from "@/lib/auth/server";
 export default auth.middleware({ loginUrl: "/sign-in" });
 
 export const config = {
-  matcher: ["/app/:path*", "/onboarding/:path*", "/admin/:path*"],
+  matcher: ["/dashboard/:path*", "/onboarding/:path*", "/admin/:path*"],
 };
 ```
 
@@ -4437,9 +4450,11 @@ export const permissions = {
   leadsRead: "leads.read",
   leadsCreate: "leads.create",
   leadsUpdate: "leads.update",
+  leadsDelete: "leads.delete",
   clientsRead: "clients.read",
   clientsCreate: "clients.create",
   clientsUpdate: "clients.update",
+  clientsDelete: "clients.delete",
   proposalsRead: "proposals.read",
   proposalsCreate: "proposals.create",
   proposalsSend: "proposals.send",
@@ -4463,9 +4478,11 @@ const rolePermissions = {
     permissions.leadsRead,
     permissions.leadsCreate,
     permissions.leadsUpdate,
+    permissions.leadsDelete,
     permissions.clientsRead,
     permissions.clientsCreate,
     permissions.clientsUpdate,
+    permissions.clientsDelete,
     permissions.proposalsRead,
     permissions.proposalsCreate,
     permissions.proposalsSend,
