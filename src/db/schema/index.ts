@@ -5,4 +5,5 @@ export * from "./organizations";
 export * from "./activity";
 export * from "./leads";
 export * from "./clients";
+export * from "./proposals";
 export * from "./relations";

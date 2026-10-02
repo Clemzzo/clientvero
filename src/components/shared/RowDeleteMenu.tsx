@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Ellipsis, Trash2 } from "lucide-react";
+import { Archive, Ellipsis, Trash2 } from "lucide-react";
 
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { useNotice } from "@/components/shared/notice-provider";
@@ -9,25 +9,46 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import type { DeletionMode } from "@/validators/fields";
 
 type RowDeleteMenuProps = {
   name: string;
-  description: string;
-  onDelete: () => Promise<{ error?: string }>;
+  archiveDescription: string;
+  permanentDescription: string;
+  onDelete: (mode: DeletionMode) => Promise<{ error?: string }>;
 };
 
-export function RowDeleteMenu({ name, description, onDelete }: RowDeleteMenuProps) {
-  const [confirmOpen, setConfirmOpen] = useState(false);
+const confirmCopy = {
+  archive: {
+    title: "Archive",
+    confirmLabel: "Archive",
+    pendingLabel: "Archiving…",
+    done: "was archived. You can restore it from Archived.",
+  },
+  permanent: {
+    title: "Permanently delete",
+    confirmLabel: "Delete permanently",
+    pendingLabel: "Deleting…",
+    done: "was permanently deleted.",
+  },
+} satisfies Record<DeletionMode, Record<string, string>>;
+
+export function RowDeleteMenu({ name, archiveDescription, permanentDescription, onDelete }: RowDeleteMenuProps) {
+  const [mode, setMode] = useState<DeletionMode | null>(null);
   const [isPending, startTransition] = useTransition();
   const showNotice = useNotice();
+  const copy = confirmCopy[mode ?? "archive"];
 
   function remove() {
+    if (!mode) return;
+
     startTransition(async () => {
-      const result = await onDelete();
-      setConfirmOpen(false);
-      showNotice(result.error ? "error" : "success", result.error ?? `${name} was deleted.`);
+      const result = await onDelete(mode);
+      setMode(null);
+      showNotice(result.error ? "error" : "success", result.error ?? `${name} ${copy.done}`);
     });
   }
 
@@ -40,22 +61,27 @@ export function RowDeleteMenu({ name, description, onDelete }: RowDeleteMenuProp
         >
           <Ellipsis aria-hidden className="size-4" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="min-w-40">
-          <DropdownMenuItem tone="destructive" onSelect={() => setConfirmOpen(true)}>
+        <DropdownMenuContent className="min-w-44">
+          <DropdownMenuItem onSelect={() => setMode("archive")}>
+            <Archive aria-hidden />
+            Archive
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem tone="destructive" onSelect={() => setMode("permanent")}>
             <Trash2 aria-hidden />
-            Delete
+            Delete permanently
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
       <ConfirmDialog
-        open={confirmOpen}
-        onOpenChange={setConfirmOpen}
-        title={`Delete ${name}?`}
-        description={description}
-        confirmLabel="Delete"
-        pendingLabel="Deleting…"
-        tone="destructive"
+        open={mode !== null}
+        onOpenChange={(open) => !open && setMode(null)}
+        title={`${copy.title} ${name}?`}
+        description={mode === "permanent" ? permanentDescription : archiveDescription}
+        confirmLabel={copy.confirmLabel}
+        pendingLabel={copy.pendingLabel}
+        tone={mode === "permanent" ? "destructive" : "default"}
         pending={isPending}
         onConfirm={remove}
       />

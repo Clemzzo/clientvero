@@ -36,6 +36,20 @@
       "when": 1790881450056,
       "tag": "0004_opposite_swarm",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790950236241,
+      "tag": "0005_spooky_zemo",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790950313323,
+      "tag": "0006_clumsy_zarda",
+      "breakpoints": true
     }
   ]
 }

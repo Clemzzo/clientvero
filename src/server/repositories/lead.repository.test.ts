@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import type { Organization } from "@/db/schema";
-import { listLeads, pipelineLeads } from "@/server/repositories/lead.repository";
+import { listArchivedLeads, listLeads, pipelineLeads } from "@/server/repositories/lead.repository";
 import { escapeLike } from "@/server/repositories/search";
 import { cleanup, createTestOrganization, insertTestLeads } from "@/test/fixtures";
 import { LEADS_PAGE_SIZE } from "@/validators/leads";
@@ -67,5 +67,15 @@ describe("lead.repository", () => {
   it("never returns another organization's leads", async () => {
     const result = await listLeads(orgB.id, { q: "", page: 1 });
     expect(result.rows.map((lead) => lead.name)).toEqual(["Jane Other Org"]);
+  });
+
+  it("lists only this organization's archived leads, with search", async () => {
+    const archived = await listArchivedLeads(orgA.id, { q: "", page: 1 });
+
+    expect(archived.total).toBe(1);
+    expect(archived.rows).toEqual([expect.objectContaining({ name: "Hidden", archivedAt: expect.any(Date) })]);
+    expect((await listArchivedLeads(orgA.id, { q: "hidden", page: 1 })).total).toBe(1);
+    expect((await listArchivedLeads(orgA.id, { q: "jane", page: 1 })).total).toBe(0);
+    expect((await listArchivedLeads(orgB.id, { q: "", page: 1 })).total).toBe(0);
   });
 });

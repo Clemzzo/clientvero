@@ -19,7 +19,8 @@ function LeadDeleteMenu({ lead }: { lead: Lead }) {
   return (
     <RowDeleteMenu
       name={lead.name}
-      description="This lead will be removed from your leads and pipeline."
+      archiveDescription="This lead will be hidden from your leads and pipeline. Its history is kept."
+      permanentDescription="This lead and its activity history will be erased from the database. This can't be undone."
       onDelete={deleteLeadAction.bind(null, lead.id)}
     />
   );

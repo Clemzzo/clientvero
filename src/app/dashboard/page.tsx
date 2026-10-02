@@ -52,7 +52,7 @@ export default async function DashboardPage() {
     { label: "Create your workspace", done: true },
     { label: "Add your first lead", done: leads.total > 0, href: "/dashboard/leads/new" },
     { label: "Convert a lead to a client", done: overview.clients.active > 0, href: "/dashboard/leads" },
-    { label: "Send a proposal", done: false },
+    { label: "Send a proposal", done: overview.proposals.sent > 0, href: "/dashboard/proposals/new" },
     { label: "Invite a client to the portal", done: false },
     { label: "Send an invoice", done: false },
   ];

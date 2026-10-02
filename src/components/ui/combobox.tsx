@@ -24,6 +24,7 @@ type ComboboxProps = {
   required?: boolean;
   invalid?: boolean;
   describedBy?: string;
+  onValueChange?: (value: string) => void;
 };
 
 export function Combobox({
@@ -36,6 +37,7 @@ export function Combobox({
   required,
   invalid,
   describedBy,
+  onValueChange,
 }: ComboboxProps) {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(defaultValue);
@@ -48,6 +50,7 @@ export function Combobox({
 
   function choose(option: Option) {
     setValue(option.value);
+    onValueChange?.(option.value);
     setOpen(false);
   }
 

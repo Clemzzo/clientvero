@@ -1,14 +1,15 @@
 import "server-only";
 
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql, type SQL } from "drizzle-orm";
 
 import { db } from "@/db";
 import { activityLogs, users } from "@/db/schema";
-import type { ActivityAction, ActivityResource } from "@/features/activity/activity-actions";
+import type { ActivityAction, ActivityActorType, ActivityResource } from "@/features/activity/activity-actions";
 
 type ActivityInput = {
   organizationId: string;
-  actorUserId: string;
+  actorUserId: string | null;
+  actorType?: ActivityActorType;
   action: ActivityAction;
   resourceType: ActivityResource;
   resourceId: string;
@@ -17,6 +18,15 @@ type ActivityInput = {
 
 export function activityInsert(input: ActivityInput) {
   return db.insert(activityLogs).values(input);
+}
+
+export function activityInsertIf(input: ActivityInput, condition: SQL) {
+  return db.execute(sql`
+    insert into ${activityLogs} (organization_id, actor_user_id, actor_type, action, resource_type, resource_id, metadata)
+    select ${input.organizationId}, ${input.actorUserId}, ${input.actorType ?? "USER"}, ${input.action},
+      ${input.resourceType}, ${input.resourceId}, ${JSON.stringify(input.metadata ?? {})}::jsonb
+    where ${condition}
+  `);
 }
 
 const activityFields = {

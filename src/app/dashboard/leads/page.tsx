@@ -5,6 +5,7 @@ import { Plus, SearchX, UserPlus } from "lucide-react";
 import { LeadPipeline } from "@/components/leads/LeadPipeline";
 import { LeadsTable } from "@/components/leads/LeadsTable";
 import { LeadsToolbar } from "@/components/leads/LeadsToolbar";
+import { ArchivedLinkButton } from "@/components/shared/ArchivedLinkButton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Pagination } from "@/components/shared/Pagination";
@@ -74,7 +75,14 @@ export default async function LeadsPage(props: PageProps<"/dashboard/leads">) {
       <PageHeader
         title="Leads"
         description="Everyone you're talking to, from first contact to won."
-        actions={canCreate && <NewLeadButton />}
+        actions={
+          (canDelete || canCreate) && (
+            <>
+              {canDelete && <ArchivedLinkButton href="/dashboard/leads/archived" />}
+              {canCreate && <NewLeadButton />}
+            </>
+          )
+        }
       />
 
       <div className="mt-8 space-y-5">

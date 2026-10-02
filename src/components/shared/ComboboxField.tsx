@@ -12,6 +12,7 @@ type ComboboxFieldProps = {
   required?: boolean;
   hint?: string;
   error?: string;
+  onValueChange?: (value: string) => void;
 };
 
 export function ComboboxField({ name, label, hint, error, ...comboboxProps }: ComboboxFieldProps) {

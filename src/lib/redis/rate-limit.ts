@@ -29,6 +29,10 @@ export const workspaceLimits = {
   conversionsPerUser: limiter("workspace:convert:user", 5, "1 m"),
 };
 
+export const publicLimits = {
+  documentActionsPerIp: limiter("public:document:ip", 30, "1 m"),
+};
+
 type LimitCheck = [Ratelimit, string];
 
 export async function withinLimits(...checks: LimitCheck[]): Promise<boolean> {

@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { db } from "@/db";
 import { clientContacts, clients, type Organization } from "@/db/schema";
-import { listClients } from "@/server/repositories/client.repository";
+import { listArchivedClients, listClients } from "@/server/repositories/client.repository";
 import { cleanup, createTestOrganization } from "@/test/fixtures";
 import { CLIENTS_PAGE_SIZE } from "@/validators/clients";
 
@@ -54,5 +54,14 @@ describe("listClients", () => {
   it("never returns another workspace's clients", async () => {
     const result = await listClients(orgB.id, { q: "", page: 1 });
     expect(result.rows.map((client) => client.name)).toEqual(["Northwind (other workspace)"]);
+  });
+
+  it("lists only this workspace's archived clients, with search", async () => {
+    const archived = await listArchivedClients(orgA.id, { q: "", page: 1 });
+
+    expect(archived.total).toBe(1);
+    expect(archived.rows).toEqual([expect.objectContaining({ name: "Archived", archivedAt: expect.any(Date) })]);
+    expect((await listArchivedClients(orgA.id, { q: "northwind", page: 1 })).total).toBe(0);
+    expect((await listArchivedClients(orgB.id, { q: "", page: 1 })).total).toBe(0);
   });
 });

@@ -72,7 +72,7 @@ These come straight from the PRD's final engineering rules. Breaking one is a bu
 
 ### Data & integrity
 
-- UUID primary keys; `created_at` / `updated_at` on all major entities; `deleted_at` where the PRD calls for soft deletion (leads, clients, projects, proposals, invoices, files, messages).
+- UUID primary keys; `created_at` / `updated_at` on all major entities; `deleted_at` where the PRD calls for soft deletion (leads, clients, projects, proposals, invoices, files, messages); leads and clients can also be deleted permanently (PRD §86).
 - Public proposal and invoice URLs use **opaque public IDs**, never internal UUIDs.
 - Invoice numbers are organization-scoped and generated with a concurrency-safe strategy — never a row count.
 - Use PostgreSQL **transactions** for lead conversion, proposal acceptance, and payment recording.

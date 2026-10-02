@@ -11,8 +11,16 @@ import { requireWithinLimit } from "@/server/actions/rate-limit-guard";
 import { requireOrganizationContext } from "@/server/auth/organization";
 import { permissions, requirePermission } from "@/server/authorization/permissions";
 import { convertLead } from "@/server/services/lead-conversion.service";
-import { changeLeadStatus, createLead, deleteLead, updateLead } from "@/server/services/lead.service";
+import {
+  archiveLead,
+  changeLeadStatus,
+  createLead,
+  deleteLeadPermanently,
+  restoreLead,
+  updateLead,
+} from "@/server/services/lead.service";
 import type { FormState } from "@/types/form-state";
+import { deletionModeSchema } from "@/validators/fields";
 import { leadFormSchema, leadIdSchema, leadStatusSchema } from "@/validators/leads";
 
 const leadFields = [
@@ -35,6 +43,7 @@ const errorOptions = { scope: "leads", notFound: leadMissing };
 function revalidateLeads(leadId?: string) {
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/leads");
+  revalidatePath("/dashboard/leads/archived");
   if (leadId) revalidatePath(`/dashboard/leads/${leadId}`);
 }
 
@@ -107,7 +116,37 @@ export async function changeLeadStatusAction(id: string, status: string): Promis
   return {};
 }
 
-export async function deleteLeadAction(id: string): Promise<{ error?: string }> {
+export async function deleteLeadAction(id: string, mode: string): Promise<{ error?: string }> {
+  const leadId = leadIdSchema.safeParse(id);
+  const deletion = deletionModeSchema.safeParse(mode);
+
+  if (!leadId.success) {
+    return { error: leadMissing };
+  }
+
+  if (!deletion.success) {
+    return { error: "That delete option isn't valid." };
+  }
+
+  try {
+    const ctx = await requireOrganizationContext();
+    requirePermission(ctx, permissions.leadsDelete);
+    await requireWithinLimit(ctx, workspaceLimits.writesPerUser);
+
+    if (deletion.data === "permanent") {
+      await deleteLeadPermanently(ctx, leadId.data);
+    } else {
+      await archiveLead(ctx, leadId.data);
+    }
+  } catch (error) {
+    return { error: toActionError(error, errorOptions) };
+  }
+
+  revalidateLeads(leadId.data);
+  return {};
+}
+
+export async function restoreLeadAction(id: string): Promise<{ error?: string }> {
   const leadId = leadIdSchema.safeParse(id);
 
   if (!leadId.success) {
@@ -118,7 +157,7 @@ export async function deleteLeadAction(id: string): Promise<{ error?: string }> 
     const ctx = await requireOrganizationContext();
     requirePermission(ctx, permissions.leadsDelete);
     await requireWithinLimit(ctx, workspaceLimits.writesPerUser);
-    await deleteLead(ctx, leadId.data);
+    await restoreLead(ctx, leadId.data);
   } catch (error) {
     return { error: toActionError(error, errorOptions) };
   }

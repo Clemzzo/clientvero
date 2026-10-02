@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Activity, Pencil } from "lucide-react";
 
 import { ClientDetails } from "@/components/clients/ClientDetails";
+import { ClientProposals } from "@/components/clients/ClientProposals";
 import { ContactsCard } from "@/components/clients/ContactsCard";
 import { ActivityTimeline } from "@/components/shared/ActivityTimeline";
 import { BackLink } from "@/components/shared/BackLink";
@@ -16,6 +17,7 @@ import type { Client } from "@/db/schema";
 import { activityResources } from "@/features/activity/activity-actions";
 import { noticeSchema, type NoticeKey } from "@/features/notices";
 import { hasPermission, permissions } from "@/server/authorization/permissions";
+import { listClientProposals } from "@/server/repositories/proposal.repository";
 import { listActivity } from "@/server/services/activity.service";
 import { listContacts } from "@/server/services/client-contact.service";
 import { clientTabSchema, type ClientTab } from "@/validators/clients";
@@ -39,12 +41,16 @@ export default async function ClientPage(props: PageProps<"/dashboard/clients/[i
   const tab = clientTabSchema.parse(searchParams.tab);
   const notice = noticeSchema.parse(searchParams.notice);
   const canEdit = hasPermission(ctx.membership.role, permissions.clientsUpdate);
-  const contacts = await listContacts(ctx.organization.id, client.id);
+  const [contacts, proposals] = await Promise.all([
+    listContacts(ctx.organization.id, client.id),
+    listClientProposals(ctx.organization.id, client.id),
+  ]);
   const basePath = `/dashboard/clients/${client.id}`;
 
   const tabs: { value: ClientTab; label: string; href: string; count?: number }[] = [
     { value: "overview", label: "Overview", href: basePath },
     { value: "contacts", label: "Contacts", href: `${basePath}?tab=contacts`, count: contacts.length },
+    { value: "proposals", label: "Proposals", href: `${basePath}?tab=proposals`, count: proposals.length },
     { value: "activity", label: "Activity", href: `${basePath}?tab=activity` },
   ];
 
@@ -84,6 +90,13 @@ export default async function ClientPage(props: PageProps<"/dashboard/clients/[i
           </div>
         )}
         {tab === "contacts" && <ContactsCard clientId={client.id} contacts={contacts} canEdit={canEdit} />}
+        {tab === "proposals" && (
+          <ClientProposals
+            clientId={client.id}
+            proposals={proposals}
+            canCreate={hasPermission(ctx.membership.role, permissions.proposalsCreate)}
+          />
+        )}
         {tab === "activity" && <ClientActivity organizationId={ctx.organization.id} clientId={client.id} />}
       </div>
     </div>

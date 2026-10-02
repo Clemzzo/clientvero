@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Plus, SearchX, Users } from "lucide-react";
 
 import { ClientsTable } from "@/components/clients/ClientsTable";
+import { ArchivedLinkButton } from "@/components/shared/ArchivedLinkButton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Pagination } from "@/components/shared/Pagination";
@@ -41,7 +42,14 @@ export default async function ClientsPage(props: PageProps<"/dashboard/clients">
       <PageHeader
         title="Clients"
         description="Everyone you're working with, and the people you deal with are stored here. You can add them manually, or convert a won lead into a client."
-        actions={canCreate && <NewClientButton />}
+        actions={
+          (canDelete || canCreate) && (
+            <>
+              {canDelete && <ArchivedLinkButton href="/dashboard/clients/archived" />}
+              {canCreate && <NewClientButton />}
+            </>
+          )
+        }
       />
 
       <div className="mt-8 space-y-5">

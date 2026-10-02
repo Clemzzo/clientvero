@@ -9,6 +9,7 @@ import { activityLogs, clients, leads, type Lead } from "@/db/schema";
 import { activityActions, activityResources, type ActivityAction, type ActivityResource } from "@/features/activity/activity-actions";
 import type { WorkspaceActor } from "@/server/auth/organization";
 import { ConflictError } from "@/server/errors";
+import { activityInsertIf } from "@/server/services/activity.service";
 import { getLead } from "@/server/services/lead.service";
 
 const alreadyConverted = "This lead has already been converted to a client.";
@@ -28,11 +29,10 @@ function activityIfClientExists(
   clientId: string,
   entry: { action: ActivityAction; resourceType: ActivityResource; resourceId: string; metadata: Record<string, unknown> },
 ) {
-  return db.execute(sql`
-    insert into ${activityLogs} (organization_id, actor_user_id, action, resource_type, resource_id, metadata)
-    select ${ctx.organization.id}, ${ctx.user.id}, ${entry.action}, ${entry.resourceType}, ${entry.resourceId}, ${JSON.stringify(entry.metadata)}::jsonb
-    where exists (select 1 from ${clients} where ${clients.id} = ${clientId})
-  `);
+  return activityInsertIf(
+    { organizationId: ctx.organization.id, actorUserId: ctx.user.id, ...entry },
+    sql`exists (select 1 from ${clients} where ${clients.id} = ${clientId})`,
+  );
 }
 
 export async function convertLead(ctx: WorkspaceActor, leadId: string): Promise<string> {

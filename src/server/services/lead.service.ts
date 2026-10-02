@@ -2,18 +2,36 @@ import "server-only";
 
 import { randomUUID } from "node:crypto";
 
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNotNull, isNull, type SQL } from "drizzle-orm";
 
 import { db } from "@/db";
-import { leads, type Lead, type LeadStatus } from "@/db/schema";
+import { activityLogs, leads, type Lead, type LeadStatus } from "@/db/schema";
 import { activityActions, activityResources, type ActivityAction } from "@/features/activity/activity-actions";
 import type { WorkspaceActor } from "@/server/auth/organization";
 import { NotFoundError, ValidationError } from "@/server/errors";
 import { activityInsert } from "@/server/services/activity.service";
 import type { LeadFormInput } from "@/validators/leads";
 
+function ownedLeadScope(organizationId: string, leadId: string) {
+  return and(eq(leads.id, leadId), eq(leads.organizationId, organizationId));
+}
+
 function leadScope(organizationId: string, leadId: string) {
-  return and(eq(leads.id, leadId), eq(leads.organizationId, organizationId), isNull(leads.deletedAt));
+  return and(ownedLeadScope(organizationId, leadId), isNull(leads.deletedAt));
+}
+
+function archivedLeadScope(organizationId: string, leadId: string) {
+  return and(ownedLeadScope(organizationId, leadId), isNotNull(leads.deletedAt));
+}
+
+async function findLead(where: SQL | undefined): Promise<Lead> {
+  const [lead] = await db.select().from(leads).where(where).limit(1);
+
+  if (!lead) {
+    throw new NotFoundError("This lead no longer exists.");
+  }
+
+  return lead;
 }
 
 function leadActivity(ctx: WorkspaceActor, leadId: string, action: ActivityAction, metadata: Record<string, unknown>) {
@@ -28,13 +46,7 @@ function leadActivity(ctx: WorkspaceActor, leadId: string, action: ActivityActio
 }
 
 export async function getLead(organizationId: string, leadId: string): Promise<Lead> {
-  const [lead] = await db.select().from(leads).where(leadScope(organizationId, leadId)).limit(1);
-
-  if (!lead) {
-    throw new NotFoundError("This lead no longer exists.");
-  }
-
-  return lead;
+  return findLead(leadScope(organizationId, leadId));
 }
 
 export async function createLead(ctx: WorkspaceActor, input: LeadFormInput): Promise<string> {
@@ -62,12 +74,41 @@ export async function updateLead(ctx: WorkspaceActor, leadId: string, input: Lea
   ]);
 }
 
-export async function deleteLead(ctx: WorkspaceActor, leadId: string): Promise<void> {
+export async function archiveLead(ctx: WorkspaceActor, leadId: string): Promise<void> {
   const lead = await getLead(ctx.organization.id, leadId);
 
   await db.batch([
     db.update(leads).set({ deletedAt: new Date() }).where(leadScope(ctx.organization.id, leadId)),
     leadActivity(ctx, leadId, activityActions.leadDeleted, { name: lead.name }),
+  ]);
+}
+
+export async function restoreLead(ctx: WorkspaceActor, leadId: string): Promise<void> {
+  const lead = await findLead(archivedLeadScope(ctx.organization.id, leadId));
+
+  await db.batch([
+    db.update(leads).set({ deletedAt: null }).where(archivedLeadScope(ctx.organization.id, leadId)),
+    leadActivity(ctx, leadId, activityActions.leadRestored, { name: lead.name }),
+  ]);
+}
+
+// Removes the row and its activity history; only the deletion itself stays in the audit trail.
+export async function deleteLeadPermanently(ctx: WorkspaceActor, leadId: string): Promise<void> {
+  const organizationId = ctx.organization.id;
+  const lead = await findLead(ownedLeadScope(organizationId, leadId));
+
+  await db.batch([
+    db.delete(leads).where(ownedLeadScope(organizationId, leadId)),
+    db
+      .delete(activityLogs)
+      .where(
+        and(
+          eq(activityLogs.organizationId, organizationId),
+          eq(activityLogs.resourceType, activityResources.lead),
+          eq(activityLogs.resourceId, leadId),
+        ),
+      ),
+    leadActivity(ctx, leadId, activityActions.leadDeletedPermanently, { name: lead.name }),
   ]);
 }
 

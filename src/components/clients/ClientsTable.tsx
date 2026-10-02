@@ -20,7 +20,8 @@ function ClientDeleteMenu({ client }: { client: ClientListRow }) {
   return (
     <RowDeleteMenu
       name={client.name}
-      description="This client and their contacts will be removed from your workspace."
+      archiveDescription="This client and their contacts will be hidden from your workspace. Their history is kept."
+      permanentDescription="This client, their contacts, and their activity history will be erased from the database. This can't be undone. Clients with proposals can only be archived."
       onDelete={deleteClientAction.bind(null, client.id)}
     />
   );

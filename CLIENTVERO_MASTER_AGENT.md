@@ -870,7 +870,6 @@ tax
 total
 timeline
 terms
-expires_at
 sent_at
 viewed_at
 accepted_at
@@ -881,14 +880,21 @@ updated_at
 deleted_at
 ```
 
+Pricing is amount-based: `subtotal` (shown as "Amount") is required; `discount` and `tax` are optional and default to 0. The server always calculates `total = subtotal − discount + tax` with decimal-safe arithmetic.
+
+There is no expiry date in the MVP: a sent proposal stays open until the client accepts or declines it, or the business withdraws it. `EXPIRED` remains in the `proposal_status` enum for future use but is never set.
+
 ---
 
 # 29. Proposal Sections
 
 ```text
 proposal_sections
+`organization_id` follows the §10 tenant rule, as with `client_contacts`.
+
 -----------------
 id
+organization_id
 proposal_id
 title
 content
@@ -921,7 +927,7 @@ Public proposal
  ↓
 Validate public ID
  ↓
-Validate status/expiration
+Validate the proposal is still open (SENT or VIEWED)
  ↓
 Transaction
  ↓
@@ -937,6 +943,13 @@ Optionally create project
 ```
 
 Acceptance must be idempotent.
+
+Implementation notes (approved by the owner):
+
+- The client accepts by typing their full name; the name and time are stored in the activity log (`PROPOSAL_ACCEPTED`, `actor_type = CLIENT`). This is a sign-off, not an e-signature (Phase 2).
+- The first response (accept or decline) closes the link for good: the page becomes read-only and any later response is refused. A repeated identical acceptance returns the existing acceptance.
+- Creating a notification and optionally creating a project are added with the Notifications and Projects builds.
+- Until the Email build, "Send" produces a shareable link instead of an email.
 
 ---
 
@@ -1454,7 +1467,7 @@ billing.read
 billing.manage
 ```
 
-Roles map to these capabilities. Deleting (soft-deleting) leads and clients is limited to OWNER and ADMIN.
+Roles map to these capabilities. Deleting leads and clients — archiving or deleting permanently — is limited to OWNER and ADMIN.
 
 ---
 
@@ -2267,6 +2280,15 @@ Soft-delete where recovery or history matters:
 - messages
 
 Financial records should generally remain auditable rather than being physically removed.
+
+**Leads and clients: archive or delete permanently.** OWNER and ADMIN choose between:
+
+- **Archive** — the soft delete above: `deleted_at` is set, the record leaves the workspace, its row and history stay.
+- **Delete permanently** — the row is physically removed. A client's contacts go with it. The record's activity history is erased, and a single `LEAD_DELETED_PERMANENTLY` / `CLIENT_DELETED_PERMANENTLY` entry (actor, time, name) stays as the audit trail.
+
+A client that has any proposal (including archived ones) cannot be deleted permanently — only archived — because proposals, and later projects and invoices, are commercial records. The same rule will apply to clients with projects or invoices when those exist.
+
+Archived leads and clients are listed on their own **Archived** screens (`/dashboard/leads/archived`, `/dashboard/clients/archived`), reached from an "Archived" button on each list and visible only to OWNER and ADMIN. From there a record can be **restored** (logged as `LEAD_RESTORED` / `CLIENT_RESTORED`) or **deleted permanently** under the rules above.
 
 ---
 

@@ -3,6 +3,7 @@ import { relations } from "drizzle-orm";
 import { activityLogs } from "./activity";
 import { clientContacts, clients } from "./clients";
 import { leads } from "./leads";
+import { proposalSections, proposals } from "./proposals";
 import { organizationMembers, organizations } from "./organizations";
 import { users } from "./users";
 
@@ -14,6 +15,7 @@ export const organizationsRelations = relations(organizations, ({ many }) => ({
   members: many(organizationMembers),
   leads: many(leads),
   clients: many(clients),
+  proposals: many(proposals),
 }));
 
 export const organizationMembersRelations = relations(organizationMembers, ({ one }) => ({
@@ -55,11 +57,35 @@ export const clientsRelations = relations(clients, ({ one, many }) => ({
     references: [organizations.id],
   }),
   contacts: many(clientContacts),
+  proposals: many(proposals),
 }));
 
 export const clientContactsRelations = relations(clientContacts, ({ one }) => ({
   client: one(clients, {
     fields: [clientContacts.clientId],
     references: [clients.id],
+  }),
+}));
+
+export const proposalsRelations = relations(proposals, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [proposals.organizationId],
+    references: [organizations.id],
+  }),
+  client: one(clients, {
+    fields: [proposals.clientId],
+    references: [clients.id],
+  }),
+  creator: one(users, {
+    fields: [proposals.createdBy],
+    references: [users.id],
+  }),
+  sections: many(proposalSections),
+}));
+
+export const proposalSectionsRelations = relations(proposalSections, ({ one }) => ({
+  proposal: one(proposals, {
+    fields: [proposalSections.proposalId],
+    references: [proposals.id],
   }),
 }));

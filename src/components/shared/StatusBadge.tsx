@@ -7,6 +7,7 @@ const tones: Record<StatusTone, string> = {
   success: "bg-emerald-50 text-emerald-700",
   warning: "bg-amber-50 text-amber-800",
   danger: "bg-red-50 text-red-700",
+  mint: "bg-mint-50 text-mint-700",
 };
 
 type StatusBadgeProps = {

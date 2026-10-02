@@ -2,18 +2,36 @@ import "server-only";
 
 import { randomUUID } from "node:crypto";
 
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNotNull, isNull, sql, type SQL } from "drizzle-orm";
 
 import { db } from "@/db";
-import { clients, type Client } from "@/db/schema";
+import { activityLogs, clients, proposals, type Client } from "@/db/schema";
 import { activityActions, activityResources, type ActivityAction } from "@/features/activity/activity-actions";
 import type { WorkspaceActor } from "@/server/auth/organization";
-import { NotFoundError } from "@/server/errors";
-import { activityInsert } from "@/server/services/activity.service";
+import { ConflictError, NotFoundError } from "@/server/errors";
+import { activityInsert, activityInsertIf } from "@/server/services/activity.service";
 import type { ClientFormInput } from "@/validators/clients";
 
+function ownedClientScope(organizationId: string, clientId: string) {
+  return and(eq(clients.id, clientId), eq(clients.organizationId, organizationId));
+}
+
 export function clientScope(organizationId: string, clientId: string) {
-  return and(eq(clients.id, clientId), eq(clients.organizationId, organizationId), isNull(clients.deletedAt));
+  return and(ownedClientScope(organizationId, clientId), isNull(clients.deletedAt));
+}
+
+function archivedClientScope(organizationId: string, clientId: string) {
+  return and(ownedClientScope(organizationId, clientId), isNotNull(clients.deletedAt));
+}
+
+async function findClient(where: SQL | undefined): Promise<Client> {
+  const [client] = await db.select().from(clients).where(where).limit(1);
+
+  if (!client) {
+    throw new NotFoundError("This client no longer exists.");
+  }
+
+  return client;
 }
 
 export function clientActivity(
@@ -33,13 +51,7 @@ export function clientActivity(
 }
 
 export async function getClient(organizationId: string, clientId: string): Promise<Client> {
-  const [client] = await db.select().from(clients).where(clientScope(organizationId, clientId)).limit(1);
-
-  if (!client) {
-    throw new NotFoundError("This client no longer exists.");
-  }
-
-  return client;
+  return findClient(clientScope(organizationId, clientId));
 }
 
 export async function createClient(ctx: WorkspaceActor, input: ClientFormInput): Promise<string> {
@@ -62,11 +74,82 @@ export async function updateClient(ctx: WorkspaceActor, clientId: string, input:
   ]);
 }
 
-export async function deleteClient(ctx: WorkspaceActor, clientId: string): Promise<void> {
+export async function archiveClient(ctx: WorkspaceActor, clientId: string): Promise<void> {
   const client = await getClient(ctx.organization.id, clientId);
 
   await db.batch([
     db.update(clients).set({ deletedAt: new Date() }).where(clientScope(ctx.organization.id, clientId)),
     clientActivity(ctx, clientId, activityActions.clientDeleted, { name: client.name }),
   ]);
+}
+
+export async function restoreClient(ctx: WorkspaceActor, clientId: string): Promise<void> {
+  const client = await findClient(archivedClientScope(ctx.organization.id, clientId));
+
+  await db.batch([
+    db.update(clients).set({ deletedAt: null }).where(archivedClientScope(ctx.organization.id, clientId)),
+    clientActivity(ctx, clientId, activityActions.clientRestored, { name: client.name }),
+  ]);
+}
+
+const clientHasProposals =
+  "This client has proposals, so it can't be deleted permanently. Archive it instead.";
+
+// Proposals are commercial records, so a client with any (even archived ones) is never hard-deleted.
+// Contacts go with the client (ON DELETE CASCADE). Its activity history is removed and only the
+// deletion itself stays in the audit trail.
+export async function deleteClientPermanently(ctx: WorkspaceActor, clientId: string): Promise<void> {
+  const organizationId = ctx.organization.id;
+  const client = await findClient(ownedClientScope(organizationId, clientId));
+
+  const [proposal] = await db
+    .select({ id: proposals.id })
+    .from(proposals)
+    .where(and(eq(proposals.organizationId, organizationId), eq(proposals.clientId, clientId)))
+    .limit(1);
+
+  if (proposal) {
+    throw new ConflictError(clientHasProposals);
+  }
+
+  // Re-checked inside the batch so a proposal created in the meantime blocks the delete
+  // instead of leaving the client with its history wiped.
+  const clientIsGone = sql`not exists (select 1 from ${clients} where ${clients.id} = ${clientId})`;
+
+  const [deleted] = await db.batch([
+    db
+      .delete(clients)
+      .where(
+        and(
+          ownedClientScope(organizationId, clientId),
+          sql`not exists (select 1 from ${proposals} where ${proposals.clientId} = ${clientId})`,
+        ),
+      )
+      .returning({ id: clients.id }),
+    db
+      .delete(activityLogs)
+      .where(
+        and(
+          eq(activityLogs.organizationId, organizationId),
+          eq(activityLogs.resourceType, activityResources.client),
+          eq(activityLogs.resourceId, clientId),
+          clientIsGone,
+        ),
+      ),
+    activityInsertIf(
+      {
+        organizationId,
+        actorUserId: ctx.user.id,
+        action: activityActions.clientDeletedPermanently,
+        resourceType: activityResources.client,
+        resourceId: clientId,
+        metadata: { name: client.name },
+      },
+      clientIsGone,
+    ),
+  ]);
+
+  if (deleted.length === 0) {
+    throw new ConflictError(clientHasProposals);
+  }
 }

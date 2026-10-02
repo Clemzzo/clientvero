@@ -1,12 +1,14 @@
 import "server-only";
 
-import { and, count, desc, eq, ilike, isNull, or, sql, type SQL } from "drizzle-orm";
+import { and, count, desc, eq, ilike, isNotNull, isNull, or, sql, type SQL } from "drizzle-orm";
 
 import { db } from "@/db";
 import { leads, type Lead, type LeadStatus } from "@/db/schema";
 import { leadStatuses, openLeadStatuses } from "@/features/leads/lead-status";
 import type { PipelineColumn } from "@/features/leads/move-lead";
 import { escapeLike } from "@/server/repositories/search";
+import type { ArchivedListResult } from "@/types/archived-record";
+import type { ArchivedListQuery } from "@/validators/fields";
 import { LEADS_PAGE_SIZE } from "@/validators/leads";
 
 const PIPELINE_COLUMN_LIMIT = 25;
@@ -22,8 +24,13 @@ export type LeadPipelineResult = {
   closed: Record<"WON" | "LOST", number>;
 };
 
-function leadFilters(organizationId: string, { q, status }: { q: string; status?: LeadStatus }) {
-  const filters: SQL[] = [eq(leads.organizationId, organizationId), isNull(leads.deletedAt)];
+type LeadFilterOptions = { q: string; status?: LeadStatus; archived?: boolean };
+
+function leadFilters(organizationId: string, { q, status, archived = false }: LeadFilterOptions) {
+  const filters: SQL[] = [
+    eq(leads.organizationId, organizationId),
+    archived ? isNotNull(leads.deletedAt) : isNull(leads.deletedAt),
+  ];
 
   if (status) {
     filters.push(eq(leads.status, status));
@@ -49,6 +56,29 @@ export async function listLeads(
       .from(leads)
       .where(where)
       .orderBy(desc(leads.createdAt), desc(leads.id))
+      .limit(LEADS_PAGE_SIZE)
+      .offset((query.page - 1) * LEADS_PAGE_SIZE),
+    db.select({ total: count() }).from(leads).where(where),
+  ]);
+
+  return { rows, total, pageCount: Math.max(1, Math.ceil(total / LEADS_PAGE_SIZE)) };
+}
+
+export async function listArchivedLeads(organizationId: string, query: ArchivedListQuery): Promise<ArchivedListResult> {
+  const where = leadFilters(organizationId, { q: query.q, archived: true });
+
+  const [rows, [{ total }]] = await Promise.all([
+    db
+      .select({
+        id: leads.id,
+        name: leads.name,
+        company: leads.company,
+        email: leads.email,
+        archivedAt: sql<Date>`${leads.deletedAt}`.mapWith(leads.deletedAt),
+      })
+      .from(leads)
+      .where(where)
+      .orderBy(desc(leads.deletedAt), desc(leads.id))
       .limit(LEADS_PAGE_SIZE)
       .offset((query.page - 1) * LEADS_PAGE_SIZE),
     db.select({ total: count() }).from(leads).where(where),

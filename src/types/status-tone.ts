@@ -1,1 +1,1 @@
-export type StatusTone = "neutral" | "brand" | "success" | "warning" | "danger";
+export type StatusTone = "neutral" | "brand" | "success" | "warning" | "danger" | "mint";

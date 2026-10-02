@@ -10,3 +10,13 @@ export const leadStatusEnum = pgEnum("lead_status", [
   "WON",
   "LOST",
 ]);
+
+export const proposalStatusEnum = pgEnum("proposal_status", [
+  "DRAFT",
+  "SENT",
+  "VIEWED",
+  "ACCEPTED",
+  "DECLINED",
+  "EXPIRED",
+  "WITHDRAWN",
+]);

@@ -11,8 +11,15 @@ import { requireWithinLimit } from "@/server/actions/rate-limit-guard";
 import { requireOrganizationContext } from "@/server/auth/organization";
 import { permissions, requirePermission } from "@/server/authorization/permissions";
 import { addContact, removeContact, updateContact } from "@/server/services/client-contact.service";
-import { createClient, deleteClient, updateClient } from "@/server/services/client.service";
+import {
+  archiveClient,
+  createClient,
+  deleteClientPermanently,
+  restoreClient,
+  updateClient,
+} from "@/server/services/client.service";
 import type { FormState } from "@/types/form-state";
+import { deletionModeSchema } from "@/validators/fields";
 import { clientFormSchema, clientIdSchema, contactFormSchema, contactIdSchema } from "@/validators/clients";
 
 const clientFields = ["name", "email", "phone", "company", "website", "address", "country", "notes"] as const;
@@ -39,6 +46,7 @@ async function requireClientWriter(permission: ClientWritePermission) {
 function revalidateClients(clientId?: string) {
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/clients");
+  revalidatePath("/dashboard/clients/archived");
   if (clientId) revalidatePath(`/dashboard/clients/${clientId}`);
 }
 
@@ -86,7 +94,35 @@ export async function updateClientAction(id: string, _previous: FormState, formD
   redirect(`/dashboard/clients/${clientId.data}`);
 }
 
-export async function deleteClientAction(id: string): Promise<{ error?: string }> {
+export async function deleteClientAction(id: string, mode: string): Promise<{ error?: string }> {
+  const clientId = clientIdSchema.safeParse(id);
+  const deletion = deletionModeSchema.safeParse(mode);
+
+  if (!clientId.success) {
+    return { error: clientMissing };
+  }
+
+  if (!deletion.success) {
+    return { error: "That delete option isn't valid." };
+  }
+
+  try {
+    const ctx = await requireClientWriter(permissions.clientsDelete);
+
+    if (deletion.data === "permanent") {
+      await deleteClientPermanently(ctx, clientId.data);
+    } else {
+      await archiveClient(ctx, clientId.data);
+    }
+  } catch (error) {
+    return { error: toActionError(error, errorOptions) };
+  }
+
+  revalidateClients(clientId.data);
+  return {};
+}
+
+export async function restoreClientAction(id: string): Promise<{ error?: string }> {
   const clientId = clientIdSchema.safeParse(id);
 
   if (!clientId.success) {
@@ -95,7 +131,7 @@ export async function deleteClientAction(id: string): Promise<{ error?: string }
 
   try {
     const ctx = await requireClientWriter(permissions.clientsDelete);
-    await deleteClient(ctx, clientId.data);
+    await restoreClient(ctx, clientId.data);
   } catch (error) {
     return { error: toActionError(error, errorOptions) };
   }

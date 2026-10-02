@@ -43,3 +43,14 @@ export const optionalMoney = z
 export const searchQuery = z.string().trim().max(100).catch("").default("");
 
 export const pageNumber = z.coerce.number().int().min(1).max(10_000).catch(1).default(1);
+
+export const archivedListQuerySchema = z.object({
+  q: searchQuery,
+  page: pageNumber,
+});
+
+export type ArchivedListQuery = z.infer<typeof archivedListQuerySchema>;
+
+export const deletionModes = ["archive", "permanent"] as const;
+export const deletionModeSchema = z.enum(deletionModes);
+export type DeletionMode = (typeof deletionModes)[number];
