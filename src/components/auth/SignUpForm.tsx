@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useActionState, type SubmitEvent } from "react";
+import { startTransition, useActionState, useState, type SubmitEvent } from "react";
 import Link from "next/link";
 
 import { PasswordField } from "@/components/auth/PasswordField";
@@ -17,6 +17,7 @@ type SignUpFormProps = {
 
 export function SignUpForm({ plan }: SignUpFormProps) {
   const [state, submit, isPending] = useActionState(signUpAction, null);
+  const [verified, setVerified] = useState(false);
 
   function errorFor(field: "name" | "email" | "password") {
     return state?.fieldErrors?.[field]?.[0];
@@ -64,11 +65,21 @@ export function SignUpForm({ plan }: SignUpFormProps) {
 
         {plan && <input type="hidden" name="plan" value={plan} />}
 
-        <TurnstileWidget action="signup" resetKey={state} />
+        <TurnstileWidget action="signup" resetKey={state} onVerifiedChange={setVerified} />
 
-        <SubmitButton pending={isPending} pendingLabel="Creating account…">
+        <SubmitButton
+          pending={isPending}
+          pendingLabel="Creating account…"
+          disabled={!verified}
+          aria-describedby={verified ? undefined : "signup-verify-hint"}
+        >
           Create account
         </SubmitButton>
+        {!verified && (
+          <p id="signup-verify-hint" className="text-center text-[13px] text-ink-500">
+            Complete the security check to create your account.
+          </p>
+        )}
       </fieldset>
 
       <p className="mt-6 text-[14px] text-ink-500">

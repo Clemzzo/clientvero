@@ -4,6 +4,10 @@ type TurnstileRenderOptions = {
   sitekey: string;
   action: TurnstileAction;
   size?: "normal" | "flexible" | "compact";
+  callback?: (token: string) => void;
+  "expired-callback"?: () => void;
+  "error-callback"?: () => void;
+  "timeout-callback"?: () => void;
 };
 
 declare global {

@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useActionState, type SubmitEvent } from "react";
+import { startTransition, useActionState, useState, type SubmitEvent } from "react";
 import Link from "next/link";
 
 import { PasswordField } from "@/components/auth/PasswordField";
@@ -17,6 +17,7 @@ type SignInFormProps = {
 
 export function SignInForm({ next }: SignInFormProps) {
   const [state, submit, isPending] = useActionState(signInAction, null);
+  const [verified, setVerified] = useState(false);
 
   function errorFor(field: "email" | "password") {
     return state?.fieldErrors?.[field]?.[0];
@@ -62,11 +63,21 @@ export function SignInForm({ next }: SignInFormProps) {
 
         {next && <input type="hidden" name="next" value={next} />}
 
-        <TurnstileWidget action="login" resetKey={state} />
+        <TurnstileWidget action="login" resetKey={state} onVerifiedChange={setVerified} />
 
-        <SubmitButton pending={isPending} pendingLabel="Signing in…">
+        <SubmitButton
+          pending={isPending}
+          pendingLabel="Signing in…"
+          disabled={!verified}
+          aria-describedby={verified ? undefined : "signin-verify-hint"}
+        >
           Sign in
         </SubmitButton>
+        {!verified && (
+          <p id="signin-verify-hint" className="text-center text-[13px] text-ink-500">
+            Complete the security check to sign in.
+          </p>
+        )}
       </fieldset>
 
       <p className="mt-6 text-[14px] text-ink-500">
