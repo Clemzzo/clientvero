@@ -22,22 +22,7 @@ export const clientFormSchema = z.object({
 
 export type ClientFormInput = z.infer<typeof clientFormSchema>;
 
-export const contactFormSchema = z.object({
-  name: requiredName("Enter the contact's name."),
-  email: optionalEmail,
-  phone: optionalText(40),
-  role: optionalText(120),
-  isPrimary: z
-    .literal("on")
-    .optional()
-    .transform((value) => value === "on"),
-});
-
-export type ContactFormInput = z.infer<typeof contactFormSchema>;
-
 export const clientIdSchema = z.uuid();
-
-export const contactIdSchema = z.uuid();
 
 export const clientListQuerySchema = z.object({
   q: searchQuery,
@@ -46,7 +31,7 @@ export const clientListQuerySchema = z.object({
 
 export type ClientListQuery = z.infer<typeof clientListQuerySchema>;
 
-export const clientTabs = ["overview", "contacts", "proposals", "projects", "activity"] as const;
+export const clientTabs = ["overview", "proposals", "projects", "activity"] as const;
 
 export type ClientTab = (typeof clientTabs)[number];
 

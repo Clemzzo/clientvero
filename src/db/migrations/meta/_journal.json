@@ -57,6 +57,20 @@
       "when": 1791056027652,
       "tag": "0007_ambitious_mindworm",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791216472215,
+      "tag": "0008_daffy_gorilla_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791218231694,
+      "tag": "0009_skinny_thunderbolt_ross",
+      "breakpoints": true
     }
   ]
 }

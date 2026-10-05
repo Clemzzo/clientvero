@@ -2,7 +2,6 @@ import Image from "next/image";
 import { Globe } from "lucide-react";
 
 import oliviaAvatar from "@/assets/images/olivia.png";
-import tomAvatar from "@/assets/images/tom.png";
 import { StatusPill } from "@/components/marketing/FeaturePreviews";
 import { cn } from "@/lib/utils";
 
@@ -62,24 +61,15 @@ export function ClientRecordPreview() {
         </dl>
 
         <div>
-          <p className="text-[11.5px] font-semibold text-ink-900">Contacts</p>
-          <ul className="mt-2.5 space-y-2">
-            <li className="flex items-center gap-2.5 rounded-lg border border-ink-200 bg-white px-3 py-2">
-              <Image src={oliviaAvatar} alt="" sizes="32px" className="size-8 shrink-0 rounded-full object-cover" />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-[12.5px] font-semibold text-ink-900">Olivia Park</span>
-                <span className="block truncate text-[11px] text-ink-400">Founder</span>
-              </span>
-              <StatusPill tone="emerald">Primary</StatusPill>
-            </li>
-            <li className="flex items-center gap-2.5 rounded-lg border border-ink-200 bg-white px-3 py-2">
-              <Image src={tomAvatar} alt="" sizes="32px" className="size-8 shrink-0 rounded-full object-cover" />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-[12.5px] font-semibold text-ink-900">Tom Reyes</span>
-                <span className="block truncate text-[11px] text-ink-400">Finance</span>
-              </span>
-            </li>
-          </ul>
+          <p className="text-[11.5px] font-semibold text-ink-900">Client portal</p>
+          <div className="mt-2.5 flex items-center gap-2.5 rounded-lg border border-ink-200 bg-white px-3 py-2">
+            <Image src={oliviaAvatar} alt="" sizes="32px" className="size-8 shrink-0 rounded-full object-cover" />
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[12.5px] font-semibold text-ink-900">Park &amp; Co.</span>
+              <span className="block truncate text-[11px] text-ink-400">olivia@parkandco.com</span>
+            </span>
+            <StatusPill tone="emerald">Active</StatusPill>
+          </div>
         </div>
       </div>
     </div>

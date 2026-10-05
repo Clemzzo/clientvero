@@ -123,7 +123,7 @@ export function ClientPreview() {
       <div className={cn(row, "mt-2 flex items-center gap-2.5 px-3 py-2.5")}>
         <Initials className="bg-violet-100 text-violet-700">JM</Initials>
         <span className="min-w-0 flex-1 truncate text-[12px] font-semibold text-ink-900">James Miller</span>
-        <span className="shrink-0 text-[10.5px] text-ink-400">Primary contact</span>
+        <span className="shrink-0 text-[10.5px] text-ink-400">Portal active</span>
       </div>
     </Frame>
   );

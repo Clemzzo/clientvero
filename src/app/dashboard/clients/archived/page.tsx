@@ -34,7 +34,7 @@ export default async function ArchivedClientsPage(props: PageProps<"/dashboard/c
       <div className="mt-4">
         <PageHeader
           title="Archived clients"
-          description="Restore a client to bring them and their contacts back, or delete them permanently."
+          description="Restore a client to bring them back to your workspace, or delete them permanently."
         />
       </div>
 
@@ -50,7 +50,7 @@ export default async function ArchivedClientsPage(props: PageProps<"/dashboard/c
           renderActions={(client) => (
             <ArchivedRowActions
               name={client.name}
-              permanentDescription="This client, their contacts, and their activity history will be erased from the database. This can't be undone. Clients with proposals can't be deleted permanently."
+              permanentDescription="This client and their activity history will be erased from the database. This can't be undone. Clients with proposals can't be deleted permanently."
               onRestore={restoreClientAction.bind(null, client.id)}
               onDeletePermanently={deleteClientAction.bind(null, client.id, "permanent")}
             />

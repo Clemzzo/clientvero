@@ -12,14 +12,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { signOutAction } from "@/server/actions/auth";
 
 type UserMenuProps = {
   name: string;
   email: string;
+  onSignOut: () => Promise<void>;
 };
 
-export function UserMenu({ name, email }: UserMenuProps) {
+export function UserMenu({ name, email, onSignOut }: UserMenuProps) {
   const [isSigningOut, startTransition] = useTransition();
 
   return (
@@ -46,7 +46,7 @@ export function UserMenu({ name, email }: UserMenuProps) {
           disabled={isSigningOut}
           onSelect={(event) => {
             event.preventDefault();
-            startTransition(() => signOutAction());
+            startTransition(() => onSignOut());
           }}
         >
           <LogOut aria-hidden />

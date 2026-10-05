@@ -74,7 +74,7 @@ export const convertLeadToClient: Guide = {
   tone: "violet",
   takeaways: [
     "Convert the lead instead of creating a client from scratch.",
-    "Add every person you will work with as a contact.",
+    "Add their email so you can invite them to your portal.",
     "Keep private notes private: clients never see them.",
   ],
   sections: [
@@ -87,15 +87,15 @@ export const convertLeadToClient: Guide = {
       ],
     },
     {
-      id: "add-contacts",
-      heading: "Add the people, not just the company",
+      id: "invite-to-portal",
+      heading: "Invite them to your portal",
       body: [
-        "Most clients involve more than one person: the one who signs, the one who approves, the one who sends files. Add each of them as a contact and mark one as primary.",
+        "Once the client has an email on file, invite them to your client portal from the clients list. They choose a password and can follow their projects without asking you for updates.",
       ],
       checklist: [
-        "Primary contact for approvals and invoices",
-        "Day-to-day contact for questions and files",
-        "Role and email for everyone you will write to",
+        "An email address on the client record",
+        "A portal invite once work is about to start",
+        "A fresh link if they ever forget their password",
       ],
     },
     {

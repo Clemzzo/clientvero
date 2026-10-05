@@ -1,8 +1,9 @@
 import { relations } from "drizzle-orm";
 
 import { activityLogs } from "./activity";
-import { clientContacts, clients } from "./clients";
+import { clients } from "./clients";
 import { leads } from "./leads";
+import { portalAccounts, portalSessions, portalSetupTokens } from "./portal";
 import { milestones, projects } from "./projects";
 import { proposalSections, proposals } from "./proposals";
 import { organizationMembers, organizations } from "./organizations";
@@ -58,16 +59,9 @@ export const clientsRelations = relations(clients, ({ one, many }) => ({
     fields: [clients.organizationId],
     references: [organizations.id],
   }),
-  contacts: many(clientContacts),
   proposals: many(proposals),
   projects: many(projects),
-}));
-
-export const clientContactsRelations = relations(clientContacts, ({ one }) => ({
-  client: one(clients, {
-    fields: [clientContacts.clientId],
-    references: [clients.id],
-  }),
+  portalAccount: one(portalAccounts),
 }));
 
 export const proposalsRelations = relations(proposals, ({ one, many }) => ({
@@ -122,5 +116,32 @@ export const milestonesRelations = relations(milestones, ({ one }) => ({
   project: one(projects, {
     fields: [milestones.projectId],
     references: [projects.id],
+  }),
+}));
+
+export const portalAccountsRelations = relations(portalAccounts, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [portalAccounts.organizationId],
+    references: [organizations.id],
+  }),
+  client: one(clients, {
+    fields: [portalAccounts.clientId],
+    references: [clients.id],
+  }),
+  setupTokens: many(portalSetupTokens),
+  sessions: many(portalSessions),
+}));
+
+export const portalSetupTokensRelations = relations(portalSetupTokens, ({ one }) => ({
+  account: one(portalAccounts, {
+    fields: [portalSetupTokens.portalAccountId],
+    references: [portalAccounts.id],
+  }),
+}));
+
+export const portalSessionsRelations = relations(portalSessions, ({ one }) => ({
+  account: one(portalAccounts, {
+    fields: [portalSessions.portalAccountId],
+    references: [portalAccounts.id],
   }),
 }));

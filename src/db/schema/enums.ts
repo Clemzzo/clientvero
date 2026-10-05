@@ -31,3 +31,5 @@ export const projectStatusEnum = pgEnum("project_status", [
 ]);
 
 export const milestoneStatusEnum = pgEnum("milestone_status", ["PENDING", "IN_PROGRESS", "COMPLETED"]);
+
+export const portalAccountStatusEnum = pgEnum("portal_account_status", ["INVITED", "ACTIVE", "REVOKED"]);

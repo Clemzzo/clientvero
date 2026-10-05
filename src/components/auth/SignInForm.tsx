@@ -50,7 +50,15 @@ export function SignInForm({ next }: SignInFormProps) {
           error={errorFor("password")}
         />
 
-        <CheckboxField name="rememberMe" label="Remember me" />
+        <div className="flex items-center justify-between gap-4">
+          <CheckboxField name="rememberMe" label="Remember me" />
+          <Link
+            href="/forgot-password"
+            className="shrink-0 text-[12px] font-semibold text-brand-700 underline-offset-4 hover:underline"
+          >
+            Forgot password?
+          </Link>
+        </div>
 
         {next && <input type="hidden" name="next" value={next} />}
 

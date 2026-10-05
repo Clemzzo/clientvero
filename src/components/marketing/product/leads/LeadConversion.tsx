@@ -28,7 +28,7 @@ export function LeadConversion() {
             status: "Active",
             tone: "brand",
             title: "Park & Co.",
-            detail: "Olivia Park, primary contact",
+            detail: "olivia@parkandco.com",
           }}
         />
       </div>

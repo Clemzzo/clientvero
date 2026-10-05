@@ -27,7 +27,7 @@ const features: Feature[] = [
   },
   {
     title: "One record per client",
-    detail: "Contacts, projects, proposals, invoices, and files for each client on one page.",
+    detail: "Projects, proposals, invoices, and files for each client on one page.",
     preview: <ClientPreview />,
   },
   {

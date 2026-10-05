@@ -7,7 +7,6 @@ import { ConsultantBilling } from "@/components/marketing/solutions/consultants/
 import { ConsultantEngagementPreview } from "@/components/marketing/solutions/consultants/ConsultantEngagementPreview";
 import { ConsultantPhases } from "@/components/marketing/solutions/consultants/ConsultantPhases";
 import { ConsultantProposals } from "@/components/marketing/solutions/consultants/ConsultantProposals";
-import { ConsultantStakeholders } from "@/components/marketing/solutions/consultants/ConsultantStakeholders";
 import { formatPlanPrice, plans } from "@/features/subscriptions/plans";
 
 function proPlanLine() {
@@ -21,7 +20,7 @@ function proPlanLine() {
 export const metadata: Metadata = {
   title: "For consultants",
   description:
-    "Send proposals that sell your expertise, keep every stakeholder in one client record, deliver in clear phases, and bill each one from a single workspace.",
+    "Send proposals that sell your expertise, keep every client in one record, deliver in clear phases, and bill each one from a single workspace.",
 };
 
 export default function ConsultantsSolutionPage() {
@@ -30,11 +29,10 @@ export default function ConsultantsSolutionPage() {
       <ProductHero
         eyebrow="For consultants"
         title="Look established from day one."
-        intro="Proposals, stakeholders, engagement phases, reports, and invoices in one workspace. Give every client the experience of working with a firm, even when the firm is you."
+        intro="Proposals, engagement phases, reports, and invoices in one workspace. Give every client the experience of working with a firm, even when the firm is you."
         preview={<ConsultantEngagementPreview />}
       />
       <ConsultantProposals />
-      <ConsultantStakeholders />
       <ConsultantPhases />
       <ConsultantAiAssist />
       <ConsultantBilling />

@@ -35,6 +35,7 @@ export default async function ClientsPage(props: PageProps<"/dashboard/clients">
   const query = clientListQuerySchema.parse(await props.searchParams);
   const canCreate = hasPermission(membership.role, permissions.clientsCreate);
   const canDelete = hasPermission(membership.role, permissions.clientsDelete);
+  const canManagePortal = hasPermission(membership.role, permissions.clientsUpdate);
   const result = await listClients(organization.id, query);
 
   return (
@@ -107,7 +108,7 @@ export default async function ClientsPage(props: PageProps<"/dashboard/clients">
           </Card>
         ) : (
           <>
-            <ClientsTable clients={result.rows} canDelete={canDelete} />
+            <ClientsTable clients={result.rows} canManagePortal={canManagePortal} canDelete={canDelete} />
             <Pagination page={query.page} pageCount={result.pageCount} pathname="/dashboard/clients" searchParams={{ q: query.q }} />
           </>
         )}

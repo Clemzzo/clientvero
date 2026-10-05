@@ -6,6 +6,7 @@ import { Logo } from "@/components/layout/logo";
 import { UserMenu } from "@/components/layout/user-menu";
 import { NoticeProvider } from "@/components/shared/notice-provider";
 import type { Organization, User } from "@/db/schema";
+import { signOutAction } from "@/server/actions/auth";
 
 type AppShellProps = {
   user: User;
@@ -68,7 +69,7 @@ export function AppShell({ user, organization, children }: AppShellProps) {
       <header className="sticky top-0 z-20 border-b border-ink-200 bg-white lg:hidden">
         <div className="flex h-14 items-center justify-between gap-3 px-4">
           <Logo href="/dashboard" className="h-8 w-auto" />
-          <UserMenu name={name} email={user.email} />
+          <UserMenu name={name} email={user.email} onSignOut={signOutAction} />
         </div>
         <nav aria-label="Main" className="flex gap-1 overflow-x-auto px-3 pb-2">
           <NavLinks />
@@ -77,7 +78,7 @@ export function AppShell({ user, organization, children }: AppShellProps) {
 
       <div className="min-w-0">
         <header className="sticky top-0 z-20 hidden h-16 items-center justify-end border-b border-ink-200 bg-white/80 px-8 backdrop-blur lg:flex">
-          <UserMenu name={name} email={user.email} />
+          <UserMenu name={name} email={user.email} onSignOut={signOutAction} />
         </header>
         <main>
           <NoticeProvider>{children}</NoticeProvider>

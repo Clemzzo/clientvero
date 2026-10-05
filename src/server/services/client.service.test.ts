@@ -2,9 +2,8 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { db } from "@/db";
-import { activityLogs, clientContacts, clients, type Organization, type User } from "@/db/schema";
+import { activityLogs, clients, type Organization, type User } from "@/db/schema";
 import { ConflictError, NotFoundError } from "@/server/errors";
-import { addContact, listContacts, removeContact, updateContact } from "@/server/services/client-contact.service";
 import {
   archiveClient,
   createClient,
@@ -16,7 +15,7 @@ import {
 import { createProject } from "@/server/services/project.service";
 import { createProposal } from "@/server/services/proposal.service";
 import { cleanup, createTestOrganization, createTestUser } from "@/test/fixtures";
-import type { ClientFormInput, ContactFormInput } from "@/validators/clients";
+import type { ClientFormInput } from "@/validators/clients";
 
 const clientInput: ClientFormInput = {
   name: "Acme Co.",
@@ -28,10 +27,6 @@ const clientInput: ClientFormInput = {
   country: "NG",
   notes: null,
 };
-
-function contact(name: string, isPrimary = false): ContactFormInput {
-  return { name, email: null, phone: null, role: null, isPrimary };
-}
 
 async function actionsFor(resourceId: string) {
   const rows = await db.select().from(activityLogs).where(eq(activityLogs.resourceId, resourceId)).orderBy(activityLogs.createdAt);
@@ -78,50 +73,22 @@ describe("client services", () => {
     expect(await actionsFor(clientId)).toEqual(["CLIENT_CREATED", "CLIENT_UPDATED"]);
   });
 
-  it("keeps exactly one primary contact", async () => {
+  it("archives a client: hidden from the workspace, row and history kept", async () => {
     const clientId = await createClient(ctxA(), clientInput);
-
-    await addContact(ctxA(), clientId, contact("Jane", true));
-    await addContact(ctxA(), clientId, contact("Sam", true));
-
-    const contacts = await listContacts(orgA.id, clientId);
-    expect(contacts.filter((entry) => entry.isPrimary).map((entry) => entry.name)).toEqual(["Sam"]);
-    expect(contacts.map((entry) => entry.name)).toEqual(["Sam", "Jane"]);
-  });
-
-  it("edits and removes contacts, logging each change", async () => {
-    const clientId = await createClient(ctxA(), clientInput);
-    await addContact(ctxA(), clientId, contact("Jane"));
-    const [jane] = await listContacts(orgA.id, clientId);
-
-    await updateContact(ctxA(), clientId, jane.id, { ...contact("Jane Doe"), role: "Founder" });
-    expect((await listContacts(orgA.id, clientId))[0]).toMatchObject({ name: "Jane Doe", role: "Founder" });
-
-    await removeContact(ctxA(), clientId, jane.id);
-    expect(await listContacts(orgA.id, clientId)).toHaveLength(0);
-    expect(await actionsFor(clientId)).toEqual(["CLIENT_CREATED", "CONTACT_ADDED", "CONTACT_UPDATED", "CONTACT_REMOVED"]);
-  });
-
-  it("archives a client: hidden from the workspace, row, contacts and history kept", async () => {
-    const clientId = await createClient(ctxA(), clientInput);
-    await addContact(ctxA(), clientId, contact("Ada", true));
 
     await archiveClient(ctxA(), clientId);
 
     await expect(getClient(orgA.id, clientId)).rejects.toBeInstanceOf(NotFoundError);
     expect(await db.select().from(clients).where(eq(clients.id, clientId))).toHaveLength(1);
-    expect(await db.select().from(clientContacts).where(eq(clientContacts.clientId, clientId))).toHaveLength(1);
-    expect(await actionsFor(clientId)).toEqual(["CLIENT_CREATED", "CONTACT_ADDED", "CLIENT_DELETED"]);
+    expect(await actionsFor(clientId)).toEqual(["CLIENT_CREATED", "CLIENT_DELETED"]);
   });
 
-  it("permanently deletes a client, its contacts and its history, leaving only the deletion entry", async () => {
+  it("permanently deletes a client and its history, leaving only the deletion entry", async () => {
     const clientId = await createClient(ctxA(), clientInput);
-    await addContact(ctxA(), clientId, contact("Ada", true));
 
     await deleteClientPermanently(ctxA(), clientId);
 
     expect(await db.select().from(clients).where(eq(clients.id, clientId))).toHaveLength(0);
-    expect(await db.select().from(clientContacts).where(eq(clientContacts.clientId, clientId))).toHaveLength(0);
     expect(await actionsFor(clientId)).toEqual(["CLIENT_DELETED_PERMANENTLY"]);
   });
 
@@ -165,16 +132,14 @@ describe("client services", () => {
     expect(await db.select().from(clients).where(eq(clients.id, withProposal))).toHaveLength(1);
   });
 
-  it("restores an archived client with their contacts and logs CLIENT_RESTORED", async () => {
+  it("restores an archived client and logs CLIENT_RESTORED", async () => {
     const clientId = await createClient(ctxA(), clientInput);
-    await addContact(ctxA(), clientId, contact("Ada", true));
     await archiveClient(ctxA(), clientId);
 
     await restoreClient(ctxA(), clientId);
 
     expect(await getClient(orgA.id, clientId)).toMatchObject({ name: "Acme Co.", deletedAt: null });
-    expect(await listContacts(orgA.id, clientId)).toHaveLength(1);
-    expect(await actionsFor(clientId)).toEqual(["CLIENT_CREATED", "CONTACT_ADDED", "CLIENT_DELETED", "CLIENT_RESTORED"]);
+    expect(await actionsFor(clientId)).toEqual(["CLIENT_CREATED", "CLIENT_DELETED", "CLIENT_RESTORED"]);
   });
 
   it("treats restoring an active client as not found", async () => {
@@ -187,7 +152,6 @@ describe("client services", () => {
     it("treats another workspace's client as not found", async () => {
       await expect(getClient(orgA.id, clientB)).rejects.toBeInstanceOf(NotFoundError);
       await expect(updateClient(ctxA(), clientB, clientInput)).rejects.toBeInstanceOf(NotFoundError);
-      await expect(addContact(ctxA(), clientB, contact("Intruder"))).rejects.toBeInstanceOf(NotFoundError);
       await expect(archiveClient(ctxA(), clientB)).rejects.toBeInstanceOf(NotFoundError);
       await expect(deleteClientPermanently(ctxA(), clientB)).rejects.toBeInstanceOf(NotFoundError);
       expect(await getClient(orgB.id, clientB)).toMatchObject({ name: "Org B client" });
@@ -203,16 +167,6 @@ describe("client services", () => {
       expect(await db.select().from(clients).where(eq(clients.id, archivedB))).toMatchObject([
         { name: "Org B archived", deletedAt: expect.any(Date) },
       ]);
-    });
-
-    it("can't edit or remove another workspace's contacts", async () => {
-      await addContact({ user, organization: orgB }, clientB, contact("Their contact"));
-      const [theirs] = await listContacts(orgB.id, clientB);
-
-      await expect(updateContact(ctxA(), clientB, theirs.id, contact("Changed"))).rejects.toBeInstanceOf(NotFoundError);
-      await expect(removeContact(ctxA(), clientB, theirs.id)).rejects.toBeInstanceOf(NotFoundError);
-      expect(await listContacts(orgA.id, clientB)).toHaveLength(0);
-      expect((await listContacts(orgB.id, clientB))[0].name).toBe("Their contact");
     });
   });
 });

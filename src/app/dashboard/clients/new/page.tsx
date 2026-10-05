@@ -24,7 +24,7 @@ export default async function NewClientPage() {
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-8 lg:py-10">
       <BackLink href="/dashboard/clients">Clients</BackLink>
       <div className="mt-4">
-        <PageHeader title="New client" description="Only the name is required. You can add contacts after saving." />
+        <PageHeader title="New client" description="Only the name is required. Add an email if you want to invite them to your client portal." />
       </div>
       <div className="mt-8">
         <ClientForm action={createClientAction} countries={countryOptions()} cancelHref="/dashboard/clients" />

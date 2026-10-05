@@ -13,6 +13,7 @@ const messages = {
   expiredCode: "That code has expired. Request a new one.",
   tooManyAttempts: "Too many incorrect attempts. Request a new code.",
   rateLimited: "Too many attempts. Wait a moment and try again.",
+  invalidResetLink: "This reset link is invalid or has expired. Request a new one.",
   fallback: "Something went wrong. Please try again.",
 } as const;
 
@@ -27,6 +28,7 @@ export function authErrorMessage(error: AuthApiError): string {
   if (code === "INVALID_OTP") return messages.invalidCode;
   if (code === "OTP_EXPIRED" || code === "OTP_NOT_FOUND") return messages.expiredCode;
   if (code === "TOO_MANY_ATTEMPTS") return messages.tooManyAttempts;
+  if (code === "INVALID_TOKEN" || code.includes("EXPIRED_TOKEN")) return messages.invalidResetLink;
   if (error.status === 429) return messages.rateLimited;
 
   return messages.fallback;

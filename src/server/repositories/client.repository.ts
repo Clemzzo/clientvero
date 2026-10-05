@@ -3,13 +3,13 @@ import "server-only";
 import { and, count, desc, eq, getTableColumns, ilike, isNotNull, isNull, or, sql, type SQL } from "drizzle-orm";
 
 import { db } from "@/db";
-import { clientContacts, clients, type Client } from "@/db/schema";
+import { clients, portalAccounts, type Client, type PortalAccountStatus } from "@/db/schema";
 import { escapeLike } from "@/server/repositories/search";
 import { CLIENTS_PAGE_SIZE, type ClientListQuery } from "@/validators/clients";
 import type { ArchivedListResult } from "@/types/archived-record";
 import type { ArchivedListQuery } from "@/validators/fields";
 
-export type ClientListRow = Client & { contactCount: number };
+export type ClientListRow = Client & { portalAccountId: string | null; portalStatus: PortalAccountStatus | null };
 
 export type ClientListResult = {
   rows: ClientListRow[];
@@ -34,18 +34,14 @@ function clientFilters(organizationId: string, q: string, archived = false) {
 export async function listClients(organizationId: string, query: ClientListQuery): Promise<ClientListResult> {
   const where = clientFilters(organizationId, query.q);
 
-  const contactCounts = db
-    .select({ clientId: clientContacts.clientId, total: count().as("contact_total") })
-    .from(clientContacts)
-    .where(eq(clientContacts.organizationId, organizationId))
-    .groupBy(clientContacts.clientId)
-    .as("contact_counts");
-
   const [rows, [{ total }]] = await Promise.all([
     db
-      .select({ ...getTableColumns(clients), contactCount: sql<number>`coalesce(${contactCounts.total}, 0)`.mapWith(Number) })
+      .select({ ...getTableColumns(clients), portalAccountId: portalAccounts.id, portalStatus: portalAccounts.status })
       .from(clients)
-      .leftJoin(contactCounts, eq(contactCounts.clientId, clients.id))
+      .leftJoin(
+        portalAccounts,
+        and(eq(portalAccounts.clientId, clients.id), eq(portalAccounts.organizationId, organizationId)),
+      )
       .where(where)
       .orderBy(desc(clients.createdAt), desc(clients.id))
       .limit(CLIENTS_PAGE_SIZE)

@@ -142,7 +142,6 @@ A user must be able to:
 - dashboard
 - leads
 - clients
-- client contacts
 - proposals
 - proposal acceptance
 - projects
@@ -238,6 +237,8 @@ Constraints:
 - Neon Auth cannot be enabled on a project that uses IP Allow or Private Networking.
 - Production requires custom SMTP for auth emails. Use Resend's SMTP so auth and transactional email share one sender domain.
 - Every app origin that auth redirects to (production and preview) must be registered as a Neon Auth trusted domain.
+
+Password reset (implemented): `/sign-in` links to `/forgot-password`, which calls `requestPasswordReset` with a server-built `redirectTo` of `{NEXT_PUBLIC_APP_URL}/reset-password`. Neon emails a single-use link that expires after 15 minutes. The response is always the same ("if an account exists…") so it never reveals which emails are registered. `/reset-password?token=…` sets the new password with `resetPassword` and returns to `/sign-in`. Requests are bot-checked (Turnstile) and rate-limited (5/hour/IP, 1/minute and 3/hour per email); reset submissions are limited to 5/10 minutes/IP.
 
 ---
 
@@ -514,7 +515,6 @@ organization_members
 
 leads
 clients
-client_contacts
 
 proposals
 proposal_sections
@@ -529,6 +529,10 @@ payments
 files
 messages
 notifications
+
+portal_accounts
+portal_setup_tokens
+portal_sessions
 
 subscriptions
 activity_logs
@@ -808,26 +812,9 @@ deleted_at
 
 ---
 
-# 26. Client Contacts
+# 26. Client Contacts (removed)
 
-```text
-client_contacts
----------------
-id
-organization_id
-client_id
-name
-email
-phone
-role
-is_primary
-created_at
-updated_at
-```
-
-Multiple contacts are supported so the client model can later accommodate agencies.
-
-`organization_id` follows the §10 tenant rule, so contact reads and writes are scoped directly. A client has at most one primary contact, enforced by a partial unique index on `(client_id) WHERE is_primary`.
+Removed by the owner: ClientVero has organizations and clients only. A client has no separate contact records; the client's own `email` and `phone` are used, and the client portal invites the client itself (§53).
 
 ---
 
@@ -890,8 +877,6 @@ There is no expiry date in the MVP: a sent proposal stays open until the client 
 
 ```text
 proposal_sections
-`organization_id` follows the §10 tenant rule, as with `client_contacts`.
-
 -----------------
 id
 organization_id
@@ -1146,7 +1131,6 @@ organization_id
 client_id
 project_id
 sender_user_id
-sender_client_contact_id
 content
 is_read
 created_at
@@ -1154,7 +1138,7 @@ updated_at
 deleted_at
 ```
 
-The sender model should enforce that a message originates from either an internal user or a client contact.
+A message originates either from an internal user (`sender_user_id` set) or from the client (`sender_user_id` null; the client is `client_id`).
 
 ---
 
@@ -1265,7 +1249,7 @@ Organization
 ├── Members
 ├── Leads
 ├── Clients
-│   ├── Contacts
+│   ├── Portal account (setup tokens, sessions)
 │   ├── Projects
 │   │   ├── Milestones
 │   │   ├── Files
@@ -1568,6 +1552,15 @@ Resolve organization
 
 Authorization starts from the portal identity, not an arbitrary `client_id` sent by the browser.
 
+Implementation (approved by the owner):
+
+- **Identity is the client.** Each client has at most one portal login (`portal_accounts`, `UNIQUE(client_id)` and `UNIQUE(organization_id, lower(email))`), using the client's own email. Portal identity never uses Neon Auth.
+- **Invitation** creates a single-use setup link (`portal_setup_tokens`, 7-day expiry; only the SHA-256 hash of the token is stored). Invitations are sent from the clients list (`/dashboard/clients`, Portal column and row menu); until the Email build, the business copies the link. Issuing a new link invalidates earlier unused ones.
+- **Verification:** the client opens the link and chooses a password (scrypt, salted). The same link flow resets a forgotten password: the business creates a "password reset link".
+- **Sessions:** `portal_sessions` (token hash, 30-day expiry) in an `httpOnly`, `sameSite=lax` cookie scoped to `/portal`. Revoking a client's access, turning the portal off for a client (`clients.portal_enabled = false`), resetting a password, or archiving the client ends access.
+- **URLs are scoped by the business slug:** `/portal/[slug]/sign-in`, `/portal/[slug]/setup/[token]`, `/portal/[slug]`, `/portal/[slug]/projects/[id]`. Every portal read is scoped by the session's organization **and** client.
+- **Clients see** project name, status, description, dates, progress and milestones; never budgets, notes or internal activity. Invoices, files and messages are added to the portal with their builds.
+
 ---
 
 # 54. Public Proposal
@@ -1673,9 +1666,9 @@ Messages: 60/minute/user
 
 Public document actions: 30/minute/IP
 
-Portal authentication: 10 attempts/15 minutes/IP
+Portal authentication: 10 attempts/15 minutes/IP, 5 attempts/15 minutes/email
 
-Workspace writes (create, update, status changes, contacts): 10/minute/user
+Workspace writes (create, update, status changes, portal access): 10/minute/user
 
 Lead conversion: 5/minute/user
 ```
@@ -1958,6 +1951,15 @@ Features:
 /dashboard/files
 /dashboard/messages
 /dashboard/notifications
+```
+
+Client portal (no workspace sign-in; portal session instead, see §53):
+
+```text
+/portal/[slug]/sign-in
+/portal/[slug]/setup/[token]
+/portal/[slug]
+/portal/[slug]/projects/[id]
 ```
 
 ---
@@ -2294,7 +2296,7 @@ Financial records should generally remain auditable rather than being physically
 **Leads and clients: archive or delete permanently.** OWNER and ADMIN choose between:
 
 - **Archive** — the soft delete above: `deleted_at` is set, the record leaves the workspace, its row and history stay.
-- **Delete permanently** — the row is physically removed. A client's contacts go with it. The record's activity history is erased, and a single `LEAD_DELETED_PERMANENTLY` / `CLIENT_DELETED_PERMANENTLY` entry (actor, time, name) stays as the audit trail.
+- **Delete permanently** — the row is physically removed. The record's activity history is erased, and a single `LEAD_DELETED_PERMANENTLY` / `CLIENT_DELETED_PERMANENTLY` entry (actor, time, name) stays as the audit trail.
 
 A client that has any proposal or project (including archived ones) cannot be deleted permanently — only archived — because proposals, projects, and later invoices, are commercial records. The same rule will apply to clients with invoices when those exist.
 
@@ -2781,7 +2783,6 @@ Rate Limiting
 - create
 - update
 - view history
-- add contacts
 - invite to portal
 
 ## Proposals
@@ -3422,17 +3423,6 @@ export const clients = pgTable(
     orgCreatedIdx: index("clients_org_created_idx").on(table.organizationId, table.createdAt),
   }),
 );
-
-export const clientContacts = pgTable("client_contacts", {
-  id: id(),
-  clientId: uuid("client_id").notNull().references(() => clients.id, { onDelete: "cascade" }),
-  name: varchar("name", { length: 200 }).notNull(),
-  email: varchar("email", { length: 320 }),
-  phone: varchar("phone", { length: 40 }),
-  role: varchar("role", { length: 120 }),
-  isPrimary: boolean("is_primary").notNull().default(false),
-  ...timestamps,
-});
 ```
 
 ## `src/db/schema/common.ts`
@@ -3707,7 +3697,7 @@ export const leads = pgTable(
 import { boolean, index, pgTable, text, uuid } from "drizzle-orm/pg-core";
 import { id, timestamps, softDelete } from "./common";
 import { organizations } from "./organizations";
-import { clients, clientContacts } from "./clients";
+import { clients } from "./clients";
 import { projects } from "./projects";
 import { users } from "./users";
 
@@ -3719,7 +3709,6 @@ export const messages = pgTable(
     clientId: uuid("client_id").notNull().references(() => clients.id, { onDelete: "cascade" }),
     projectId: uuid("project_id").references(() => projects.id, { onDelete: "set null" }),
     senderUserId: uuid("sender_user_id").references(() => users.id, { onDelete: "set null" }),
-    senderClientContactId: uuid("sender_client_contact_id").references(() => clientContacts.id, { onDelete: "set null" }),
     content: text("content").notNull(),
     isRead: boolean("is_read").notNull().default(false), 
     ...timestamps,
@@ -3962,7 +3951,7 @@ import { relations } from "drizzle-orm";
 import { users } from "./users";
 import { organizations, organizationMembers } from "./organizations";
 import { leads } from "./leads";
-import { clients, clientContacts } from "./clients";
+import { clients } from "./clients";
 import { proposals, proposalSections } from "./proposals";
 import { projects, milestones } from "./projects";
 import { invoices, invoiceItems } from "./invoices";
@@ -4012,19 +4001,11 @@ export const clientsRelations = relations(clients, ({ one, many }) => ({
     fields: [clients.organizationId],
     references: [organizations.id],
   }),
-  contacts: many(clientContacts),
   proposals: many(proposals),
   projects: many(projects),
   invoices: many(invoices),
   files: many(files),
   messages: many(messages),
-}));
-
-export const clientContactsRelations = relations(clientContacts, ({ one }) => ({
-  client: one(clients, {
-    fields: [clientContacts.clientId],
-    references: [clients.id],
-  }),
 }));
 
 export const proposalsRelations = relations(proposals, ({ one, many }) => ({
@@ -4167,10 +4148,6 @@ export const messagesRelations = relations(messages, ({ one }) => ({
   senderUser: one(users, {
     fields: [messages.senderUserId],
     references: [users.id],
-  }),
-  senderClientContact: one(clientContacts, {
-    fields: [messages.senderClientContactId],
-    references: [clientContacts.id],
   }),
 }));
 

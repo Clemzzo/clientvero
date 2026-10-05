@@ -22,11 +22,20 @@ export const authLimits = {
   resendPerIp: limiter("resend:ip", 5, "1 h"),
   resendPerEmailBurst: limiter("resend:email:burst", 1, "60 s"),
   resendPerEmail: limiter("resend:email", 5, "1 h"),
+  resetRequestPerIp: limiter("reset-request:ip", 5, "1 h"),
+  resetRequestPerEmailBurst: limiter("reset-request:email:burst", 1, "60 s"),
+  resetRequestPerEmail: limiter("reset-request:email", 3, "1 h"),
+  resetSubmitPerIp: limiter("reset-submit:ip", 5, "10 m"),
 };
 
 export const workspaceLimits = {
   writesPerUser: limiter("workspace:writes:user", 10, "1 m"),
   conversionsPerUser: limiter("workspace:convert:user", 5, "1 m"),
+};
+
+export const portalLimits = {
+  authPerIp: limiter("portal:auth:ip", 10, "15 m"),
+  authPerEmail: limiter("portal:auth:email", 5, "15 m"),
 };
 
 export const publicLimits = {

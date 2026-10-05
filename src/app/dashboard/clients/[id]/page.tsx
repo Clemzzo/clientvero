@@ -5,7 +5,7 @@ import { Activity, Pencil } from "lucide-react";
 import { ClientDetails } from "@/components/clients/ClientDetails";
 import { ClientProjects } from "@/components/clients/ClientProjects";
 import { ClientProposals } from "@/components/clients/ClientProposals";
-import { ContactsCard } from "@/components/clients/ContactsCard";
+import { DisablePortalButton } from "@/components/clients/DisablePortalButton";
 import { ActivityTimeline } from "@/components/shared/ActivityTimeline";
 import { BackLink } from "@/components/shared/BackLink";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -21,7 +21,6 @@ import { hasPermission, permissions } from "@/server/authorization/permissions";
 import { listClientProjects } from "@/server/repositories/project.repository";
 import { listClientProposals } from "@/server/repositories/proposal.repository";
 import { listActivity } from "@/server/services/activity.service";
-import { listContacts } from "@/server/services/client-contact.service";
 import { clientTabSchema, type ClientTab } from "@/validators/clients";
 
 import { loadClient } from "./load-client";
@@ -43,8 +42,7 @@ export default async function ClientPage(props: PageProps<"/dashboard/clients/[i
   const tab = clientTabSchema.parse(searchParams.tab);
   const notice = noticeSchema.parse(searchParams.notice);
   const canEdit = hasPermission(ctx.membership.role, permissions.clientsUpdate);
-  const [contacts, proposals, projects] = await Promise.all([
-    listContacts(ctx.organization.id, client.id),
+  const [proposals, projects] = await Promise.all([
     listClientProposals(ctx.organization.id, client.id),
     listClientProjects(ctx.organization.id, client.id),
   ]);
@@ -52,7 +50,6 @@ export default async function ClientPage(props: PageProps<"/dashboard/clients/[i
 
   const tabs: { value: ClientTab; label: string; href: string; count?: number }[] = [
     { value: "overview", label: "Overview", href: basePath },
-    { value: "contacts", label: "Contacts", href: `${basePath}?tab=contacts`, count: contacts.length },
     { value: "proposals", label: "Proposals", href: `${basePath}?tab=proposals`, count: proposals.length },
     { value: "projects", label: "Projects", href: `${basePath}?tab=projects`, count: projects.length },
     { value: "activity", label: "Activity", href: `${basePath}?tab=activity` },
@@ -69,12 +66,15 @@ export default async function ClientPage(props: PageProps<"/dashboard/clients/[i
           description={client.company ?? undefined}
           actions={
             canEdit && (
-              <Button asChild className="h-10 rounded-lg">
-                <Link href={`${basePath}/edit`}>
-                  <Pencil aria-hidden className="size-4" />
-                  Edit
-                </Link>
-              </Button>
+              <>
+                {client.portalEnabled && <DisablePortalButton clientId={client.id} clientName={client.name} />}
+                <Button asChild className="h-10 rounded-lg">
+                  <Link href={`${basePath}/edit`}>
+                    <Pencil aria-hidden className="size-4" />
+                    Edit
+                  </Link>
+                </Button>
+              </>
             )
           }
         />
@@ -85,15 +85,7 @@ export default async function ClientPage(props: PageProps<"/dashboard/clients/[i
       </div>
 
       <div className="mt-6">
-        {tab === "overview" && (
-          <div className="grid items-start gap-4 lg:grid-cols-3">
-            <div className="lg:col-span-2">
-              <ClientDetails client={client} />
-            </div>
-            <ContactsCard clientId={client.id} contacts={contacts} canEdit={canEdit} />
-          </div>
-        )}
-        {tab === "contacts" && <ContactsCard clientId={client.id} contacts={contacts} canEdit={canEdit} />}
+        {tab === "overview" && <ClientDetails client={client} />}
         {tab === "proposals" && (
           <ClientProposals
             clientId={client.id}

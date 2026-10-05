@@ -42,10 +42,10 @@ export function ClientRecord() {
   );
 }
 
-const contacts = [
-  "Add several contacts to one client",
-  "Mark one contact as primary",
-  "Keep each contact's phone and role",
+const clientDetails = [
+  "Name, company, email, and phone in one place",
+  "Private notes only your team can see",
+  "One email to invite them to the portal",
 ];
 
 const portalAccess = [
@@ -58,13 +58,13 @@ export function ClientAccess() {
   return (
     <ProductSection
       id="access"
-      title="The right people, the right access."
-      intro="Work with everyone on the client's side, and give them a private portal when it's time to share progress."
+      title="The right details, the right access."
+      intro="Keep each client's details in one place, and give them a private portal when it's time to share progress."
       dark
     >
       <div className="relative isolate">
         <div className="grid gap-10 sm:grid-cols-2 lg:max-w-4xl">
-          <CheckList title="Contacts" items={contacts} />
+          <CheckList title="Client details" items={clientDetails} />
           <CheckList title="Client portal" items={portalAccess} />
         </div>
         <Image

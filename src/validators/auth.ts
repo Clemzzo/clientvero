@@ -12,6 +12,11 @@ export const emailSchema = z
   .toLowerCase()
   .pipe(z.email({ error: "Enter a valid email address." }).max(320));
 
+const passwordSchema = z
+  .string({ error: "Enter a password." })
+  .min(8, "Use at least 8 characters.")
+  .max(128, "Use 128 characters or fewer.");
+
 export const turnstileTokenSchema = z.string().min(1).max(2048);
 
 export const signUpSchema = z.object({
@@ -21,10 +26,7 @@ export const signUpSchema = z.object({
     .min(1, "Enter your name.")
     .max(120, "Use 120 characters or fewer."),
   email: emailSchema,
-  password: z
-    .string({ error: "Enter a password." })
-    .min(8, "Use at least 8 characters.")
-    .max(128, "Use 128 characters or fewer."),
+  password: passwordSchema,
   plan: planIdSchema,
 });
 
@@ -45,6 +47,21 @@ export const verifyEmailSchema = z.object({
     .regex(/^\d{6}$/, "Enter the 6-digit code from your email."),
   plan: planIdSchema,
 });
+
+export const forgotPasswordSchema = z.object({
+  email: emailSchema,
+});
+
+export const resetPasswordSchema = z
+  .object({
+    token: z.string().min(1).max(512).refine((token) => token !== "INVALID_TOKEN"),
+    password: passwordSchema,
+    confirmPassword: z.string({ error: "Type your new password again." }),
+  })
+  .refine((input) => input.password === input.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "The passwords don't match.",
+  });
 
 export type SignUpInput = z.infer<typeof signUpSchema>;
 export type SignInInput = z.infer<typeof signInSchema>;

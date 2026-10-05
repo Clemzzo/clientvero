@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { db } from "@/db";
-import { clientContacts, clients, type Organization } from "@/db/schema";
+import { clients, portalAccounts, type Organization } from "@/db/schema";
 import { listArchivedClients, listClients } from "@/server/repositories/client.repository";
 import { cleanup, createTestOrganization } from "@/test/fixtures";
 import { CLIENTS_PAGE_SIZE } from "@/validators/clients";
@@ -25,10 +25,9 @@ describe("listClients", () => {
       .returning();
 
     const northwind = inserted.find((client) => client.name === "Northwind")!;
-    await db.insert(clientContacts).values([
-      { organizationId: orgA.id, clientId: northwind.id, name: "Jane" },
-      { organizationId: orgA.id, clientId: northwind.id, name: "Sam" },
-    ]);
+    await db
+      .insert(portalAccounts)
+      .values({ organizationId: orgA.id, clientId: northwind.id, email: "ops@northwind.com", status: "ACTIVE" });
   });
 
   afterAll(async () => {
@@ -43,10 +42,11 @@ describe("listClients", () => {
     expect(first.pageCount).toBe(2);
   });
 
-  it("searches name, email and company and counts contacts", async () => {
+  it("searches name, email and company and shows portal status", async () => {
     const byEmail = await listClients(orgA.id, { q: "northwind.com", page: 1 });
 
-    expect(byEmail.rows.map((client) => [client.name, client.contactCount])).toEqual([["Northwind", 2]]);
+    expect(byEmail.rows.map((client) => [client.name, client.portalStatus])).toEqual([["Northwind", "ACTIVE"]]);
+    expect((await listClients(orgA.id, { q: "globex", page: 1 })).rows[0].portalStatus).toBeNull();
     expect((await listClients(orgA.id, { q: "100%", page: 1 })).total).toBe(1);
     expect((await listClients(orgA.id, { q: "archived", page: 1 })).total).toBe(0);
   });

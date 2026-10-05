@@ -1,4 +1,4 @@
-export type TurnstileAction = "signup" | "login";
+export type TurnstileAction = "signup" | "login" | "password-reset";
 
 type TurnstileRenderOptions = {
   sitekey: string;

@@ -17,7 +17,7 @@ function freeClientsLine() {
 export const metadata: Metadata = {
   title: "Client management",
   description:
-    "Keep contacts, projects, proposals, invoices, files, and messages together for every client, and invite them to a private portal.",
+    "Keep projects, proposals, invoices, files, and messages together for every client, and invite them to a private portal.",
 };
 
 export default function ClientsProductPage() {
@@ -26,7 +26,7 @@ export default function ClientsProductPage() {
       <ProductHero
         eyebrow="Clients"
         title="Every client relationship in one place."
-        intro="Keep contacts, projects, proposals, invoices, files, and messages together for each client, so you never dig through old emails to find what was agreed."
+        intro="Keep projects, proposals, invoices, files, and messages together for each client, so you never dig through old emails to find what was agreed."
         preview={<ClientRecordPreview />}
       />
       <ClientRecord />

@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import type { PlanId } from "@/features/subscriptions/plans";
 import { auth } from "@/lib/auth/server";
+import { env } from "@/lib/env";
 import { authLimits, withinLimits } from "@/lib/redis/rate-limit";
 import { verifyTurnstile } from "@/lib/turnstile/verify";
 import { authErrorMessage } from "@/server/auth/auth-error-message";
@@ -17,7 +18,14 @@ import {
   setPendingVerificationEmail,
 } from "@/server/auth/pending-verification";
 import type { TurnstileAction } from "@/types/turnstile";
-import { signInSchema, signUpSchema, turnstileTokenSchema, verifyEmailSchema } from "@/validators/auth";
+import {
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  signInSchema,
+  signUpSchema,
+  turnstileTokenSchema,
+  verifyEmailSchema,
+} from "@/validators/auth";
 
 export type AuthFormState = {
   error?: string;
@@ -33,6 +41,7 @@ const codeResent = "If your email still needs verifying, we've sent a new code."
 const rateLimited = authErrorMessage({ status: 429 });
 const accountExists = authErrorMessage({ code: "USER_ALREADY_EXISTS" });
 const botCheckFailed = "We couldn't verify you're human. Please try again.";
+const resetLinkSent = "If an account exists for that email, we've sent a link to reset your password. It expires in 15 minutes.";
 
 function readForm(formData: FormData, keys: readonly string[]) {
   return Object.fromEntries(
@@ -207,6 +216,65 @@ export async function resendVerificationAction(): Promise<AuthFormState> {
   }
 
   return { message: codeResent };
+}
+
+export async function requestPasswordResetAction(_previous: AuthFormState, formData: FormData): Promise<AuthFormState> {
+  const parsed = forgotPasswordSchema.safeParse(readForm(formData, ["email"]));
+
+  if (!parsed.success) {
+    return { error: invalidForm, fieldErrors: z.flattenError(parsed.error).fieldErrors };
+  }
+
+  const { email } = parsed.data;
+  const ip = await getClientIp();
+
+  const allowed = await withinLimits(
+    [authLimits.resetRequestPerIp, ip],
+    [authLimits.resetRequestPerEmailBurst, email],
+    [authLimits.resetRequestPerEmail, email],
+  );
+
+  if (!allowed) {
+    return { error: rateLimited };
+  }
+
+  if (!(await passesBotCheck(formData, "password-reset", ip))) {
+    return { error: botCheckFailed };
+  }
+
+  const redirectTo = new URL("/reset-password", env.NEXT_PUBLIC_APP_URL).toString();
+  const { error } = await auth.requestPasswordReset({ email, redirectTo });
+
+  if (error) {
+    logAuthFailure("request-password-reset", error);
+  }
+
+  return { message: resetLinkSent };
+}
+
+export async function resetPasswordAction(_previous: AuthFormState, formData: FormData): Promise<AuthFormState> {
+  const parsed = resetPasswordSchema.safeParse(readForm(formData, ["token", "password", "confirmPassword"]));
+
+  if (!parsed.success) {
+    const { fieldErrors } = z.flattenError(parsed.error);
+    return fieldErrors.token
+      ? { error: authErrorMessage({ code: "INVALID_TOKEN" }) }
+      : { error: invalidForm, fieldErrors };
+  }
+
+  if (!(await withinLimits([authLimits.resetSubmitPerIp, await getClientIp()]))) {
+    return { error: rateLimited };
+  }
+
+  const { token, password } = parsed.data;
+  const { error } = await auth.resetPassword({ newPassword: password, token });
+
+  if (error) {
+    logAuthFailure("reset-password", error);
+    return { error: authErrorMessage(error) };
+  }
+
+  redirect("/sign-in?reset=1");
 }
 
 export async function signOutAction(): Promise<void> {

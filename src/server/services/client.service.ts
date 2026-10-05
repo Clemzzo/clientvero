@@ -103,8 +103,7 @@ function hasProposalsOrProjects(clientId: string) {
 }
 
 // Proposals and projects are commercial records, so a client with any (even archived ones) is never hard-deleted.
-// Contacts go with the client (ON DELETE CASCADE). Its activity history is removed and only the
-// deletion itself stays in the audit trail.
+// Its activity history is removed and only the deletion itself stays in the audit trail.
 export async function deleteClientPermanently(ctx: WorkspaceActor, clientId: string): Promise<void> {
   const organizationId = ctx.organization.id;
   const client = await findClient(ownedClientScope(organizationId, clientId));

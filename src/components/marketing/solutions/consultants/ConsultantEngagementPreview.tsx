@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 
 type PhaseState = "done" | "active" | "pending";
 
-const stakeholders = [
+const team = [
   { name: "James Carter", avatar: jamesAvatar },
   { name: "Holand Brooks", avatar: holandAvatar },
   { name: "Mike Hansen", avatar: mikeAvatar },
@@ -61,7 +61,7 @@ export function ConsultantEngagementPreview() {
 
           <div className="mt-4 flex items-center justify-between gap-3">
             <div className="flex items-center">
-              {stakeholders.map((person, index) => (
+              {team.map((person, index) => (
                 <Image
                   key={person.name}
                   src={person.avatar}
@@ -70,7 +70,7 @@ export function ConsultantEngagementPreview() {
                   className={cn("size-7 rounded-full object-cover ring-2 ring-white", index > 0 && "-ml-2")}
                 />
               ))}
-              <span className="ml-2.5 text-[11.5px] text-ink-500">3 stakeholders</span>
+              <span className="ml-2.5 text-[11.5px] text-ink-500">3 on your team</span>
             </div>
             <span className="text-[11.5px] font-semibold tabular-nums text-ink-700">25%</span>
           </div>

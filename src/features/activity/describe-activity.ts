@@ -7,7 +7,6 @@ import { projectStatusLabels, projectStatuses } from "@/features/projects/projec
 const metadataSchema = z
   .object({
     name: z.string().optional(),
-    contactName: z.string().optional(),
     signerName: z.string().optional(),
     clientName: z.string().optional(),
     to: z.enum(leadStatuses).optional(),
@@ -24,7 +23,7 @@ type ActivityDescription = {
 };
 
 export function describeActivity(action: string, metadata: unknown): ActivityDescription {
-  const { name, contactName, to, milestoneName, projectStatus, count } = metadataSchema.parse(metadata ?? {});
+  const { name, to, milestoneName, projectStatus, count } = metadataSchema.parse(metadata ?? {});
 
   switch (action) {
     case activityActions.leadCreated:
@@ -51,12 +50,6 @@ export function describeActivity(action: string, metadata: unknown): ActivityDes
       return { verb: "permanently deleted client", subject: name };
     case activityActions.clientRestored:
       return { verb: "restored client", subject: name };
-    case activityActions.contactAdded:
-      return { verb: "added contact", subject: contactName };
-    case activityActions.contactUpdated:
-      return { verb: "updated contact", subject: contactName };
-    case activityActions.contactRemoved:
-      return { verb: "removed contact", subject: contactName };
     case activityActions.proposalCreated:
       return { verb: "created proposal", subject: name };
     case activityActions.proposalUpdated:
@@ -95,6 +88,16 @@ export function describeActivity(action: string, metadata: unknown): ActivityDes
       return { verb: "completed milestone", subject: milestoneName };
     case activityActions.milestoneRemoved:
       return { verb: "removed milestone", subject: milestoneName };
+    case activityActions.portalInvited:
+      return { verb: "invited", subject: name, detail: "to the client portal" };
+    case activityActions.portalLinkIssued:
+      return { verb: "created a new portal link for", subject: name };
+    case activityActions.portalActivated:
+      return { verb: "joined the client portal" };
+    case activityActions.portalAccessRevoked:
+      return { verb: "revoked portal access for", subject: name };
+    case activityActions.portalDisabled:
+      return { verb: "turned off the client portal" };
     case activityActions.activityCleared:
       return { verb: `cleared ${count ?? 0} activity ${count === 1 ? "entry" : "entries"}` };
     default:

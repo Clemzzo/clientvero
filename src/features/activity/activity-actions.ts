@@ -11,9 +11,6 @@ export const activityActions = {
   clientDeleted: "CLIENT_DELETED",
   clientDeletedPermanently: "CLIENT_DELETED_PERMANENTLY",
   clientRestored: "CLIENT_RESTORED",
-  contactAdded: "CONTACT_ADDED",
-  contactUpdated: "CONTACT_UPDATED",
-  contactRemoved: "CONTACT_REMOVED",
   proposalCreated: "PROPOSAL_CREATED",
   proposalUpdated: "PROPOSAL_UPDATED",
   proposalSent: "PROPOSAL_SENT",
@@ -32,6 +29,11 @@ export const activityActions = {
   milestoneCompleted: "MILESTONE_COMPLETED",
   milestoneRemoved: "MILESTONE_REMOVED",
   activityCleared: "ACTIVITY_CLEARED",
+  portalInvited: "PORTAL_INVITED",
+  portalLinkIssued: "PORTAL_LINK_ISSUED",
+  portalActivated: "PORTAL_ACTIVATED",
+  portalAccessRevoked: "PORTAL_ACCESS_REVOKED",
+  portalDisabled: "PORTAL_DISABLED",
 } as const;
 
 export type ActivityAction = (typeof activityActions)[keyof typeof activityActions];
