@@ -948,7 +948,8 @@ Implementation notes (approved by the owner):
 
 - The client accepts by typing their full name; the name and time are stored in the activity log (`PROPOSAL_ACCEPTED`, `actor_type = CLIENT`). This is a sign-off, not an e-signature (Phase 2).
 - The first response (accept or decline) closes the link for good: the page becomes read-only and any later response is refused. A repeated identical acceptance returns the existing acceptance.
-- Creating a notification and optionally creating a project are added with the Notifications and Projects builds.
+- Creating a notification is added with the Notifications build.
+- Acceptance does not create a project automatically. An accepted proposal shows a **Create project** button that opens the new-project form prefilled from the proposal (client, name, budget, currency, description). One live project per proposal (`projects_proposal_uidx`, ignoring archived projects); after that the button becomes **View project**.
 - Until the Email build, "Send" produces a shareable link instead of an email.
 
 ---
@@ -1458,6 +1459,7 @@ proposals.send
 projects.read
 projects.create
 projects.update
+projects.delete
 
 invoices.read
 invoices.create
@@ -1467,7 +1469,7 @@ billing.read
 billing.manage
 ```
 
-Roles map to these capabilities. Deleting leads and clients — archiving or deleting permanently — is limited to OWNER and ADMIN.
+Roles map to these capabilities. Deleting leads, clients and projects — archiving, restoring or deleting permanently — is limited to OWNER and ADMIN (`leads.delete`, `clients.delete`, `projects.delete`).
 
 ---
 
@@ -2286,9 +2288,11 @@ Financial records should generally remain auditable rather than being physically
 - **Archive** — the soft delete above: `deleted_at` is set, the record leaves the workspace, its row and history stay.
 - **Delete permanently** — the row is physically removed. A client's contacts go with it. The record's activity history is erased, and a single `LEAD_DELETED_PERMANENTLY` / `CLIENT_DELETED_PERMANENTLY` entry (actor, time, name) stays as the audit trail.
 
-A client that has any proposal (including archived ones) cannot be deleted permanently — only archived — because proposals, and later projects and invoices, are commercial records. The same rule will apply to clients with projects or invoices when those exist.
+A client that has any proposal or project (including archived ones) cannot be deleted permanently — only archived — because proposals, projects, and later invoices, are commercial records. The same rule will apply to clients with invoices when those exist.
 
 Archived leads and clients are listed on their own **Archived** screens (`/dashboard/leads/archived`, `/dashboard/clients/archived`), reached from an "Archived" button on each list and visible only to OWNER and ADMIN. From there a record can be **restored** (logged as `LEAD_RESTORED` / `CLIENT_RESTORED`) or **deleted permanently** under the rules above.
+
+**Projects** follow the same model: OWNER and ADMIN can archive a project or delete it permanently from the projects list, and restore or permanently delete archived projects at `/dashboard/projects/archived`. Permanent deletion removes the project's milestones and activity history, leaving one `PROJECT_DELETED_PERMANENTLY` audit entry. A project created from a proposal can't be restored while another live project exists for that proposal. When invoices, files and messages reference projects, a project with any of them will be archive-only, like clients with proposals.
 
 ---
 

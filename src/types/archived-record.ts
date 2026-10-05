@@ -1,8 +1,7 @@
 export type ArchivedRecord = {
   id: string;
   name: string;
-  company: string | null;
-  email: string | null;
+  detail: string | null;
   archivedAt: Date;
 };
 

@@ -40,6 +40,26 @@ export const optionalMoney = z
       .nullable(),
   );
 
+const isoDate = /^\d{4}-\d{2}-\d{2}$/;
+
+function isRealDate(value: string) {
+  const date = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().startsWith(value);
+}
+
+export const optionalDate = z
+  .string()
+  .trim()
+  .optional()
+  .transform((value) => value || null)
+  .pipe(
+    z
+      .string()
+      .regex(isoDate, "Enter a date like 2026-10-31.")
+      .refine(isRealDate, "Enter a real date.")
+      .nullable(),
+  );
+
 export const searchQuery = z.string().trim().max(100).catch("").default("");
 
 export const pageNumber = z.coerce.number().int().min(1).max(10_000).catch(1).default(1);

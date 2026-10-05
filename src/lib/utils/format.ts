@@ -13,6 +13,12 @@ export function formatMoney(amount: string, currency: string): string {
   return new Intl.NumberFormat("en", { style: "currency", currency }).format(Number(amount));
 }
 
+const dateFormat = new Intl.DateTimeFormat("en", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+
+export function formatDate(isoDate: string): string {
+  return dateFormat.format(new Date(`${isoDate}T00:00:00Z`));
+}
+
 export function formatRelativeTime(date: Date, now = new Date()): string {
   const seconds = Math.round((date.getTime() - now.getTime()) / 1000);
 

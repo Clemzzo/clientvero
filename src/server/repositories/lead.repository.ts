@@ -72,8 +72,7 @@ export async function listArchivedLeads(organizationId: string, query: ArchivedL
       .select({
         id: leads.id,
         name: leads.name,
-        company: leads.company,
-        email: leads.email,
+        detail: sql<string | null>`coalesce(${leads.company}, ${leads.email})`,
         archivedAt: sql<Date>`${leads.deletedAt}`.mapWith(leads.deletedAt),
       })
       .from(leads)

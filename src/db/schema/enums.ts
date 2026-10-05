@@ -20,3 +20,14 @@ export const proposalStatusEnum = pgEnum("proposal_status", [
   "EXPIRED",
   "WITHDRAWN",
 ]);
+
+export const projectStatusEnum = pgEnum("project_status", [
+  "PLANNING",
+  "IN_PROGRESS",
+  "REVIEW",
+  "COMPLETED",
+  "PAUSED",
+  "CANCELLED",
+]);
+
+export const milestoneStatusEnum = pgEnum("milestone_status", ["PENDING", "IN_PROGRESS", "COMPLETED"]);

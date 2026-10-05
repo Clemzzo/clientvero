@@ -3,6 +3,7 @@ import { relations } from "drizzle-orm";
 import { activityLogs } from "./activity";
 import { clientContacts, clients } from "./clients";
 import { leads } from "./leads";
+import { milestones, projects } from "./projects";
 import { proposalSections, proposals } from "./proposals";
 import { organizationMembers, organizations } from "./organizations";
 import { users } from "./users";
@@ -16,6 +17,7 @@ export const organizationsRelations = relations(organizations, ({ many }) => ({
   leads: many(leads),
   clients: many(clients),
   proposals: many(proposals),
+  projects: many(projects),
 }));
 
 export const organizationMembersRelations = relations(organizationMembers, ({ one }) => ({
@@ -58,6 +60,7 @@ export const clientsRelations = relations(clients, ({ one, many }) => ({
   }),
   contacts: many(clientContacts),
   proposals: many(proposals),
+  projects: many(projects),
 }));
 
 export const clientContactsRelations = relations(clientContacts, ({ one }) => ({
@@ -81,11 +84,43 @@ export const proposalsRelations = relations(proposals, ({ one, many }) => ({
     references: [users.id],
   }),
   sections: many(proposalSections),
+  projects: many(projects),
 }));
 
 export const proposalSectionsRelations = relations(proposalSections, ({ one }) => ({
   proposal: one(proposals, {
     fields: [proposalSections.proposalId],
     references: [proposals.id],
+  }),
+}));
+
+export const projectsRelations = relations(projects, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [projects.organizationId],
+    references: [organizations.id],
+  }),
+  client: one(clients, {
+    fields: [projects.clientId],
+    references: [clients.id],
+  }),
+  proposal: one(proposals, {
+    fields: [projects.proposalId],
+    references: [proposals.id],
+  }),
+  creator: one(users, {
+    fields: [projects.createdBy],
+    references: [users.id],
+  }),
+  milestones: many(milestones),
+}));
+
+export const milestonesRelations = relations(milestones, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [milestones.organizationId],
+    references: [organizations.id],
+  }),
+  project: one(projects, {
+    fields: [milestones.projectId],
+    references: [projects.id],
   }),
 }));

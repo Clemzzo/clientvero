@@ -20,6 +20,7 @@ export const permissions = {
   projectsRead: "projects.read",
   projectsCreate: "projects.create",
   projectsUpdate: "projects.update",
+  projectsDelete: "projects.delete",
   invoicesRead: "invoices.read",
   invoicesCreate: "invoices.create",
   invoicesSend: "invoices.send",

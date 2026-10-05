@@ -5,6 +5,7 @@ import { and, count, eq, inArray, isNull, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { clients, leads, type LeadStatus } from "@/db/schema";
 import { leadStatuses, openLeadStatuses } from "@/features/leads/lead-status";
+import { countActiveProjects } from "@/server/repositories/project.repository";
 import { countPendingProposals } from "@/server/repositories/proposal.repository";
 import { listRecentActivity, type ActivityEntry } from "@/server/services/activity.service";
 
@@ -18,7 +19,7 @@ export type DashboardOverview = {
     byStatus: Record<LeadStatus, number>;
   };
   clients: { active: number };
-  projects: { active: number };
+  projects: { active: number; total: number };
   proposals: { pending: number; sent: number };
   money: { revenueThisMonth: string; outstanding: string; overdue: string; overdueInvoices: number };
   recentActivity: ActivityEntry[];
@@ -55,11 +56,12 @@ function leadStatusCounts(organizationId: string) {
 }
 
 export async function getDashboardOverview(organizationId: string, currency: string): Promise<DashboardOverview> {
-  const [[aggregates], statusCounts, [clientTotals], proposalCounts, recentActivity] = await Promise.all([
+  const [[aggregates], statusCounts, [clientTotals], proposalCounts, projectCounts, recentActivity] = await Promise.all([
     leadAggregates(organizationId, currency),
     leadStatusCounts(organizationId),
     activeClientCount(organizationId),
     countPendingProposals(organizationId),
+    countActiveProjects(organizationId),
     listRecentActivity(organizationId),
   ]);
 
@@ -72,7 +74,7 @@ export async function getDashboardOverview(organizationId: string, currency: str
   return {
     leads: { ...aggregates, byStatus },
     clients: { active: clientTotals.total },
-    projects: { active: 0 },
+    projects: projectCounts,
     proposals: proposalCounts,
     money: { revenueThisMonth: "0", outstanding: "0", overdue: "0", overdueInvoices: 0 },
     recentActivity,

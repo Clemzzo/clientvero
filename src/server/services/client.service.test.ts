@@ -13,6 +13,7 @@ import {
   restoreClient,
   updateClient,
 } from "@/server/services/client.service";
+import { createProject } from "@/server/services/project.service";
 import { createProposal } from "@/server/services/proposal.service";
 import { cleanup, createTestOrganization, createTestUser } from "@/test/fixtures";
 import type { ClientFormInput, ContactFormInput } from "@/validators/clients";
@@ -131,6 +132,23 @@ describe("client services", () => {
     await expect(deleteClientPermanently(ctxA(), clientId)).rejects.toBeInstanceOf(ConflictError);
     expect(await getClient(orgA.id, clientId)).toMatchObject({ name: "Acme Co." });
     expect(await actionsFor(clientId)).toEqual(["CLIENT_CREATED"]);
+  });
+
+  it("refuses to permanently delete a client that has a project", async () => {
+    const clientId = await createClient(ctxA(), clientInput);
+    await createProject(ctxA(), {
+      clientId,
+      proposalId: null,
+      name: "Website build",
+      description: null,
+      budget: null,
+      currency: "USD",
+      startDate: null,
+      dueDate: null,
+    });
+
+    await expect(deleteClientPermanently(ctxA(), clientId)).rejects.toBeInstanceOf(ConflictError);
+    expect(await getClient(orgA.id, clientId)).toMatchObject({ name: "Acme Co." });
   });
 
   it("permanently deletes an archived client, but not one with proposals", async () => {

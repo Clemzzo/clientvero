@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { activityActions } from "@/features/activity/activity-actions";
 import { leadStatusLabels, leadStatuses } from "@/features/leads/lead-status";
+import { projectStatusLabels, projectStatuses } from "@/features/projects/project-status";
 
 const metadataSchema = z
   .object({
@@ -10,6 +11,8 @@ const metadataSchema = z
     signerName: z.string().optional(),
     clientName: z.string().optional(),
     to: z.enum(leadStatuses).optional(),
+    milestoneName: z.string().optional(),
+    projectStatus: z.enum(projectStatuses).optional(),
   })
   .catch({});
 
@@ -20,7 +23,7 @@ type ActivityDescription = {
 };
 
 export function describeActivity(action: string, metadata: unknown): ActivityDescription {
-  const { name, contactName, to } = metadataSchema.parse(metadata ?? {});
+  const { name, contactName, to, milestoneName, projectStatus } = metadataSchema.parse(metadata ?? {});
 
   switch (action) {
     case activityActions.leadCreated:
@@ -67,6 +70,30 @@ export function describeActivity(action: string, metadata: unknown): ActivityDes
       return { verb: "declined proposal", subject: name };
     case activityActions.proposalWithdrawn:
       return { verb: "withdrew proposal", subject: name };
+    case activityActions.projectCreated:
+      return { verb: "created project", subject: name };
+    case activityActions.projectUpdated:
+      return { verb: "updated project", subject: name };
+    case activityActions.projectStatusChanged:
+      return {
+        verb: "moved",
+        subject: name,
+        detail: projectStatus ? `to ${projectStatusLabels[projectStatus]}` : undefined,
+      };
+    case activityActions.projectDeleted:
+      return { verb: "archived project", subject: name };
+    case activityActions.projectDeletedPermanently:
+      return { verb: "permanently deleted project", subject: name };
+    case activityActions.projectRestored:
+      return { verb: "restored project", subject: name };
+    case activityActions.milestoneAdded:
+      return { verb: "added milestone", subject: milestoneName };
+    case activityActions.milestoneUpdated:
+      return { verb: "updated milestone", subject: milestoneName };
+    case activityActions.milestoneCompleted:
+      return { verb: "completed milestone", subject: milestoneName };
+    case activityActions.milestoneRemoved:
+      return { verb: "removed milestone", subject: milestoneName };
     default:
       return { verb: "made a change" };
   }

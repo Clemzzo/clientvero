@@ -21,6 +21,16 @@ export const activityActions = {
   proposalAccepted: "PROPOSAL_ACCEPTED",
   proposalDeclined: "PROPOSAL_DECLINED",
   proposalWithdrawn: "PROPOSAL_WITHDRAWN",
+  projectCreated: "PROJECT_CREATED",
+  projectUpdated: "PROJECT_UPDATED",
+  projectStatusChanged: "PROJECT_STATUS_CHANGED",
+  projectDeleted: "PROJECT_DELETED",
+  projectDeletedPermanently: "PROJECT_DELETED_PERMANENTLY",
+  projectRestored: "PROJECT_RESTORED",
+  milestoneAdded: "MILESTONE_ADDED",
+  milestoneUpdated: "MILESTONE_UPDATED",
+  milestoneCompleted: "MILESTONE_COMPLETED",
+  milestoneRemoved: "MILESTONE_REMOVED",
 } as const;
 
 export type ActivityAction = (typeof activityActions)[keyof typeof activityActions];
@@ -29,6 +39,7 @@ export const activityResources = {
   lead: "LEAD",
   client: "CLIENT",
   proposal: "PROPOSAL",
+  project: "PROJECT",
 } as const;
 
 export type ActivityResource = (typeof activityResources)[keyof typeof activityResources];

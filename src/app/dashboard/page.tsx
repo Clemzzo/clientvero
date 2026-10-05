@@ -38,7 +38,7 @@ export default async function DashboardPage() {
       label: "Active projects",
       value: overview.projects.active,
       icon: <FolderKanban />,
-      hint: "Projects in progress",
+      hint: overview.projects.total === 0 ? "Start one from an accepted proposal" : "Planning, in progress or in review",
     },
     {
       label: "Pending proposals",
@@ -53,6 +53,7 @@ export default async function DashboardPage() {
     { label: "Add your first lead", done: leads.total > 0, href: "/dashboard/leads/new" },
     { label: "Convert a lead to a client", done: overview.clients.active > 0, href: "/dashboard/leads" },
     { label: "Send a proposal", done: overview.proposals.sent > 0, href: "/dashboard/proposals/new" },
+    { label: "Start a project", done: overview.projects.total > 0, href: "/dashboard/projects/new" },
     { label: "Invite a client to the portal", done: false },
     { label: "Send an invoice", done: false },
   ];

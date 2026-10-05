@@ -5,7 +5,7 @@ import { randomUUID } from "node:crypto";
 import { and, eq, isNotNull, isNull, sql, type SQL } from "drizzle-orm";
 
 import { db } from "@/db";
-import { activityLogs, clients, proposals, type Client } from "@/db/schema";
+import { activityLogs, clients, projects, proposals, type Client } from "@/db/schema";
 import { activityActions, activityResources, type ActivityAction } from "@/features/activity/activity-actions";
 import type { WorkspaceActor } from "@/server/auth/organization";
 import { ConflictError, NotFoundError } from "@/server/errors";
@@ -92,27 +92,41 @@ export async function restoreClient(ctx: WorkspaceActor, clientId: string): Prom
   ]);
 }
 
-const clientHasProposals =
-  "This client has proposals, so it can't be deleted permanently. Archive it instead.";
+const clientHasRecords =
+  "This client has proposals or projects, so it can't be deleted permanently. Archive it instead.";
 
-// Proposals are commercial records, so a client with any (even archived ones) is never hard-deleted.
+function hasProposalsOrProjects(clientId: string) {
+  return sql`(
+    exists (select 1 from ${proposals} where ${proposals.clientId} = ${clientId})
+    or exists (select 1 from ${projects} where ${projects.clientId} = ${clientId})
+  )`;
+}
+
+// Proposals and projects are commercial records, so a client with any (even archived ones) is never hard-deleted.
 // Contacts go with the client (ON DELETE CASCADE). Its activity history is removed and only the
 // deletion itself stays in the audit trail.
 export async function deleteClientPermanently(ctx: WorkspaceActor, clientId: string): Promise<void> {
   const organizationId = ctx.organization.id;
   const client = await findClient(ownedClientScope(organizationId, clientId));
 
-  const [proposal] = await db
-    .select({ id: proposals.id })
-    .from(proposals)
-    .where(and(eq(proposals.organizationId, organizationId), eq(proposals.clientId, clientId)))
-    .limit(1);
+  const [proposal, project] = await Promise.all([
+    db
+      .select({ id: proposals.id })
+      .from(proposals)
+      .where(and(eq(proposals.organizationId, organizationId), eq(proposals.clientId, clientId)))
+      .limit(1),
+    db
+      .select({ id: projects.id })
+      .from(projects)
+      .where(and(eq(projects.organizationId, organizationId), eq(projects.clientId, clientId)))
+      .limit(1),
+  ]);
 
-  if (proposal) {
-    throw new ConflictError(clientHasProposals);
+  if (proposal.length > 0 || project.length > 0) {
+    throw new ConflictError(clientHasRecords);
   }
 
-  // Re-checked inside the batch so a proposal created in the meantime blocks the delete
+  // Re-checked inside the batch so a proposal or project created in the meantime blocks the delete
   // instead of leaving the client with its history wiped.
   const clientIsGone = sql`not exists (select 1 from ${clients} where ${clients.id} = ${clientId})`;
 
@@ -122,7 +136,7 @@ export async function deleteClientPermanently(ctx: WorkspaceActor, clientId: str
       .where(
         and(
           ownedClientScope(organizationId, clientId),
-          sql`not exists (select 1 from ${proposals} where ${proposals.clientId} = ${clientId})`,
+          sql`not ${hasProposalsOrProjects(clientId)}`,
         ),
       )
       .returning({ id: clients.id }),
@@ -150,6 +164,6 @@ export async function deleteClientPermanently(ctx: WorkspaceActor, clientId: str
   ]);
 
   if (deleted.length === 0) {
-    throw new ConflictError(clientHasProposals);
+    throw new ConflictError(clientHasRecords);
   }
 }

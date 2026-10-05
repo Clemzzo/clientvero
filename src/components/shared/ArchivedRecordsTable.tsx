@@ -11,10 +11,6 @@ type ArchivedRecordsTableProps = {
 
 const headerCell = "px-4 py-3 text-left text-[12px] font-semibold uppercase tracking-[0.08em] text-ink-500";
 
-function recordDetail(record: ArchivedRecord) {
-  return record.company ?? record.email ?? "—";
-}
-
 export function ArchivedRecordsTable({ recordLabel, records, renderActions }: ArchivedRecordsTableProps) {
   const now = new Date();
 
@@ -35,7 +31,7 @@ export function ArchivedRecordsTable({ recordLabel, records, renderActions }: Ar
             <tr key={record.id}>
               <td className="max-w-80 px-4 py-3.5">
                 <p className="truncate text-[14px] font-semibold text-ink-900">{record.name}</p>
-                <p className="truncate text-[13px] text-ink-500">{recordDetail(record)}</p>
+                <p className="truncate text-[13px] text-ink-500">{record.detail ?? "—"}</p>
               </td>
               <td className="px-4 py-3.5 text-[13px] text-ink-500">
                 <time dateTime={record.archivedAt.toISOString()}>{formatRelativeTime(record.archivedAt, now)}</time>
@@ -52,7 +48,7 @@ export function ArchivedRecordsTable({ recordLabel, records, renderActions }: Ar
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="truncate text-[14px] font-semibold text-ink-900">{record.name}</p>
-                <p className="truncate text-[13px] text-ink-500">{recordDetail(record)}</p>
+                <p className="truncate text-[13px] text-ink-500">{record.detail ?? "—"}</p>
               </div>
               <time dateTime={record.archivedAt.toISOString()} className="shrink-0 text-[13px] text-ink-500">
                 {formatRelativeTime(record.archivedAt, now)}

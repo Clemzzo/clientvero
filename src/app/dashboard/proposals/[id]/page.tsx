@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Activity } from "lucide-react";
+import { Activity, FolderKanban } from "lucide-react";
 
 import { ProposalActions } from "@/components/proposals/ProposalActions";
 import { ProposalDocument } from "@/components/proposals/ProposalDocument";
@@ -11,12 +11,14 @@ import { BackLink } from "@/components/shared/BackLink";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { UrlNotice } from "@/components/shared/UrlNotice";
+import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { activityResources } from "@/features/activity/activity-actions";
 import { noticeSchema } from "@/features/notices";
 import { proposalStatusLabels, proposalStatusTones } from "@/features/proposals/proposal-status";
 import { proposalPublicUrl } from "@/lib/utils/public-url";
 import { hasPermission, permissions } from "@/server/authorization/permissions";
+import { findProjectIdForProposal } from "@/server/repositories/project.repository";
 import { listActivity } from "@/server/services/activity.service";
 import { getSignerName } from "@/server/services/proposal.service";
 
@@ -30,11 +32,14 @@ export async function generateMetadata(props: PageProps<"/dashboard/proposals/[i
 export default async function ProposalPage(props: PageProps<"/dashboard/proposals/[id]">) {
   const { ctx, proposal } = await loadProposal((await props.params).id);
   const notice = noticeSchema.parse((await props.searchParams).notice);
-  const [activity, signerName] = await Promise.all([
+  const accepted = proposal.status === "ACCEPTED";
+  const [activity, signerName, projectId] = await Promise.all([
     listActivity(ctx.organization.id, activityResources.proposal, proposal.id),
-    proposal.status === "ACCEPTED" ? getSignerName(proposal) : null,
+    accepted ? getSignerName(proposal) : null,
+    accepted ? findProjectIdForProposal(ctx.organization.id, proposal.id) : null,
   ]);
   const role = ctx.membership.role;
+  const canStartProject = accepted && !projectId && hasPermission(role, permissions.projectsCreate);
 
   return (
     <div className="mx-auto max-w-300 px-4 py-8 sm:px-8 lg:py-10">
@@ -60,13 +65,23 @@ export default async function ProposalPage(props: PageProps<"/dashboard/proposal
           </p>
         </div>
 
-        <ProposalActions
-          proposalId={proposal.id}
-          status={proposal.status}
-          publicUrl={proposalPublicUrl(proposal.publicId)}
-          canManage={hasPermission(role, permissions.proposalsCreate)}
-          canSendProposals={hasPermission(role, permissions.proposalsSend)}
-        />
+        <div className="flex flex-wrap gap-2">
+          <ProposalActions
+            proposalId={proposal.id}
+            status={proposal.status}
+            publicUrl={proposalPublicUrl(proposal.publicId)}
+            canManage={hasPermission(role, permissions.proposalsCreate)}
+            canSendProposals={hasPermission(role, permissions.proposalsSend)}
+          />
+          {(projectId || canStartProject) && (
+            <Button asChild className="h-10 rounded-lg">
+              <Link href={projectId ? `/dashboard/projects/${projectId}` : `/dashboard/projects/new?proposalId=${proposal.id}`}>
+                <FolderKanban aria-hidden className="size-4" />
+                {projectId ? "View project" : "Create project"}
+              </Link>
+            </Button>
+          )}
+        </div>
       </header>
 
       <div className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">

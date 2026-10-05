@@ -67,8 +67,7 @@ export async function listArchivedClients(
       .select({
         id: clients.id,
         name: clients.name,
-        company: clients.company,
-        email: clients.email,
+        detail: sql<string | null>`coalesce(${clients.company}, ${clients.email})`,
         archivedAt: sql<Date>`${clients.deletedAt}`.mapWith(clients.deletedAt),
       })
       .from(clients)
