@@ -13,6 +13,7 @@ const metadataSchema = z
     to: z.enum(leadStatuses).optional(),
     milestoneName: z.string().optional(),
     projectStatus: z.enum(projectStatuses).optional(),
+    count: z.number().int().nonnegative().optional(),
   })
   .catch({});
 
@@ -23,7 +24,7 @@ type ActivityDescription = {
 };
 
 export function describeActivity(action: string, metadata: unknown): ActivityDescription {
-  const { name, contactName, to, milestoneName, projectStatus } = metadataSchema.parse(metadata ?? {});
+  const { name, contactName, to, milestoneName, projectStatus, count } = metadataSchema.parse(metadata ?? {});
 
   switch (action) {
     case activityActions.leadCreated:
@@ -94,6 +95,8 @@ export function describeActivity(action: string, metadata: unknown): ActivityDes
       return { verb: "completed milestone", subject: milestoneName };
     case activityActions.milestoneRemoved:
       return { verb: "removed milestone", subject: milestoneName };
+    case activityActions.activityCleared:
+      return { verb: `cleared ${count ?? 0} activity ${count === 1 ? "entry" : "entries"}` };
     default:
       return { verb: "made a change" };
   }

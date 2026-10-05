@@ -9,6 +9,8 @@ import { countActiveProjects } from "@/server/repositories/project.repository";
 import { countPendingProposals } from "@/server/repositories/proposal.repository";
 import { listRecentActivity, type ActivityEntry } from "@/server/services/activity.service";
 
+const RECENT_ACTIVITY_LIMIT = 5;
+
 export type DashboardOverview = {
   leads: {
     total: number;
@@ -62,7 +64,7 @@ export async function getDashboardOverview(organizationId: string, currency: str
     activeClientCount(organizationId),
     countPendingProposals(organizationId),
     countActiveProjects(organizationId),
-    listRecentActivity(organizationId),
+    listRecentActivity(organizationId, RECENT_ACTIVITY_LIMIT),
   ]);
 
   const byStatus = Object.fromEntries(leadStatuses.map((status) => [status, 0])) as Record<LeadStatus, number>;

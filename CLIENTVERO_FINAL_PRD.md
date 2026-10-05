@@ -1454,9 +1454,11 @@ invoices.send
 
 billing.read
 billing.manage
+
+activity.delete
 ```
 
-Roles map to these capabilities. Deleting leads, clients and projects — archiving, restoring or deleting permanently — is limited to OWNER and ADMIN (`leads.delete`, `clients.delete`, `projects.delete`).
+Roles map to these capabilities. Deleting leads, clients and projects — archiving, restoring or deleting permanently — is limited to OWNER and ADMIN (`leads.delete`, `clients.delete`, `projects.delete`). Deleting or clearing activity entries is limited to OWNER and ADMIN (`activity.delete`).
 
 ---
 
@@ -1808,10 +1810,16 @@ Sections:
 - pipeline summary
 - active projects
 - outstanding invoices
-- recent activity
+- recent activity (the latest 5 entries, with a "Show all" link to the Activity screen)
 - upcoming work
 
 Use aggregated queries rather than dozens of sequential database calls.
+
+## Activity screen
+
+`/dashboard/activity` lists the workspace's whole activity log, newest first, 25 entries per page, with filter tabs (All · Leads · Clients · Proposals · Projects). It is linked from the sidebar and visible to every role.
+
+OWNER and ADMIN (`activity.delete`) can delete a single entry or clear all activity. Deleting is never silent: every deletion or clear writes one `ACTIVITY_CLEARED` entry (who, when, how many entries were removed), and these entries cannot be deleted or cleared, so the audit trail always records that history was removed.
 
 ---
 
@@ -2307,7 +2315,7 @@ Before launch:
 [ ] XSS protections
 [ ] SQL-injection-safe queries
 [ ] destructive-operation confirmation
-[ ] activity/audit trail
+[ ] activity/audit trail (OWNER/ADMIN may delete or clear entries; each deletion leaves an undeletable `ACTIVITY_CLEARED` record)
 ```
 
 ---

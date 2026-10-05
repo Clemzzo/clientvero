@@ -17,7 +17,7 @@ export function ProjectProgress({ value, label, className }: ProjectProgressProp
         aria-valuenow={value}
         className="h-2 min-w-16 flex-1 overflow-hidden rounded-full bg-ink-100"
       >
-        <div className="h-full rounded-full bg-brand-600 transition-[width]" style={{ width: `${value}%` }} />
+        <div className="h-full rounded-full bg-mint-500 transition-[width]" style={{ width: `${value}%` }} />
       </div>
       <span className="w-9 text-right text-[13px] font-medium tabular-nums text-ink-700">{value}%</span>
     </div>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Check, ChevronRight } from "lucide-react";
+import { Check, ChevronRight, Rocket } from "lucide-react";
 
 import { Card, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -21,7 +21,7 @@ function StepContent({ step }: { step: SetupStep }) {
         aria-hidden
         className={cn(
           "grid size-5 shrink-0 place-items-center rounded-full border",
-          step.done ? "border-brand-600 bg-brand-600 text-white" : "border-ink-200 bg-white",
+          step.done ? "border-mint-600 bg-mint-600 text-white" : "border-ink-200 bg-white",
         )}
       >
         {step.done && <Check className="size-3" strokeWidth={3} />}
@@ -46,7 +46,11 @@ export function SetupChecklistCard({ steps }: SetupChecklistCardProps) {
 
   return (
     <Card>
-      <CardHeader title="Get set up" description={`${completed} of ${steps.length} complete`} />
+      <CardHeader
+        title="Get set up"
+        description={`${completed} of ${steps.length} complete`}
+        icon={{ node: <Rocket />, tone: "ocean" }}
+      />
 
       <div
         role="progressbar"
@@ -56,7 +60,7 @@ export function SetupChecklistCard({ steps }: SetupChecklistCardProps) {
         aria-valuemax={100}
         className="mx-5 mt-4 h-1.5 overflow-hidden rounded-full bg-ink-100 sm:mx-6"
       >
-        <div className="h-full rounded-full bg-brand-600" style={{ width: `${progress}%` }} />
+        <div className="h-full rounded-full bg-mint-500" style={{ width: `${progress}%` }} />
       </div>
 
       <ul className="mt-3 px-3 pb-3 sm:px-4">

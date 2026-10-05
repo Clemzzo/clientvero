@@ -86,7 +86,10 @@ function selectProjectRows(organizationId: string, where: SQL | undefined) {
 }
 
 function withProgress(rows: Omit<ProjectListRow, "progress">[]): ProjectListRow[] {
-  return rows.map((row) => ({ ...row, progress: projectProgress(row.milestonesCompleted, row.milestoneTotal) }));
+  return rows.map((row) => ({
+    ...row,
+    progress: projectProgress(row.milestonesCompleted, row.milestoneTotal, row.status),
+  }));
 }
 
 async function countByFilter(organizationId: string, q: string): Promise<Record<ProjectFilter, number>> {

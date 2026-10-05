@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, Plus, UserPlus } from "lucide-react";
+import { ArrowUpRight, ChartNoAxesColumn, Plus, UserPlus } from "lucide-react";
 
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ export function PipelineCard({ leads, currency }: PipelineCardProps) {
       <CardHeader
         title="Pipeline"
         description="Open leads by stage"
+        icon={{ node: <ChartNoAxesColumn />, tone: "brand" }}
         action={
           leads.total > 0 && (
             <Link
@@ -78,21 +79,29 @@ export function PipelineCard({ leads, currency }: PipelineCardProps) {
               ))}
           </div>
 
-          <ul className="mt-5 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4">
+          <ul className="mt-6 mb-6 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
             {stages.map((stage) => (
               <li key={stage.status}>
                 <span className="flex items-center gap-2 text-[12.5px] text-ink-500">
                   <span aria-hidden className={`size-2 rounded-full ${pipelineStageColors[stage.status]}`} />
                   {leadStatusLabels[stage.status]}
                 </span>
-                <span className="mt-1 block pl-4 text-[17px] font-semibold text-ink-900 tabular-nums">{stage.count}</span>
+                <span className="mt-1 block pl-4 font-display text-[22px] font-bold tracking-[-0.02em] text-ink-900 tabular-nums">
+                  {stage.count}
+                </span>
               </li>
             ))}
           </ul>
 
-          <p className="mt-auto border-t border-ink-200 pt-4 text-[13px] text-ink-500">
-            <span className="font-semibold text-ink-900 tabular-nums">{leads.byStatus.WON}</span> won ·{" "}
-            <span className="font-semibold text-ink-900 tabular-nums">{leads.byStatus.LOST}</span> lost
+          <p className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-ink-200 pt-4 text-[13px] text-ink-500">
+            <span className="flex items-center gap-2">
+              <span aria-hidden className="size-2 rounded-full bg-mint-500" />
+              <span className="font-semibold text-ink-900 tabular-nums">{leads.byStatus.WON}</span> won
+            </span>
+            <span className="flex items-center gap-2">
+              <span aria-hidden className="size-2 rounded-full bg-coral-500" />
+              <span className="font-semibold text-ink-900 tabular-nums">{leads.byStatus.LOST}</span> lost
+            </span>
           </p>
         </div>
       )}

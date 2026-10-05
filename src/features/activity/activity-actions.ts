@@ -31,6 +31,7 @@ export const activityActions = {
   milestoneUpdated: "MILESTONE_UPDATED",
   milestoneCompleted: "MILESTONE_COMPLETED",
   milestoneRemoved: "MILESTONE_REMOVED",
+  activityCleared: "ACTIVITY_CLEARED",
 } as const;
 
 export type ActivityAction = (typeof activityActions)[keyof typeof activityActions];
@@ -40,6 +41,7 @@ export const activityResources = {
   client: "CLIENT",
   proposal: "PROPOSAL",
   project: "PROJECT",
+  organization: "ORGANIZATION",
 } as const;
 
 export type ActivityResource = (typeof activityResources)[keyof typeof activityResources];

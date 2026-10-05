@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { Avatar } from "@/components/shared/Avatar";
 import { actorName, describeActivity } from "@/features/activity/describe-activity";
 import { formatRelativeTime } from "@/lib/utils/format";
@@ -6,9 +8,10 @@ import type { ActivityEntry } from "@/server/services/activity.service";
 type ActivityTimelineProps = {
   entries: ActivityEntry[];
   showSubject?: boolean;
+  renderAction?: (entry: ActivityEntry) => ReactNode;
 };
 
-export function ActivityTimeline({ entries, showSubject = true }: ActivityTimelineProps) {
+export function ActivityTimeline({ entries, showSubject = true, renderAction }: ActivityTimelineProps) {
   const now = new Date();
 
   return (
@@ -28,6 +31,7 @@ export function ActivityTimeline({ entries, showSubject = true }: ActivityTimeli
             <time dateTime={entry.createdAt.toISOString()} className="shrink-0 pt-px text-[12.5px] text-ink-500 tabular-nums">
               {formatRelativeTime(entry.createdAt, now)}
             </time>
+            {renderAction?.(entry)}
           </li>
         );
       })}

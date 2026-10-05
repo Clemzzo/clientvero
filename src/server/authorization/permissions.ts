@@ -26,6 +26,7 @@ export const permissions = {
   invoicesSend: "invoices.send",
   billingRead: "billing.read",
   billingManage: "billing.manage",
+  activityDelete: "activity.delete",
 } as const;
 
 export type Permission = (typeof permissions)[keyof typeof permissions];

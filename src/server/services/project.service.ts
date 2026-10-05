@@ -91,7 +91,7 @@ export async function getProject(organizationId: string, projectId: string): Pro
     clientName: row.clientName,
     milestoneTotal: row.milestoneTotal,
     milestonesCompleted: row.milestonesCompleted,
-    progress: projectProgress(row.milestonesCompleted, row.milestoneTotal),
+    progress: projectProgress(row.milestonesCompleted, row.milestoneTotal, row.project.status),
   };
 }
 

@@ -25,6 +25,34 @@
   --color-mint-700: #0f775c;
   --color-mint-800: #115e4b;
 
+  --color-ocean-50: #ecf6fe;
+  --color-ocean-100: #d6ecfc;
+  --color-ocean-200: #b3dcf8;
+  --color-ocean-500: #1c96d8;
+  --color-ocean-600: #0b75b3;
+  --color-ocean-700: #0b5d8f;
+
+  --color-sun-50: #fff8eb;
+  --color-sun-100: #feecc5;
+  --color-sun-200: #fdd98a;
+  --color-sun-500: #f3a417;
+  --color-sun-600: #b46a04;
+  --color-sun-700: #8f5208;
+
+  --color-coral-50: #fff1f2;
+  --color-coral-100: #ffe1e4;
+  --color-coral-200: #fec6cd;
+  --color-coral-500: #f2546f;
+  --color-coral-600: #d81c45;
+  --color-coral-700: #b0123a;
+
+  --color-grape-50: #f4f1ff;
+  --color-grape-100: #e9e3ff;
+  --color-grape-200: #d6cdfe;
+  --color-grape-500: #8b7cf6;
+  --color-grape-600: #6a54e3;
+  --color-grape-700: #5640c4;
+
   --color-ink-900: #070b18;
   --color-ink-700: #1d2436;
   --color-ink-500: #525c72;
