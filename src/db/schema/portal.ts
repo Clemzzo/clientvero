@@ -46,6 +46,8 @@ export const portalSetupTokens = pgTable(
       .notNull()
       .references(() => portalAccounts.id, { onDelete: "cascade" }),
     tokenHash: varchar("token_hash", { length: 64 }).notNull().unique(),
+    // AES-GCM copy of the token so an open link can be copied again; cleared once the link is used or replaced.
+    tokenSealed: text("token_sealed"),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     usedAt: timestamp("used_at", { withTimezone: true }),
     createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),

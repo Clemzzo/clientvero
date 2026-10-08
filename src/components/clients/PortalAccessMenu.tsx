@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Ban, KeyRound, Link2, MonitorSmartphone } from "lucide-react";
+import { Ban, Copy, KeyRound, Link2, MonitorSmartphone } from "lucide-react";
 
 import { PortalLinkDialog } from "@/components/clients/PortalLinkDialog";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { Client, PortalAccountStatus } from "@/db/schema";
 import {
+  copyPortalLinkAction,
   invitePortalClientAction,
   issuePortalLinkAction,
   revokePortalAccessAction,
@@ -26,16 +27,16 @@ type PortalAccessMenuProps = {
 };
 
 export function PortalAccessMenu({ client, account }: PortalAccessMenuProps) {
-  const [link, setLink] = useState<string | null>(null);
+  const [link, setLink] = useState<{ url: string; recopied: boolean } | null>(null);
   const [confirmRevoke, setConfirmRevoke] = useState(false);
   const [isPending, startTransition] = useTransition();
   const showNotice = useNotice();
   const canInvite = !account || account.status === "REVOKED";
 
-  function createLink(action: () => Promise<{ error?: string; url?: string }>) {
+  function createLink(action: () => Promise<{ error?: string; url?: string }>, recopied = false) {
     startTransition(async () => {
       const result = await action();
-      if (result.url) setLink(result.url);
+      if (result.url) setLink({ url: result.url, recopied });
       else showNotice("error", result.error ?? "We couldn't create a link. Please try again.");
     });
   }
@@ -75,6 +76,10 @@ export function PortalAccessMenu({ client, account }: PortalAccessMenuProps) {
                 {account.status === "ACTIVE" ? <KeyRound aria-hidden /> : <Link2 aria-hidden />}
                 {account.status === "ACTIVE" ? "Create password reset link" : "Create new invite link"}
               </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => createLink(() => copyPortalLinkAction(account.id), true)}>
+                <Copy aria-hidden />
+                Recopy link
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem tone="destructive" onSelect={() => setConfirmRevoke(true)}>
                 <Ban aria-hidden />
@@ -85,7 +90,12 @@ export function PortalAccessMenu({ client, account }: PortalAccessMenuProps) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <PortalLinkDialog clientName={client.name} url={link} onOpenChange={(open) => !open && setLink(null)} />
+      <PortalLinkDialog
+        clientName={client.name}
+        url={link?.url ?? null}
+        recopied={link?.recopied}
+        onOpenChange={(open) => !open && setLink(null)}
+      />
       <ConfirmDialog
         open={confirmRevoke}
         onOpenChange={setConfirmRevoke}

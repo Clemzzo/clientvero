@@ -2,12 +2,12 @@ import "server-only";
 
 import { randomUUID } from "node:crypto";
 
-import { and, eq, inArray, isNull, ne, sql } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, isNotNull, isNull, ne, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import { clients, portalAccounts, portalSessions, portalSetupTokens } from "@/db/schema";
 import { activityActions } from "@/features/activity/activity-actions";
-import { newToken } from "@/lib/portal/crypto";
+import { newToken, openToken, sealToken } from "@/lib/portal/crypto";
 import { portalSetupUrl } from "@/lib/utils/public-url";
 import type { WorkspaceActor } from "@/server/auth/organization";
 import { ConflictError, NotFoundError, ValidationError } from "@/server/errors";
@@ -22,7 +22,7 @@ function setupLinkExpiry() {
 function invalidateOpenLinks(accountIds: string[] | ReturnType<typeof sql>) {
   return db
     .update(portalSetupTokens)
-    .set({ usedAt: new Date() })
+    .set({ usedAt: new Date(), tokenSealed: null })
     .where(and(inArray(portalSetupTokens.portalAccountId, accountIds), isNull(portalSetupTokens.usedAt)));
 }
 
@@ -35,6 +35,7 @@ function newSetupLink(ctx: WorkspaceActor, accountId: string) {
       organizationId: ctx.organization.id,
       portalAccountId: accountId,
       tokenHash: hash,
+      tokenSealed: sealToken(token),
       expiresAt: setupLinkExpiry(),
       createdBy: ctx.user.id,
     }),
@@ -143,6 +144,39 @@ export async function issuePortalLink(ctx: WorkspaceActor, accountId: string): P
   ]);
 
   return link.url;
+}
+
+export async function getOpenPortalLink(ctx: WorkspaceActor, accountId: string): Promise<string> {
+  const account = await getAccount(ctx.organization.id, accountId);
+
+  if (account.status === "REVOKED") {
+    throw new ValidationError("This client's access was revoked. Invite them again instead.");
+  }
+
+  await getClient(ctx.organization.id, account.clientId);
+
+  const [link] = await db
+    .select({ tokenSealed: portalSetupTokens.tokenSealed })
+    .from(portalSetupTokens)
+    .where(
+      and(
+        eq(portalSetupTokens.portalAccountId, account.id),
+        eq(portalSetupTokens.organizationId, ctx.organization.id),
+        isNull(portalSetupTokens.usedAt),
+        gt(portalSetupTokens.expiresAt, new Date()),
+        isNotNull(portalSetupTokens.tokenSealed),
+      ),
+    )
+    .orderBy(desc(portalSetupTokens.createdAt))
+    .limit(1);
+
+  const token = link?.tokenSealed ? openToken(link.tokenSealed) : null;
+
+  if (!token) {
+    throw new ConflictError("There's no open link for this client. Create a new one instead.");
+  }
+
+  return portalSetupUrl(ctx.organization.slug, token);
 }
 
 export async function revokePortalAccess(ctx: WorkspaceActor, accountId: string): Promise<void> {

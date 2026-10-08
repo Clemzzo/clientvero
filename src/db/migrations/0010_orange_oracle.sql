@@ -1,0 +1,1 @@
+ALTER TABLE "portal_setup_tokens" ADD COLUMN "token_sealed" text;

@@ -9,6 +9,7 @@ import { requireOrganizationContext } from "@/server/auth/organization";
 import { permissions, requirePermission } from "@/server/authorization/permissions";
 import {
   disableClientPortal,
+  getOpenPortalLink,
   invitePortalClient,
   issuePortalLink,
   revokePortalAccess,
@@ -61,6 +62,21 @@ export async function issuePortalLinkAction(id: string): Promise<LinkResult> {
     const url = await issuePortalLink(ctx, accountId.data);
     revalidateClients();
     return { url };
+  } catch (error) {
+    return { error: toActionError(error, errorOptions) };
+  }
+}
+
+export async function copyPortalLinkAction(id: string): Promise<LinkResult> {
+  const accountId = portalAccountIdSchema.safeParse(id);
+
+  if (!accountId.success) {
+    return { error: accessMissing };
+  }
+
+  try {
+    const ctx = await requirePortalManager();
+    return { url: await getOpenPortalLink(ctx, accountId.data) };
   } catch (error) {
     return { error: toActionError(error, errorOptions) };
   }

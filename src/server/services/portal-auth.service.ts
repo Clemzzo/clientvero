@@ -114,7 +114,7 @@ export async function completeSetup(slug: string, token: string, password: strin
   const [claimed] = await db.batch([
     db
       .update(portalSetupTokens)
-      .set({ usedAt })
+      .set({ usedAt, tokenSealed: null })
       .where(and(eq(portalSetupTokens.id, link.tokenId), isNull(portalSetupTokens.usedAt)))
       .returning({ id: portalSetupTokens.id }),
     db
