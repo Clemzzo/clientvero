@@ -4,6 +4,7 @@ import { activityLogs } from "./activity";
 import { clients } from "./clients";
 import { files } from "./files";
 import { leads } from "./leads";
+import { messages } from "./messages";
 import { portalAccounts, portalSessions, portalSetupTokens } from "./portal";
 import { milestones, projects } from "./projects";
 import { proposalSections, proposals } from "./proposals";
@@ -63,6 +64,7 @@ export const clientsRelations = relations(clients, ({ one, many }) => ({
   proposals: many(proposals),
   projects: many(projects),
   files: many(files),
+  messages: many(messages),
   portalAccount: one(portalAccounts),
 }));
 
@@ -109,6 +111,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   }),
   milestones: many(milestones),
   files: many(files),
+  messages: many(messages),
 }));
 
 export const milestonesRelations = relations(milestones, ({ one }) => ({
@@ -164,6 +167,25 @@ export const filesRelations = relations(files, ({ one }) => ({
   }),
   uploader: one(users, {
     fields: [files.uploadedBy],
+    references: [users.id],
+  }),
+}));
+
+export const messagesRelations = relations(messages, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [messages.organizationId],
+    references: [organizations.id],
+  }),
+  client: one(clients, {
+    fields: [messages.clientId],
+    references: [clients.id],
+  }),
+  project: one(projects, {
+    fields: [messages.projectId],
+    references: [projects.id],
+  }),
+  sender: one(users, {
+    fields: [messages.senderUserId],
     references: [users.id],
   }),
 }));

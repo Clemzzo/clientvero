@@ -4,6 +4,7 @@ import { Activity, Pencil } from "lucide-react";
 
 import { ClientDetails } from "@/components/clients/ClientDetails";
 import { ClientFiles } from "@/components/clients/ClientFiles";
+import { ClientMessages } from "@/components/clients/ClientMessages";
 import { ClientProjects } from "@/components/clients/ClientProjects";
 import { ClientProposals } from "@/components/clients/ClientProposals";
 import { DisablePortalButton } from "@/components/clients/DisablePortalButton";
@@ -20,6 +21,7 @@ import { activityResources } from "@/features/activity/activity-actions";
 import { noticeSchema, type NoticeKey } from "@/features/notices";
 import { hasPermission, permissions } from "@/server/authorization/permissions";
 import { listWorkspaceFiles } from "@/server/repositories/file.repository";
+import { listConversations, unreadSummary } from "@/server/repositories/message.repository";
 import { listClientProjects } from "@/server/repositories/project.repository";
 import { listClientProposals } from "@/server/repositories/proposal.repository";
 import { listActivity } from "@/server/services/activity.service";
@@ -44,20 +46,29 @@ export default async function ClientPage(props: PageProps<"/dashboard/clients/[i
   const searchParams = await props.searchParams;
   const tab = clientTabSchema.parse(searchParams.tab);
   const notice = noticeSchema.parse(searchParams.notice);
-  const filesPage = pageNumber.parse(searchParams.page);
+  const page = pageNumber.parse(searchParams.page);
   const canEdit = hasPermission(ctx.membership.role, permissions.clientsUpdate);
-  const [proposals, projects, files] = await Promise.all([
+  const [proposals, projects, files, conversations, clientMessages] = await Promise.all([
     listClientProposals(ctx.organization.id, client.id),
     listClientProjects(ctx.organization.id, client.id),
-    listWorkspaceFiles(ctx.organization.id, { q: "", page: filesPage }, { clientId: client.id }),
+    listWorkspaceFiles(ctx.organization.id, { q: "", page: tab === "files" ? page : 1 }, { clientId: client.id }),
+    listConversations(ctx.organization.id, { q: "", page: tab === "messages" ? page : 1, filter: "all" }, { clientId: client.id }),
+    unreadSummary(ctx.organization.id, "team", client.id),
   ]);
   const basePath = `/dashboard/clients/${client.id}`;
 
-  const tabs: { value: ClientTab; label: string; href: string; count?: number }[] = [
+  const tabs: { value: ClientTab; label: string; href: string; count?: number; unread?: number }[] = [
     { value: "overview", label: "Overview", href: basePath },
     { value: "proposals", label: "Proposals", href: `${basePath}?tab=proposals`, count: proposals.length },
     { value: "projects", label: "Projects", href: `${basePath}?tab=projects`, count: projects.length },
     { value: "files", label: "Files", href: `${basePath}?tab=files`, count: files.total },
+    {
+      value: "messages",
+      label: "Messages",
+      href: `${basePath}?tab=messages`,
+      count: conversations.total,
+      unread: clientMessages.unread,
+    },
     { value: "activity", label: "Activity", href: `${basePath}?tab=activity` },
   ];
 
@@ -106,7 +117,10 @@ export default async function ClientPage(props: PageProps<"/dashboard/clients/[i
             canCreate={hasPermission(ctx.membership.role, permissions.projectsCreate)}
           />
         )}
-        {tab === "files" && <ClientFiles clientId={client.id} result={files} page={filesPage} />}
+        {tab === "files" && <ClientFiles clientId={client.id} result={files} page={page} />}
+        {tab === "messages" && (
+          <ClientMessages clientId={client.id} clientName={client.name} result={conversations} page={page} />
+        )}
         {tab === "activity" && <ClientActivity organizationId={ctx.organization.id} clientId={client.id} />}
       </div>
     </div>

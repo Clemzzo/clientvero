@@ -1,10 +1,11 @@
-import { FileText, FolderKanban, FolderOpen, History, LayoutDashboard, UserPlus, Users, type LucideIcon } from "lucide-react";
+import { FileText, FolderKanban, FolderOpen, History, MessagesSquare, LayoutDashboard, UserPlus, Users, type LucideIcon } from "lucide-react";
 
 export type AppNavItem = {
   label: string;
   href: string;
   icon: LucideIcon;
   exact?: boolean;
+  badge?: "messages";
 };
 
 export const appNavigation: AppNavItem[] = [
@@ -13,6 +14,7 @@ export const appNavigation: AppNavItem[] = [
   { label: "Clients", href: "/dashboard/clients", icon: Users },
   { label: "Proposals", href: "/dashboard/proposals", icon: FileText },
   { label: "Projects", href: "/dashboard/projects", icon: FolderKanban },
+  { label: "Messages", href: "/dashboard/messages", icon: MessagesSquare, badge: "messages" },
   { label: "Files", href: "/dashboard/files", icon: FolderOpen },
   { label: "Activity", href: "/dashboard/activity", icon: History },
 ];

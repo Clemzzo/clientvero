@@ -9,4 +9,5 @@ export * from "./proposals";
 export * from "./projects";
 export * from "./portal";
 export * from "./files";
+export * from "./messages";
 export * from "./relations";

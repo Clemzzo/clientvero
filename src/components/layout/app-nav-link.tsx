@@ -4,15 +4,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
+import { UnreadBadge } from "@/components/shared/UnreadBadge";
 import { cn } from "@/lib/utils";
 
 type AppNavLinkProps = {
   href: string;
   exact?: boolean;
+  badge?: number;
   children: ReactNode;
 };
 
-export function AppNavLink({ href, exact = false, children }: AppNavLinkProps) {
+export function AppNavLink({ href, exact = false, badge = 0, children }: AppNavLinkProps) {
   const pathname = usePathname();
   const active = exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
 
@@ -26,6 +28,7 @@ export function AppNavLink({ href, exact = false, children }: AppNavLinkProps) {
       )}
     >
       {children}
+      <UnreadBadge count={badge} className="ml-auto" />
     </Link>
   );
 }

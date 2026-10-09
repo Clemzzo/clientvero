@@ -1130,10 +1130,20 @@ content
 is_read
 created_at
 updated_at
-deleted_at
 ```
 
 A message originates either from an internal user (`sender_user_id` set) or from the client (`sender_user_id` null; the client is `client_id`).
+
+Implementation (approved by the owner):
+
+- **One conversation per project.** `project_id` is required and `client_id` is copied from the project. The team reads and replies at `/dashboard/messages` (inbox + thread), on the project's Messages tab, and from the client's Messages tab; the client uses `/portal/[slug]/messages`.
+- **`is_read`** is one flag per message: on a client message it means the team has opened the thread; on a team message it means the client has. Opening a thread marks the other side's messages read. Unread counts appear as badges in both sidebars; "Seen" shows under your side's latest message once the other side has read it.
+- **Real time by short polling.** An open thread fetches only newer messages every 3 seconds (immediately on tab focus, paused while the tab is hidden), re-reading a 2-second window before its cursor so messages committed out of order are never skipped; temporary failures back off (up to 60 seconds) instead of stopping. The inbox and unread badges refresh every 15 seconds. No push service is used.
+- **Sends are idempotent.** The browser generates each message id; sending the same id again (a retry after a lost response) stores nothing new and returns the thread, and an id already used by someone else is refused.
+- **Deleting is permanent and own-only.** Team members and clients can delete their own messages; the row is removed (no `deleted_at`) and disappears for both sides. Messages cannot be edited.
+- **No activity entries** are written for messages. Plain text only (up to 5,000 characters; `http(s)` links are made clickable); no attachments.
+- Sending and deleting need `projects.update`; reading needs `projects.read`. Clients are authorized only through their portal session, on their own live projects.
+- A project with messages can only be archived (§86). Email and in-app notifications for new messages come with the Email and Notifications builds.
 
 ---
 
@@ -1189,6 +1199,8 @@ PAYMENT_RECEIVED
 FILE_UPLOADED
 MESSAGE_SENT
 ```
+
+`MESSAGE_SENT` is not logged: the conversation is its own record (§38).
 
 ---
 
@@ -1554,7 +1566,7 @@ Implementation (approved by the owner):
 - **Verification:** the client opens the link and chooses a password (scrypt, salted). The same link flow resets a forgotten password: the business creates a "password reset link".
 - **Sessions:** `portal_sessions` (token hash, 30-day expiry) in an `httpOnly`, `sameSite=lax` cookie scoped to `/portal`. Revoking a client's access, turning the portal off for a client (`clients.portal_enabled = false`), resetting a password, or archiving the client ends access.
 - **URLs are scoped by the business slug:** `/portal/[slug]/sign-in`, `/portal/[slug]/setup/[token]`, `/portal/[slug]`, `/portal/[slug]/projects/[id]`. Every portal read is scoped by the session's organization **and** client.
-- **Clients see** project name, status, description, dates, progress and milestones; never budgets, notes or internal activity. Shared project files are listed on the portal project page (§37). Invoices and messages are added to the portal with their builds.
+- **Clients see** project name, status, description, dates, progress and milestones; never budgets, notes or internal activity. Shared project files are listed on the portal project page (§37), and clients message the team at `/portal/[slug]/messages` (§38). Invoices are added to the portal with their build.
 
 ---
 
@@ -1657,7 +1669,9 @@ Suggested starting limits:
 ```text
 AI: 20 requests/hour/user
 
-Messages: 60/minute/user
+Messages: 60/minute/user (sends and deletes; clients: 60/minute per portal account)
+
+Message polling: 120/minute per user or portal account (a limited poll returns nothing and the next one retries)
 
 Public document actions: 30/minute/IP
 
@@ -2289,9 +2303,8 @@ Soft-delete where recovery or history matters:
 - projects
 - proposals
 - invoices
-- messages
 
-Files are not soft-deleted: deleting a file removes it permanently (§37).
+Files and messages are not soft-deleted: deleting either removes it permanently (§37, §38).
 
 Financial records should generally remain auditable rather than being physically removed.
 

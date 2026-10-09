@@ -4,13 +4,17 @@ import { AppNavLink } from "@/components/layout/app-nav-link";
 import { appNavigation } from "@/components/layout/app-navigation";
 import { Logo } from "@/components/layout/logo";
 import { UserMenu } from "@/components/layout/user-menu";
+import { InboxPoller } from "@/components/messages/InboxPoller";
 import { NoticeProvider } from "@/components/shared/notice-provider";
 import type { Organization, User } from "@/db/schema";
 import { signOutAction } from "@/server/actions/auth";
+import { pollInboxSummaryAction } from "@/server/actions/messages";
+import type { UnreadSummary } from "@/server/repositories/message.repository";
 
 type AppShellProps = {
   user: User;
   organization: Organization;
+  messages: UnreadSummary;
   children: ReactNode;
 };
 
@@ -18,9 +22,9 @@ function displayName(user: User) {
   return [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email;
 }
 
-function NavLinks() {
-  return appNavigation.map(({ label, href, icon: Icon, exact }) => (
-    <AppNavLink key={href} href={href} exact={exact}>
+function NavLinks({ unreadMessages }: { unreadMessages: number }) {
+  return appNavigation.map(({ label, href, icon: Icon, exact, badge }) => (
+    <AppNavLink key={href} href={href} exact={exact} badge={badge === "messages" ? unreadMessages : 0}>
       <Icon aria-hidden className="size-4" />
       {label}
     </AppNavLink>
@@ -44,7 +48,7 @@ function WorkspaceBadge({ organization }: { organization: Organization }) {
   );
 }
 
-export function AppShell({ user, organization, children }: AppShellProps) {
+export function AppShell({ user, organization, messages, children }: AppShellProps) {
   const name = displayName(user);
 
   return (
@@ -61,7 +65,7 @@ export function AppShell({ user, organization, children }: AppShellProps) {
         <nav aria-label="Main" className="flex-1 px-3 pt-6">
           <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-500">Workspace</p>
           <div className="space-y-1">
-            <NavLinks />
+            <NavLinks unreadMessages={messages.unread} />
           </div>
         </nav>
       </aside>
@@ -72,7 +76,7 @@ export function AppShell({ user, organization, children }: AppShellProps) {
           <UserMenu name={name} email={user.email} onSignOut={signOutAction} />
         </div>
         <nav aria-label="Main" className="flex gap-1 overflow-x-auto px-3 pb-2">
-          <NavLinks />
+          <NavLinks unreadMessages={messages.unread} />
         </nav>
       </header>
 
@@ -82,6 +86,7 @@ export function AppShell({ user, organization, children }: AppShellProps) {
         </header>
         <main>
           <NoticeProvider>{children}</NoticeProvider>
+          <InboxPoller initial={messages} poll={pollInboxSummaryAction} />
         </main>
       </div>
     </div>

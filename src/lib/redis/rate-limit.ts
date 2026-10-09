@@ -31,12 +31,16 @@ export const authLimits = {
 export const workspaceLimits = {
   writesPerUser: limiter("workspace:writes:user", 10, "1 m"),
   conversionsPerUser: limiter("workspace:convert:user", 5, "1 m"),
+  messagesPerUser: limiter("workspace:messages:user", 60, "1 m"),
+  messagePollsPerUser: limiter("workspace:message-polls:user", 120, "1 m"),
   uploadsPerUser: limiter("workspace:uploads:user", 40, "1 m"),
 };
 
 export const portalLimits = {
   authPerIp: limiter("portal:auth:ip", 10, "15 m"),
   authPerEmail: limiter("portal:auth:email", 5, "15 m"),
+  messagesPerAccount: limiter("portal:messages:account", 60, "1 m"),
+  messagePollsPerAccount: limiter("portal:message-polls:account", 120, "1 m"),
 };
 
 export const publicLimits = {

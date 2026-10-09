@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, CalendarCheck, CalendarDays, Flag, FolderOpen } from "lucide-react";
+import { ArrowLeft, CalendarCheck, CalendarDays, Flag, FolderOpen, MessagesSquare } from "lucide-react";
 
 import { MilestoneTimeline } from "@/components/portal/MilestoneTimeline";
 import { PortalFileList } from "@/components/portal/PortalFileList";
@@ -9,12 +9,15 @@ import { ProjectProgress } from "@/components/projects/ProjectProgress";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { IconTile } from "@/components/shared/IconTile";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { UnreadBadge } from "@/components/shared/UnreadBadge";
+import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { projectStatusLabels, projectStatusTones } from "@/features/projects/project-status";
 import { formatDate } from "@/lib/utils/format";
 import { requirePortalContext } from "@/server/auth/portal-session";
 import { NotFoundError } from "@/server/errors";
 import { listPortalProjectFiles } from "@/server/repositories/file.repository";
+import { unreadByProject } from "@/server/repositories/message.repository";
 import { getPortalProject, listPortalMilestones } from "@/server/repositories/portal.repository";
 import { projectIdSchema } from "@/validators/projects";
 
@@ -27,12 +30,13 @@ async function loadProject(slug: string, id: string) {
   }
 
   try {
-    const [project, milestones, files] = await Promise.all([
+    const [project, milestones, files, unreadMessages] = await Promise.all([
       getPortalProject(context, projectId.data),
       listPortalMilestones(context, projectId.data),
       listPortalProjectFiles(context, projectId.data),
+      unreadByProject(context.organization.id, "client", projectId.data, context.client.id),
     ]);
-    return { context, project, milestones, files };
+    return { context, project, milestones, files, unreadMessages };
   } catch (error) {
     if (error instanceof NotFoundError) notFound();
     throw error;
@@ -47,7 +51,7 @@ export async function generateMetadata(props: PageProps<"/portal/[slug]/projects
 
 export default async function PortalProjectPage(props: PageProps<"/portal/[slug]/projects/[id]">) {
   const { slug, id } = await props.params;
-  const { context, project, milestones, files } = await loadProject(slug, id);
+  const { context, project, milestones, files, unreadMessages } = await loadProject(slug, id);
   const today = new Date().toISOString().slice(0, 10);
 
   const dates = [
@@ -71,14 +75,23 @@ export default async function PortalProjectPage(props: PageProps<"/portal/[slug]
         Projects
       </Link>
 
-      <header>
-        <StatusBadge label={projectStatusLabels[project.status]} tone={projectStatusTones[project.status]} />
-        <h1 className="mt-3 font-display text-[clamp(26px,2.6vw,34px)] font-extrabold leading-[1.15] tracking-[-0.03em] text-ink-900">
-          {project.name}
-        </h1>
-        {project.description && (
-          <p className="mt-3 max-w-[70ch] whitespace-pre-line text-[15px] leading-relaxed text-ink-500">{project.description}</p>
-        )}
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <StatusBadge label={projectStatusLabels[project.status]} tone={projectStatusTones[project.status]} />
+          <h1 className="mt-3 font-display text-[clamp(26px,2.6vw,34px)] font-extrabold leading-[1.15] tracking-[-0.03em] text-ink-900">
+            {project.name}
+          </h1>
+          {project.description && (
+            <p className="mt-3 max-w-[70ch] whitespace-pre-line text-[15px] leading-relaxed text-ink-500">{project.description}</p>
+          )}
+        </div>
+        <Button asChild className="h-10 shrink-0 rounded-lg">
+          <Link href={`/portal/${context.organization.slug}/messages/${project.id}`}>
+            <MessagesSquare aria-hidden className="size-4" />
+            Message {context.organization.name}
+            <UnreadBadge count={unreadMessages} />
+          </Link>
+        </Button>
       </header>
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">

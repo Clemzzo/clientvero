@@ -3,29 +3,33 @@ import Link from "next/link";
 
 import { AppNavLink } from "@/components/layout/app-nav-link";
 import { UserMenu } from "@/components/layout/user-menu";
+import { InboxPoller } from "@/components/messages/InboxPoller";
 import { PortalBrand } from "@/components/portal/PortalBrand";
 import { PortalFooter } from "@/components/portal/PortalFooter";
 import { portalNavigation } from "@/components/portal/portal-navigation";
 import { portalSignOutAction } from "@/server/actions/portal";
+import { pollPortalInboxSummaryAction } from "@/server/actions/portal-messages";
+import type { UnreadSummary } from "@/server/repositories/message.repository";
 
 type PortalShellProps = {
   slug: string;
   organizationName: string;
   clientName: string;
   email: string;
+  messages: UnreadSummary;
   children: ReactNode;
 };
 
-function NavLinks({ slug }: { slug: string }) {
-  return portalNavigation(slug).map(({ label, href, icon: Icon, exact }) => (
-    <AppNavLink key={href} href={href} exact={exact}>
+function NavLinks({ slug, unreadMessages }: { slug: string; unreadMessages: number }) {
+  return portalNavigation(slug).map(({ label, href, icon: Icon, exact, badge }) => (
+    <AppNavLink key={href} href={href} exact={exact} badge={badge === "messages" ? unreadMessages : 0}>
       <Icon aria-hidden className="size-4" />
       {label}
     </AppNavLink>
   ));
 }
 
-export function PortalShell({ slug, organizationName, clientName, email, children }: PortalShellProps) {
+export function PortalShell({ slug, organizationName, clientName, email, messages, children }: PortalShellProps) {
   const clientMenu = <UserMenu name={clientName} email={email} onSignOut={portalSignOutAction.bind(null, slug)} />;
 
   return (
@@ -40,7 +44,7 @@ export function PortalShell({ slug, organizationName, clientName, email, childre
         <nav aria-label="Portal" className="flex-1 px-3 pt-6">
           <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-500">Portal</p>
           <div className="space-y-1">
-            <NavLinks slug={slug} />
+            <NavLinks slug={slug} unreadMessages={messages.unread} />
           </div>
         </nav>
 
@@ -57,7 +61,7 @@ export function PortalShell({ slug, organizationName, clientName, email, childre
           {clientMenu}
         </div>
         <nav aria-label="Portal" className="flex gap-1 overflow-x-auto px-3 pb-2">
-          <NavLinks slug={slug} />
+          <NavLinks slug={slug} unreadMessages={messages.unread} />
         </nav>
       </header>
 
@@ -67,6 +71,7 @@ export function PortalShell({ slug, organizationName, clientName, email, childre
         </header>
         <main className="mx-auto w-full max-w-300 flex-1 px-4 py-8 sm:px-8 lg:py-10">{children}</main>
         <PortalFooter className="lg:hidden" />
+        <InboxPoller initial={messages} poll={pollPortalInboxSummaryAction.bind(null, slug)} />
       </div>
     </div>
   );

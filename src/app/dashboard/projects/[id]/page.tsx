@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Activity, Settings } from "lucide-react";
 
 import { ProjectFiles } from "@/components/files/ProjectFiles";
+import { TeamThread } from "@/components/messages/TeamThread";
 import { MilestonesCard } from "@/components/projects/MilestonesCard";
 import { ProjectDetails } from "@/components/projects/ProjectDetails";
 import { ProjectStatusMenu } from "@/components/projects/ProjectStatusMenu";
@@ -19,6 +20,7 @@ import { noticeSchema } from "@/features/notices";
 import { projectStatusLabels, projectStatusTones } from "@/features/projects/project-status";
 import { hasPermission, permissions } from "@/server/authorization/permissions";
 import { listProjectFiles } from "@/server/repositories/file.repository";
+import { unreadByProject } from "@/server/repositories/message.repository";
 import { listActivity } from "@/server/services/activity.service";
 import { listMilestones } from "@/server/services/milestone.service";
 import { projectTabSchema, type ProjectTab } from "@/validators/projects";
@@ -36,16 +38,18 @@ export default async function ProjectPage(props: PageProps<"/dashboard/projects/
   const tab = projectTabSchema.parse(searchParams.tab);
   const notice = noticeSchema.parse(searchParams.notice);
   const canEdit = hasPermission(ctx.membership.role, permissions.projectsUpdate);
-  const [milestones, files] = await Promise.all([
+  const [milestones, files, unreadMessages] = await Promise.all([
     listMilestones(ctx.organization.id, project.id),
     listProjectFiles(ctx.organization.id, project.id),
+    unreadByProject(ctx.organization.id, "team", project.id),
   ]);
   const basePath = `/dashboard/projects/${project.id}`;
 
-  const tabs: { value: ProjectTab; label: string; href: string; count?: number }[] = [
+  const tabs: { value: ProjectTab; label: string; href: string; count?: number; unread?: number }[] = [
     { value: "overview", label: "Overview", href: basePath },
     { value: "milestones", label: "Milestones", href: `${basePath}?tab=milestones`, count: milestones.length },
     { value: "files", label: "Files", href: `${basePath}?tab=files`, count: files.length },
+    { value: "messages", label: "Messages", href: `${basePath}?tab=messages`, unread: unreadMessages },
     { value: "activity", label: "Activity", href: `${basePath}?tab=activity` },
   ];
 
@@ -99,6 +103,17 @@ export default async function ProjectPage(props: PageProps<"/dashboard/projects/
         )}
         {tab === "milestones" && <MilestonesCard projectId={project.id} milestones={milestones} canEdit={canEdit} />}
         {tab === "files" && <ProjectFiles projectId={project.id} files={files} canEdit={canEdit} />}
+        {tab === "messages" && (
+          <Card className="flex h-[min(720px,calc(100dvh-260px))] min-h-[480px] flex-col overflow-hidden">
+            <TeamThread
+              organizationId={ctx.organization.id}
+              user={ctx.user}
+              projectId={project.id}
+              clientId={project.clientId}
+              clientName={project.clientName}
+            />
+          </Card>
+        )}
         {tab === "activity" && <ProjectActivity organizationId={ctx.organization.id} projectId={project.id} />}
       </div>
     </div>
