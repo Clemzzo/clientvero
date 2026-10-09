@@ -22,10 +22,14 @@ type PortalShellProps = {
 
 function NavLinks({ slug, unreadMessages }: { slug: string; unreadMessages: number }) {
   return portalNavigation(slug).map(({ label, href, icon: Icon, exact, badge }) => (
-    <AppNavLink key={href} href={href} exact={exact} badge={badge === "messages" ? unreadMessages : 0}>
-      <Icon aria-hidden className="size-4" />
-      {label}
-    </AppNavLink>
+    <AppNavLink
+      key={href}
+      href={href}
+      label={label}
+      icon={<Icon aria-hidden className="size-4 shrink-0" />}
+      exact={exact}
+      badge={badge === "messages" ? unreadMessages : 0}
+    />
   ));
 }
 
