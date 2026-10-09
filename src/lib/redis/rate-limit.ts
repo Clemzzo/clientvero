@@ -31,6 +31,7 @@ export const authLimits = {
 export const workspaceLimits = {
   writesPerUser: limiter("workspace:writes:user", 10, "1 m"),
   conversionsPerUser: limiter("workspace:convert:user", 5, "1 m"),
+  uploadsPerUser: limiter("workspace:uploads:user", 40, "1 m"),
 };
 
 export const portalLimits = {

@@ -57,7 +57,7 @@ export const projectListQuerySchema = z.object({
 
 export type ProjectListQuery = z.infer<typeof projectListQuerySchema>;
 
-export const projectTabs = ["overview", "milestones", "activity"] as const;
+export const projectTabs = ["overview", "milestones", "files", "activity"] as const;
 
 export type ProjectTab = (typeof projectTabs)[number];
 

@@ -5,7 +5,7 @@ import { randomUUID } from "node:crypto";
 import { and, eq, isNotNull, isNull, sql, type SQL } from "drizzle-orm";
 
 import { db } from "@/db";
-import { activityLogs, clients, milestones, projects, type Project, type ProjectStatus } from "@/db/schema";
+import { activityLogs, clients, files, milestones, projects, type Project, type ProjectStatus } from "@/db/schema";
 import { activityActions, activityResources, type ActivityAction } from "@/features/activity/activity-actions";
 import { projectProgress } from "@/features/projects/progress";
 import type { WorkspaceActor } from "@/server/auth/organization";
@@ -232,9 +232,21 @@ export async function restoreProject(ctx: WorkspaceActor, projectId: string): Pr
   }
 }
 
+const projectHasFiles = "This project has files, so it can only be archived.";
+
 export async function deleteProjectPermanently(ctx: WorkspaceActor, projectId: string): Promise<void> {
   const organizationId = ctx.organization.id;
   const project = await findProject(ownedProjectScope(organizationId, projectId));
+
+  const [projectFile] = await db
+    .select({ id: files.id })
+    .from(files)
+    .where(and(eq(files.organizationId, organizationId), eq(files.projectId, projectId)))
+    .limit(1);
+
+  if (projectFile) {
+    throw new ConflictError(projectHasFiles);
+  }
 
   await db.batch([
     db.delete(projects).where(ownedProjectScope(organizationId, projectId)),

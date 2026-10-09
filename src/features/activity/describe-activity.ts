@@ -11,6 +11,7 @@ const metadataSchema = z
     clientName: z.string().optional(),
     to: z.enum(leadStatuses).optional(),
     milestoneName: z.string().optional(),
+    fileName: z.string().optional(),
     projectStatus: z.enum(projectStatuses).optional(),
     count: z.number().int().nonnegative().optional(),
   })
@@ -23,7 +24,7 @@ type ActivityDescription = {
 };
 
 export function describeActivity(action: string, metadata: unknown): ActivityDescription {
-  const { name, to, milestoneName, projectStatus, count } = metadataSchema.parse(metadata ?? {});
+  const { name, to, milestoneName, fileName, projectStatus, count } = metadataSchema.parse(metadata ?? {});
 
   switch (action) {
     case activityActions.leadCreated:
@@ -88,6 +89,14 @@ export function describeActivity(action: string, metadata: unknown): ActivityDes
       return { verb: "completed milestone", subject: milestoneName };
     case activityActions.milestoneRemoved:
       return { verb: "removed milestone", subject: milestoneName };
+    case activityActions.fileUploaded:
+      return { verb: "uploaded", subject: fileName };
+    case activityActions.fileShared:
+      return { verb: "shared", subject: fileName, detail: "with the client" };
+    case activityActions.fileUnshared:
+      return { verb: "stopped sharing", subject: fileName, detail: "with the client" };
+    case activityActions.fileDeleted:
+      return { verb: "permanently deleted file", subject: fileName };
     case activityActions.portalInvited:
       return { verb: "invited", subject: name, detail: "to the client portal" };
     case activityActions.portalLinkIssued:

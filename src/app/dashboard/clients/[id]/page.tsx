@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Activity, Pencil } from "lucide-react";
 
 import { ClientDetails } from "@/components/clients/ClientDetails";
+import { ClientFiles } from "@/components/clients/ClientFiles";
 import { ClientProjects } from "@/components/clients/ClientProjects";
 import { ClientProposals } from "@/components/clients/ClientProposals";
 import { DisablePortalButton } from "@/components/clients/DisablePortalButton";
@@ -18,10 +19,12 @@ import type { Client } from "@/db/schema";
 import { activityResources } from "@/features/activity/activity-actions";
 import { noticeSchema, type NoticeKey } from "@/features/notices";
 import { hasPermission, permissions } from "@/server/authorization/permissions";
+import { listWorkspaceFiles } from "@/server/repositories/file.repository";
 import { listClientProjects } from "@/server/repositories/project.repository";
 import { listClientProposals } from "@/server/repositories/proposal.repository";
 import { listActivity } from "@/server/services/activity.service";
 import { clientTabSchema, type ClientTab } from "@/validators/clients";
+import { pageNumber } from "@/validators/fields";
 
 import { loadClient } from "./load-client";
 
@@ -41,10 +44,12 @@ export default async function ClientPage(props: PageProps<"/dashboard/clients/[i
   const searchParams = await props.searchParams;
   const tab = clientTabSchema.parse(searchParams.tab);
   const notice = noticeSchema.parse(searchParams.notice);
+  const filesPage = pageNumber.parse(searchParams.page);
   const canEdit = hasPermission(ctx.membership.role, permissions.clientsUpdate);
-  const [proposals, projects] = await Promise.all([
+  const [proposals, projects, files] = await Promise.all([
     listClientProposals(ctx.organization.id, client.id),
     listClientProjects(ctx.organization.id, client.id),
+    listWorkspaceFiles(ctx.organization.id, { q: "", page: filesPage }, { clientId: client.id }),
   ]);
   const basePath = `/dashboard/clients/${client.id}`;
 
@@ -52,6 +57,7 @@ export default async function ClientPage(props: PageProps<"/dashboard/clients/[i
     { value: "overview", label: "Overview", href: basePath },
     { value: "proposals", label: "Proposals", href: `${basePath}?tab=proposals`, count: proposals.length },
     { value: "projects", label: "Projects", href: `${basePath}?tab=projects`, count: projects.length },
+    { value: "files", label: "Files", href: `${basePath}?tab=files`, count: files.total },
     { value: "activity", label: "Activity", href: `${basePath}?tab=activity` },
   ];
 
@@ -100,6 +106,7 @@ export default async function ClientPage(props: PageProps<"/dashboard/clients/[i
             canCreate={hasPermission(ctx.membership.role, permissions.projectsCreate)}
           />
         )}
+        {tab === "files" && <ClientFiles clientId={client.id} result={files} page={filesPage} />}
         {tab === "activity" && <ClientActivity organizationId={ctx.organization.id} clientId={client.id} />}
       </div>
     </div>

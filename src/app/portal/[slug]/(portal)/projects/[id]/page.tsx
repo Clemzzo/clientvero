@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, CalendarCheck, CalendarDays, Flag } from "lucide-react";
+import { ArrowLeft, CalendarCheck, CalendarDays, Flag, FolderOpen } from "lucide-react";
 
 import { MilestoneTimeline } from "@/components/portal/MilestoneTimeline";
+import { PortalFileList } from "@/components/portal/PortalFileList";
 import { ProjectProgress } from "@/components/projects/ProjectProgress";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { IconTile } from "@/components/shared/IconTile";
@@ -13,6 +14,7 @@ import { projectStatusLabels, projectStatusTones } from "@/features/projects/pro
 import { formatDate } from "@/lib/utils/format";
 import { requirePortalContext } from "@/server/auth/portal-session";
 import { NotFoundError } from "@/server/errors";
+import { listPortalProjectFiles } from "@/server/repositories/file.repository";
 import { getPortalProject, listPortalMilestones } from "@/server/repositories/portal.repository";
 import { projectIdSchema } from "@/validators/projects";
 
@@ -25,11 +27,12 @@ async function loadProject(slug: string, id: string) {
   }
 
   try {
-    const [project, milestones] = await Promise.all([
+    const [project, milestones, files] = await Promise.all([
       getPortalProject(context, projectId.data),
       listPortalMilestones(context, projectId.data),
+      listPortalProjectFiles(context, projectId.data),
     ]);
-    return { context, project, milestones };
+    return { context, project, milestones, files };
   } catch (error) {
     if (error instanceof NotFoundError) notFound();
     throw error;
@@ -44,7 +47,7 @@ export async function generateMetadata(props: PageProps<"/portal/[slug]/projects
 
 export default async function PortalProjectPage(props: PageProps<"/portal/[slug]/projects/[id]">) {
   const { slug, id } = await props.params;
-  const { context, project, milestones } = await loadProject(slug, id);
+  const { context, project, milestones, files } = await loadProject(slug, id);
   const today = new Date().toISOString().slice(0, 10);
 
   const dates = [
@@ -79,20 +82,37 @@ export default async function PortalProjectPage(props: PageProps<"/portal/[slug]
       </header>
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <Card>
-          <CardHeader title="Milestones" description="The steps to finishing this project." />
-          <div className="px-5 pb-6 pt-5 sm:px-6">
-            {milestones.length === 0 ? (
-              <EmptyState
-                icon={<Flag />}
-                title="No milestones yet"
-                description={`${context.organization.name} will add the project's steps here.`}
-              />
-            ) : (
-              <MilestoneTimeline milestones={milestones} today={today} />
-            )}
-          </div>
-        </Card>
+        <div className="space-y-6">
+          <Card>
+            <CardHeader title="Milestones" description="The steps to finishing this project." />
+            <div className="px-5 pb-6 pt-5 sm:px-6">
+              {milestones.length === 0 ? (
+                <EmptyState
+                  icon={<Flag />}
+                  title="No milestones yet"
+                  description={`${context.organization.name} will add the project's steps here.`}
+                />
+              ) : (
+                <MilestoneTimeline milestones={milestones} today={today} />
+              )}
+            </div>
+          </Card>
+
+          <Card>
+            <CardHeader title="Files" description={`Files ${context.organization.name} has shared with you.`} />
+            <div className="px-3 pb-4 pt-3 sm:px-4">
+              {files.length === 0 ? (
+                <EmptyState
+                  icon={<FolderOpen />}
+                  title="No files yet"
+                  description={`Files ${context.organization.name} shares for this project will appear here.`}
+                />
+              ) : (
+                <PortalFileList slug={context.organization.slug} files={files} />
+              )}
+            </div>
+          </Card>
+        </div>
 
         <aside className="space-y-4 lg:sticky lg:top-24">
           <Card className="p-5 sm:p-6">

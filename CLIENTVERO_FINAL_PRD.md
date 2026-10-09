@@ -1101,8 +1101,16 @@ size_bytes
 is_public
 created_at
 updated_at
-deleted_at
 ```
+
+Implementation (approved by the owner):
+
+- Files attach to **projects**. `project_id` and `client_id` (copied from the project) are required. `proposal_id` and `invoice_id` are added with the features that attach files to proposals and invoices.
+- `is_public` means **Shared with client**: shared files are listed on the portal project page and downloadable by that client. New uploads are shared by default; the team can stop sharing per file.
+- Allowed types are decided by file extension on the server: PDF, PNG, JPEG, WebP, GIF, DOC/DOCX, XLS/XLSX, PPT/PPTX, TXT, CSV, ZIP (no SVG or HTML). Maximum 10 MB per file and 200 files per project.
+- Uploading, sharing and deleting need `projects.update`; viewing and downloading need `projects.read`. Deleting a file is permanent: the row is removed, then the object is deleted from the bucket, and a `FILE_DELETED` activity entry stays as the audit trail. Files have no `deleted_at`. A project with files can only be archived (§86).
+- PDF, PNG and JPEG files can be opened in the browser (click to view) in the workspace and the portal; every other type downloads. Viewing uses the same authorization as downloading.
+- Clients cannot upload from the portal in the MVP.
 
 ---
 
@@ -1546,7 +1554,7 @@ Implementation (approved by the owner):
 - **Verification:** the client opens the link and chooses a password (scrypt, salted). The same link flow resets a forgotten password: the business creates a "password reset link".
 - **Sessions:** `portal_sessions` (token hash, 30-day expiry) in an `httpOnly`, `sameSite=lax` cookie scoped to `/portal`. Revoking a client's access, turning the portal off for a client (`clients.portal_enabled = false`), resetting a password, or archiving the client ends access.
 - **URLs are scoped by the business slug:** `/portal/[slug]/sign-in`, `/portal/[slug]/setup/[token]`, `/portal/[slug]`, `/portal/[slug]/projects/[id]`. Every portal read is scoped by the session's organization **and** client.
-- **Clients see** project name, status, description, dates, progress and milestones; never budgets, notes or internal activity. Invoices, files and messages are added to the portal with their builds.
+- **Clients see** project name, status, description, dates, progress and milestones; never budgets, notes or internal activity. Shared project files are listed on the portal project page (§37). Invoices and messages are added to the portal with their builds.
 
 ---
 
@@ -1656,6 +1664,8 @@ Public document actions: 30/minute/IP
 Portal authentication: 10 attempts/15 minutes/IP, 5 attempts/15 minutes/email
 
 Workspace writes (create, update, status changes, portal access): 10/minute/user
+
+File uploads: 20 files/minute/user (40 upload steps; each file uses two: prepare and complete)
 
 Lead conversion: 5/minute/user
 ```
@@ -2279,8 +2289,9 @@ Soft-delete where recovery or history matters:
 - projects
 - proposals
 - invoices
-- files
 - messages
+
+Files are not soft-deleted: deleting a file removes it permanently (§37).
 
 Financial records should generally remain auditable rather than being physically removed.
 

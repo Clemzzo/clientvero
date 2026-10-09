@@ -1,4 +1,4 @@
-import { FileText, FolderKanban, History, LayoutDashboard, UserPlus, Users, type LucideIcon } from "lucide-react";
+import { FileText, FolderKanban, FolderOpen, History, LayoutDashboard, UserPlus, Users, type LucideIcon } from "lucide-react";
 
 export type AppNavItem = {
   label: string;
@@ -13,5 +13,6 @@ export const appNavigation: AppNavItem[] = [
   { label: "Clients", href: "/dashboard/clients", icon: Users },
   { label: "Proposals", href: "/dashboard/proposals", icon: FileText },
   { label: "Projects", href: "/dashboard/projects", icon: FolderKanban },
+  { label: "Files", href: "/dashboard/files", icon: FolderOpen },
   { label: "Activity", href: "/dashboard/activity", icon: History },
 ];

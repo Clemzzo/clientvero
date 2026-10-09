@@ -31,7 +31,7 @@ export const clientListQuerySchema = z.object({
 
 export type ClientListQuery = z.infer<typeof clientListQuerySchema>;
 
-export const clientTabs = ["overview", "proposals", "projects", "activity"] as const;
+export const clientTabs = ["overview", "proposals", "projects", "files", "activity"] as const;
 
 export type ClientTab = (typeof clientTabs)[number];
 

@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm";
 
 import { activityLogs } from "./activity";
 import { clients } from "./clients";
+import { files } from "./files";
 import { leads } from "./leads";
 import { portalAccounts, portalSessions, portalSetupTokens } from "./portal";
 import { milestones, projects } from "./projects";
@@ -61,6 +62,7 @@ export const clientsRelations = relations(clients, ({ one, many }) => ({
   }),
   proposals: many(proposals),
   projects: many(projects),
+  files: many(files),
   portalAccount: one(portalAccounts),
 }));
 
@@ -106,6 +108,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
     references: [users.id],
   }),
   milestones: many(milestones),
+  files: many(files),
 }));
 
 export const milestonesRelations = relations(milestones, ({ one }) => ({
@@ -143,5 +146,24 @@ export const portalSessionsRelations = relations(portalSessions, ({ one }) => ({
   account: one(portalAccounts, {
     fields: [portalSessions.portalAccountId],
     references: [portalAccounts.id],
+  }),
+}));
+
+export const filesRelations = relations(files, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [files.organizationId],
+    references: [organizations.id],
+  }),
+  client: one(clients, {
+    fields: [files.clientId],
+    references: [clients.id],
+  }),
+  project: one(projects, {
+    fields: [files.projectId],
+    references: [projects.id],
+  }),
+  uploader: one(users, {
+    fields: [files.uploadedBy],
+    references: [users.id],
   }),
 }));

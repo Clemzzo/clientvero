@@ -8,4 +8,5 @@ export * from "./clients";
 export * from "./proposals";
 export * from "./projects";
 export * from "./portal";
+export * from "./files";
 export * from "./relations";
