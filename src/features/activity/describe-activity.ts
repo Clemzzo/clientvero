@@ -3,6 +3,7 @@ import { z } from "zod";
 import { activityActions } from "@/features/activity/activity-actions";
 import { leadStatusLabels, leadStatuses } from "@/features/leads/lead-status";
 import { projectStatusLabels, projectStatuses } from "@/features/projects/project-status";
+import { formatMoney } from "@/lib/utils/format";
 
 const metadataSchema = z
   .object({
@@ -14,6 +15,8 @@ const metadataSchema = z
     fileName: z.string().optional(),
     projectStatus: z.enum(projectStatuses).optional(),
     count: z.number().int().nonnegative().optional(),
+    amount: z.string().regex(/^\d{1,12}(\.\d{1,2})?$/).optional(),
+    currency: z.string().length(3).optional(),
   })
   .catch({});
 
@@ -24,7 +27,8 @@ type ActivityDescription = {
 };
 
 export function describeActivity(action: string, metadata: unknown): ActivityDescription {
-  const { name, to, milestoneName, fileName, projectStatus, count } = metadataSchema.parse(metadata ?? {});
+  const { name, to, milestoneName, fileName, projectStatus, count, amount, currency } = metadataSchema.parse(metadata ?? {});
+  const money = amount && currency ? formatMoney(amount, currency) : undefined;
 
   switch (action) {
     case activityActions.leadCreated:
@@ -97,6 +101,24 @@ export function describeActivity(action: string, metadata: unknown): ActivityDes
       return { verb: "stopped sharing", subject: fileName, detail: "with the client" };
     case activityActions.fileDeleted:
       return { verb: "permanently deleted file", subject: fileName };
+    case activityActions.invoiceCreated:
+      return { verb: "created invoice", subject: name };
+    case activityActions.invoiceUpdated:
+      return { verb: "updated invoice", subject: name };
+    case activityActions.invoiceSent:
+      return { verb: "sent invoice", subject: name };
+    case activityActions.invoiceViewed:
+      return { verb: "viewed invoice", subject: name };
+    case activityActions.invoiceCancelled:
+      return { verb: "cancelled invoice", subject: name };
+    case activityActions.invoiceDeleted:
+      return { verb: "deleted draft invoice", subject: name };
+    case activityActions.invoicePaid:
+      return { verb: "marked invoice", subject: name, detail: "as paid in full" };
+    case activityActions.paymentReceived:
+      return { verb: money ? `recorded ${money} against` : "recorded a payment against", subject: name };
+    case activityActions.paymentRemoved:
+      return { verb: money ? `removed a ${money} payment from` : "removed a payment from", subject: name };
     case activityActions.portalInvited:
       return { verb: "invited", subject: name, detail: "to the client portal" };
     case activityActions.portalLinkIssued:

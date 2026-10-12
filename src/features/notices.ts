@@ -8,6 +8,9 @@ export const noticeKeys = [
   "proposal-saved",
   "project-created",
   "project-saved",
+  "invoice-created",
+  "invoice-saved",
+  "invoice-locked",
 ] as const;
 
 export type NoticeKey = (typeof noticeKeys)[number];

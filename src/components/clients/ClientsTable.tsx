@@ -34,7 +34,7 @@ function ClientActions({ client, canManagePortal, canDelete }: { client: ClientL
         <RowDeleteMenu
           name={client.name}
           archiveDescription="This client will be hidden from your workspace. Their history is kept."
-          permanentDescription="This client and their activity history will be erased from the database. This can't be undone. Clients with proposals or projects can only be archived."
+          permanentDescription="This client and their activity history will be erased from the database. This can't be undone. Clients with proposals, projects or invoices can only be archived."
           onDelete={deleteClientAction.bind(null, client.id)}
         />
       )}

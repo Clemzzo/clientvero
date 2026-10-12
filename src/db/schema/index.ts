@@ -10,4 +10,6 @@ export * from "./projects";
 export * from "./portal";
 export * from "./files";
 export * from "./messages";
+export * from "./invoices";
+export * from "./payments";
 export * from "./relations";

@@ -5,7 +5,7 @@ import { randomUUID } from "node:crypto";
 import { and, eq, isNotNull, isNull, sql, type SQL } from "drizzle-orm";
 
 import { db } from "@/db";
-import { activityLogs, clients, projects, proposals, type Client } from "@/db/schema";
+import { activityLogs, clients, invoices, projects, proposals, type Client } from "@/db/schema";
 import { activityActions, activityResources, type ActivityAction } from "@/features/activity/activity-actions";
 import type { WorkspaceActor } from "@/server/auth/organization";
 import { ConflictError, NotFoundError } from "@/server/errors";
@@ -93,16 +93,17 @@ export async function restoreClient(ctx: WorkspaceActor, clientId: string): Prom
 }
 
 const clientHasRecords =
-  "This client has proposals or projects, so it can't be deleted permanently. Archive it instead.";
+  "This client has proposals, projects or invoices, so it can't be deleted permanently. Archive it instead.";
 
 function hasProposalsOrProjects(clientId: string) {
   return sql`(
     exists (select 1 from ${proposals} where ${proposals.clientId} = ${clientId})
     or exists (select 1 from ${projects} where ${projects.clientId} = ${clientId})
+    or exists (select 1 from ${invoices} where ${invoices.clientId} = ${clientId})
   )`;
 }
 
-// Proposals and projects are commercial records, so a client with any (even archived ones) is never hard-deleted.
+// Proposals, projects and invoices are commercial records, so a client with any (even archived ones) is never hard-deleted.
 // Its activity history is removed and only the deletion itself stays in the audit trail.
 export async function deleteClientPermanently(ctx: WorkspaceActor, clientId: string): Promise<void> {
   const organizationId = ctx.organization.id;

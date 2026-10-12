@@ -33,3 +33,15 @@ export const projectStatusEnum = pgEnum("project_status", [
 export const milestoneStatusEnum = pgEnum("milestone_status", ["PENDING", "IN_PROGRESS", "COMPLETED"]);
 
 export const portalAccountStatusEnum = pgEnum("portal_account_status", ["INVITED", "ACTIVE", "REVOKED"]);
+
+export const invoiceStatusEnum = pgEnum("invoice_status", [
+  "DRAFT",
+  "SENT",
+  "VIEWED",
+  "PARTIALLY_PAID",
+  "PAID",
+  "OVERDUE",
+  "CANCELLED",
+]);
+
+export const paymentStatusEnum = pgEnum("payment_status", ["PENDING", "SUCCEEDED", "FAILED", "REFUNDED"]);

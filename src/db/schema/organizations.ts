@@ -1,4 +1,4 @@
-import { index, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core";
+import { index, integer, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core";
 
 import { id, softDelete, timestamps } from "./common";
 import { organizationRoleEnum } from "./enums";
@@ -15,6 +15,7 @@ export const organizations = pgTable("organizations", {
   currency: varchar("currency", { length: 3 }).notNull().default("USD"),
   address: text("address"),
   taxId: varchar("tax_id", { length: 120 }),
+  invoiceSequence: integer("invoice_sequence").notNull().default(0),
   ...timestamps,
   ...softDelete,
 });

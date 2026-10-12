@@ -64,8 +64,8 @@ export default async function DashboardPage() {
     { label: "Convert a lead to a client", done: clients.active > 0, href: "/dashboard/leads" },
     { label: "Send a proposal", done: proposals.sent > 0, href: "/dashboard/proposals/new" },
     { label: "Start a project", done: projects.total > 0, href: "/dashboard/projects/new" },
-    { label: "Invite a client to the portal", done: false },
-    { label: "Send an invoice", done: false },
+    { label: "Invite a client to the portal", done: overview.setup.portalInvited, href: "/dashboard/clients" },
+    { label: "Send an invoice", done: overview.setup.invoiceSent, href: "/dashboard/invoices/new" },
   ];
   const setupComplete = setupSteps.every((step) => step.done);
 

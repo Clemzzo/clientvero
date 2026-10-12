@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { db } from "@/db";
 import { clients, proposals, type Organization, type ProposalStatus, type User } from "@/db/schema";
 import { countPendingProposals, listClientOptions, listProposals } from "@/server/repositories/proposal.repository";
-import { generatePublicId } from "@/server/services/proposal.service";
+import { generatePublicId } from "@/lib/utils/public-id";
 import { cleanup, createTestOrganization, createTestUser } from "@/test/fixtures";
 
 describe("proposal.repository", () => {

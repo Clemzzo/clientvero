@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Activity, Settings } from "lucide-react";
+import { Activity, ReceiptText, Settings } from "lucide-react";
 
 import { ProjectFiles } from "@/components/files/ProjectFiles";
 import { TeamThread } from "@/components/messages/TeamThread";
@@ -38,6 +38,7 @@ export default async function ProjectPage(props: PageProps<"/dashboard/projects/
   const tab = projectTabSchema.parse(searchParams.tab);
   const notice = noticeSchema.parse(searchParams.notice);
   const canEdit = hasPermission(ctx.membership.role, permissions.projectsUpdate);
+  const canInvoice = hasPermission(ctx.membership.role, permissions.invoicesCreate);
   const [milestones, files, unreadMessages] = await Promise.all([
     listMilestones(ctx.organization.id, project.id),
     listProjectFiles(ctx.organization.id, project.id),
@@ -77,15 +78,27 @@ export default async function ProjectPage(props: PageProps<"/dashboard/projects/
           </p>
         </div>
 
-        {canEdit && (
+        {(canEdit || canInvoice) && (
           <div className="flex flex-wrap gap-2">
-            <ProjectStatusMenu projectId={project.id} projectName={project.name} status={project.status} />
-            <Button asChild variant="outline" className="h-10 rounded-lg">
-              <Link href={`${basePath}/settings`}>
-                <Settings aria-hidden className="size-4" />
-                Settings
-              </Link>
-            </Button>
+            {canEdit && (
+              <>
+                <ProjectStatusMenu projectId={project.id} projectName={project.name} status={project.status} />
+                <Button asChild variant="outline" className="h-10 rounded-lg">
+                  <Link href={`${basePath}/settings`}>
+                    <Settings aria-hidden className="size-4" />
+                    Settings
+                  </Link>
+                </Button>
+              </>
+            )}
+            {canInvoice && (
+              <Button asChild className="h-10 rounded-lg">
+                <Link href={`/dashboard/invoices/new?projectId=${project.id}`}>
+                  <ReceiptText aria-hidden className="size-4" />
+                  Create invoice
+                </Link>
+              </Button>
+            )}
           </div>
         )}
       </header>

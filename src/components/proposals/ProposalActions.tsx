@@ -4,8 +4,8 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { Eye, Link2, Pencil, Send, Undo2 } from "lucide-react";
 
-import { ShareProposalDialog } from "@/components/proposals/ShareProposalDialog";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { ShareLinkDialog } from "@/components/shared/ShareLinkDialog";
 import { useNotice } from "@/components/shared/notice-provider";
 import { Button } from "@/components/ui/button";
 import type { ProposalStatus } from "@/db/schema";
@@ -108,10 +108,14 @@ export function ProposalActions({ proposalId, status, publicUrl, canManage, canS
         pending={isPending}
         onConfirm={withdraw}
       />
-      <ShareProposalDialog
+      <ShareLinkDialog
         open={dialog === "share"}
         onOpenChange={(open) => setDialog(open ? "share" : null)}
         publicUrl={publicUrl}
+        title="Share your proposal"
+        description="Send this link to your client. They can read the proposal and accept or decline it. No account needed."
+        linkLabel="Proposal link"
+        footnote="Emailing proposals from ClientVero is coming soon."
       />
     </div>
   );

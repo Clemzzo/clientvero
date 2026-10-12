@@ -1,6 +1,6 @@
 import "server-only";
 
-import { randomBytes, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 
 import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 
@@ -9,6 +9,7 @@ import { activityLogs, clients, proposalSections, proposals, type Proposal, type
 import { activityActions, activityResources, type ActivityAction } from "@/features/activity/activity-actions";
 import { isEditable } from "@/features/proposals/proposal-status";
 import { proposalTotal } from "@/lib/utils/money";
+import { generatePublicId } from "@/lib/utils/public-id";
 import type { WorkspaceActor } from "@/server/auth/organization";
 import { ConflictError, NotFoundError, ValidationError } from "@/server/errors";
 import { activityInsert, activityInsertIf } from "@/server/services/activity.service";
@@ -99,10 +100,6 @@ export async function getSignerName(proposal: Pick<Proposal, "id" | "organizatio
     .limit(1);
 
   return entry?.signerName ?? null;
-}
-
-export function generatePublicId() {
-  return randomBytes(16).toString("base64url");
 }
 
 export async function getProposal(organizationId: string, proposalId: string): Promise<ProposalDetail> {

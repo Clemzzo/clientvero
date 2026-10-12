@@ -32,6 +32,15 @@ export const activityActions = {
   fileShared: "FILE_SHARED",
   fileUnshared: "FILE_UNSHARED",
   fileDeleted: "FILE_DELETED",
+  invoiceCreated: "INVOICE_CREATED",
+  invoiceUpdated: "INVOICE_UPDATED",
+  invoiceSent: "INVOICE_SENT",
+  invoiceViewed: "INVOICE_VIEWED",
+  invoiceCancelled: "INVOICE_CANCELLED",
+  invoiceDeleted: "INVOICE_DELETED",
+  invoicePaid: "INVOICE_PAID",
+  paymentReceived: "PAYMENT_RECEIVED",
+  paymentRemoved: "PAYMENT_REMOVED",
   activityCleared: "ACTIVITY_CLEARED",
   portalInvited: "PORTAL_INVITED",
   portalLinkIssued: "PORTAL_LINK_ISSUED",
@@ -47,6 +56,7 @@ export const activityResources = {
   client: "CLIENT",
   proposal: "PROPOSAL",
   project: "PROJECT",
+  invoice: "INVOICE",
   organization: "ORGANIZATION",
 } as const;
 

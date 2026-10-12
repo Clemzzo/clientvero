@@ -24,6 +24,7 @@ export const permissions = {
   invoicesRead: "invoices.read",
   invoicesCreate: "invoices.create",
   invoicesSend: "invoices.send",
+  invoicesDelete: "invoices.delete",
   billingRead: "billing.read",
   billingManage: "billing.manage",
   activityDelete: "activity.delete",

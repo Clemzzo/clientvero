@@ -2,13 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
+import { AmountDueNotice } from "@/components/invoices/AmountDueNotice";
 import { PortalProjectGrid } from "@/components/portal/PortalProjectGrid";
 import { PortalSummary } from "@/components/portal/PortalSummary";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { todayIso } from "@/features/invoices/invoice-dates";
 import { activeProjectStatuses } from "@/features/projects/project-status";
 import { formatDate } from "@/lib/utils/format";
 import { requirePortalContext } from "@/server/auth/portal-session";
 import { listPortalProjects, type PortalProjectSummary } from "@/server/repositories/portal.repository";
+import { listPortalInvoices } from "@/server/services/client-invoice.service";
 
 export const metadata: Metadata = {
   title: "Overview",
@@ -30,7 +33,7 @@ function nextDue(projects: PortalProjectSummary[]) {
 
 export default async function PortalOverviewPage(props: PageProps<"/portal/[slug]">) {
   const context = await requirePortalContext((await props.params).slug);
-  const projects = await listPortalProjects(context);
+  const [projects, invoices] = await Promise.all([listPortalProjects(context), listPortalInvoices(context)]);
   const active = projects.filter(isActive);
   const featured = (active.length > 0 ? active : projects).slice(0, OVERVIEW_PROJECT_LIMIT);
 
@@ -40,6 +43,8 @@ export default async function PortalOverviewPage(props: PageProps<"/portal/[slug
         title={`Welcome, ${context.client.name}`}
         description={`Here's where your work with ${context.organization.name} stands.`}
       />
+
+      <AmountDueNotice invoices={invoices} href={`/portal/${context.organization.slug}/invoices`} today={todayIso()} />
 
       <PortalSummary
         activeProjects={active.length}

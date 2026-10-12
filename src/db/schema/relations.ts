@@ -3,12 +3,14 @@ import { relations } from "drizzle-orm";
 import { activityLogs } from "./activity";
 import { clients } from "./clients";
 import { files } from "./files";
+import { invoiceItems, invoices } from "./invoices";
 import { leads } from "./leads";
 import { messages } from "./messages";
 import { portalAccounts, portalSessions, portalSetupTokens } from "./portal";
 import { milestones, projects } from "./projects";
 import { proposalSections, proposals } from "./proposals";
 import { organizationMembers, organizations } from "./organizations";
+import { payments } from "./payments";
 import { users } from "./users";
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -21,6 +23,7 @@ export const organizationsRelations = relations(organizations, ({ many }) => ({
   clients: many(clients),
   proposals: many(proposals),
   projects: many(projects),
+  invoices: many(invoices),
 }));
 
 export const organizationMembersRelations = relations(organizationMembers, ({ one }) => ({
@@ -65,6 +68,7 @@ export const clientsRelations = relations(clients, ({ one, many }) => ({
   projects: many(projects),
   files: many(files),
   messages: many(messages),
+  invoices: many(invoices),
   portalAccount: one(portalAccounts),
 }));
 
@@ -112,6 +116,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   milestones: many(milestones),
   files: many(files),
   messages: many(messages),
+  invoices: many(invoices),
 }));
 
 export const milestonesRelations = relations(milestones, ({ one }) => ({
@@ -186,6 +191,49 @@ export const messagesRelations = relations(messages, ({ one }) => ({
   }),
   sender: one(users, {
     fields: [messages.senderUserId],
+    references: [users.id],
+  }),
+}));
+
+export const invoicesRelations = relations(invoices, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [invoices.organizationId],
+    references: [organizations.id],
+  }),
+  client: one(clients, {
+    fields: [invoices.clientId],
+    references: [clients.id],
+  }),
+  project: one(projects, {
+    fields: [invoices.projectId],
+    references: [projects.id],
+  }),
+  creator: one(users, {
+    fields: [invoices.createdBy],
+    references: [users.id],
+  }),
+  items: many(invoiceItems),
+  payments: many(payments),
+}));
+
+export const invoiceItemsRelations = relations(invoiceItems, ({ one }) => ({
+  invoice: one(invoices, {
+    fields: [invoiceItems.invoiceId],
+    references: [invoices.id],
+  }),
+}));
+
+export const paymentsRelations = relations(payments, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [payments.organizationId],
+    references: [organizations.id],
+  }),
+  invoice: one(invoices, {
+    fields: [payments.invoiceId],
+    references: [invoices.id],
+  }),
+  recorder: one(users, {
+    fields: [payments.recordedBy],
     references: [users.id],
   }),
 }));

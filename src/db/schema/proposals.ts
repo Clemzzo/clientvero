@@ -1,12 +1,10 @@
-import { index, integer, numeric, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import { index, integer, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 
 import { clients } from "./clients";
-import { id, softDelete, timestamps } from "./common";
+import { id, money, softDelete, timestamps } from "./common";
 import { proposalStatusEnum } from "./enums";
 import { organizations } from "./organizations";
 import { users } from "./users";
-
-const money = (name: string) => numeric(name, { precision: 14, scale: 2 }).notNull().default("0");
 
 export const proposals = pgTable(
   "proposals",

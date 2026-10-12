@@ -632,6 +632,8 @@ subscription_status
   UNPAID
 ```
 
+`OVERDUE` is never stored: an invoice is shown as overdue when it is SENT, VIEWED or PARTIALLY_PAID and its due date has passed (§33). This avoids a scheduled job, the same way `EXPIRED` is kept but unused for proposals.
+
 ---
 
 # 20. Drizzle Schema Starter
@@ -994,11 +996,11 @@ issue_date
 due_date
 subtotal
 discount
-tax
 total
 amount_paid
 amount_due
 notes
+payment_instructions
 public_id
 sent_at
 viewed_at
@@ -1014,6 +1016,17 @@ Constraint:
 UNIQUE(organization_id, invoice_number)
 ```
 
+Implementation (approved by the owner):
+
+- **No tax.** Invoices have no tax column, field or line: the total is the line items minus an optional discount, calculated on the server (`subtotal = Σ quantity × unit_price`, each line rounded half-up to cents; `total = subtotal − discount`, always above 0).
+- `payment_instructions` is shown to the client under "How to pay". New invoices prefill it from the workspace's most recent invoice. `notes` is a note to the client and is also shown on the invoice.
+- An invoice is created from `/dashboard/invoices/new`, optionally prefilled from a client (`?clientId=`) or a project (`?projectId=`, which also sets the client and currency). A linked project must belong to the same workspace and client.
+- **Statuses:** DRAFT → SENT (send produces a share link until the Email build) → VIEWED (first view of the public link or the portal page) → PARTIALLY_PAID / PAID as payments are recorded. Overdue is derived (§19).
+- **Editing** is allowed while DRAFT, SENT or VIEWED with no payments recorded; the public link shows the latest version. After the first payment the invoice is locked.
+- **Removing:** a DRAFT can be deleted permanently (logged as `INVOICE_DELETED`; its number is not reused). A SENT or VIEWED invoice with no payments can only be **cancelled** (CANCELLED, kept for the audit trail). Invoices are not archived.
+- Permissions: create and edit need `invoices.create`; send, cancel and record a payment need `invoices.send`; deleting a draft and removing a payment need `invoices.delete` (OWNER/ADMIN); reading needs `invoices.read`.
+- Activity: `INVOICE_CREATED`, `INVOICE_UPDATED`, `INVOICE_SENT`, `INVOICE_VIEWED` (actor CLIENT), `INVOICE_CANCELLED`, `INVOICE_DELETED`, `INVOICE_PAID`, `PAYMENT_RECEIVED`, `PAYMENT_REMOVED`, filterable under "Invoices" on the Activity screen.
+
 ---
 
 # 34. Invoice Items
@@ -1022,6 +1035,7 @@ UNIQUE(organization_id, invoice_number)
 invoice_items
 -------------
 id
+organization_id
 invoice_id
 description
 quantity
@@ -1052,9 +1066,12 @@ provider_payment_id
 reference
 paid_at
 metadata
+recorded_by
 created_at
 updated_at
 ```
+
+Implementation (approved by the owner): the MVP records **manual** payments only (`provider = 'MANUAL'`, `status = 'SUCCEEDED'`). A team member records the amount (up to the amount still due), the date, the method (bank transfer, card, cash, cheque or other, stored in `metadata.method` with an optional `metadata.note`) and an optional reference; `recorded_by` stores who recorded it. Recording is one transaction under an advisory lock on the invoice and is idempotent: the browser generates the payment id, and a repeated submission stores nothing new. The invoice's `amount_paid`, `amount_due`, status and `paid_at` are recalculated from its successful payments. OWNER/ADMIN can remove a payment recorded by mistake; the invoice is recalculated and a `PAYMENT_REMOVED` entry stays as the audit trail. Online card payments are Phase 2.
 
 ---
 
@@ -1455,6 +1472,7 @@ projects.delete
 invoices.read
 invoices.create
 invoices.send
+invoices.delete
 
 billing.read
 billing.manage
@@ -1462,7 +1480,7 @@ billing.manage
 activity.delete
 ```
 
-Roles map to these capabilities. Deleting leads, clients and projects — archiving, restoring or deleting permanently — is limited to OWNER and ADMIN (`leads.delete`, `clients.delete`, `projects.delete`). Deleting or clearing activity entries is limited to OWNER and ADMIN (`activity.delete`).
+Roles map to these capabilities. Deleting leads, clients and projects — archiving, restoring or deleting permanently — is limited to OWNER and ADMIN (`leads.delete`, `clients.delete`, `projects.delete`). Deleting or clearing activity entries is limited to OWNER and ADMIN (`activity.delete`). Deleting draft invoices and removing recorded payments is limited to OWNER and ADMIN (`invoices.delete`).
 
 ---
 
@@ -1566,7 +1584,7 @@ Implementation (approved by the owner):
 - **Verification:** the client opens the link and chooses a password (scrypt, salted). The same link flow resets a forgotten password: the business creates a "password reset link".
 - **Sessions:** `portal_sessions` (token hash, 30-day expiry) in an `httpOnly`, `sameSite=lax` cookie scoped to `/portal`. Revoking a client's access, turning the portal off for a client (`clients.portal_enabled = false`), resetting a password, or archiving the client ends access.
 - **URLs are scoped by the business slug:** `/portal/[slug]/sign-in`, `/portal/[slug]/setup/[token]`, `/portal/[slug]`, `/portal/[slug]/projects/[id]`. Every portal read is scoped by the session's organization **and** client.
-- **Clients see** project name, status, description, dates, progress and milestones; never budgets, notes or internal activity. Shared project files are listed on the portal project page (§37), and clients message the team at `/portal/[slug]/messages` (§38). Invoices are added to the portal with their build.
+- **Clients see** project name, status, description, dates, progress and milestones; never budgets, notes or internal activity. Shared project files are listed on the portal project page (§37), and clients message the team at `/portal/[slug]/messages` (§38). Clients see their own sent invoices at `/portal/[slug]/invoices` and `/portal/[slug]/invoices/[id]` (never drafts), and the portal overview shows the amount due when invoices are open.
 
 ---
 
@@ -1612,6 +1630,8 @@ Shows:
 - totals
 - payment status
 - payment instructions
+
+Implementation: draft invoices never resolve. The first view of a SENT invoice marks it VIEWED. The page is `noindex` and print-friendly ("Print or save as PDF").
 
 ---
 
@@ -1753,7 +1773,7 @@ Client invoice payments are a separate domain from ClientVero subscription billi
 
 The `payments` table is designed for future payment provider integrations.
 
-The MVP may support manual payment recording before adding online client payment processing.
+The MVP records manual payments (§35); online client payment processing is Phase 2.
 
 ---
 
@@ -1834,7 +1854,7 @@ Use aggregated queries rather than dozens of sequential database calls.
 
 ## Activity screen
 
-`/dashboard/activity` lists the workspace's whole activity log, newest first, 25 entries per page, with filter tabs (All · Leads · Clients · Proposals · Projects). It is linked from the sidebar and visible to every role.
+`/dashboard/activity` lists the workspace's whole activity log, newest first, 25 entries per page, with filter tabs (All · Leads · Clients · Proposals · Projects · Invoices). It is linked from the sidebar and visible to every role.
 
 OWNER and ADMIN (`activity.delete`) can delete a single entry or clear all activity. Deleting is never silent: every deletion or clear writes one `ACTIVITY_CLEARED` entry (who, when, how many entries were removed), and these entries cannot be deleted or cleared, so the audit trail always records that history was removed.
 
@@ -1945,7 +1965,6 @@ Features:
 
 - invoice creation
 - line items
-- tax
 - discount
 - due date
 - preview
@@ -2292,6 +2311,8 @@ Do not generate numbers using a simple row count.
 
 Use a concurrency-safe strategy such as a dedicated counter or PostgreSQL sequence strategy.
 
+Implementation: `organizations.invoice_sequence` is a per-workspace counter. Creating an invoice increments it in the same transaction as the insert (the row lock serialises concurrent creates) and formats `INV-` plus at least four digits. `UNIQUE(organization_id, invoice_number)` is the backstop. Numbers are never reused, so a deleted draft leaves a gap.
+
 ---
 
 # 86. Soft Deletion
@@ -2304,7 +2325,7 @@ Soft-delete where recovery or history matters:
 - proposals
 - invoices
 
-Files and messages are not soft-deleted: deleting either removes it permanently (§37, §38).
+Files and messages are not soft-deleted: deleting either removes it permanently (§37, §38). Invoices are not archived in practice: drafts are deleted permanently and sent invoices are cancelled (§33).
 
 Financial records should generally remain auditable rather than being physically removed.
 
@@ -2313,11 +2334,11 @@ Financial records should generally remain auditable rather than being physically
 - **Archive** — the soft delete above: `deleted_at` is set, the record leaves the workspace, its row and history stay.
 - **Delete permanently** — the row is physically removed. The record's activity history is erased, and a single `LEAD_DELETED_PERMANENTLY` / `CLIENT_DELETED_PERMANENTLY` entry (actor, time, name) stays as the audit trail.
 
-A client that has any proposal or project (including archived ones) cannot be deleted permanently — only archived — because proposals, projects, and later invoices, are commercial records. The same rule will apply to clients with invoices when those exist.
+A client that has any proposal, project or invoice (including archived ones) cannot be deleted permanently — only archived — because these are commercial records.
 
 Archived leads and clients are listed on their own **Archived** screens (`/dashboard/leads/archived`, `/dashboard/clients/archived`), reached from an "Archived" button on each list and visible only to OWNER and ADMIN. From there a record can be **restored** (logged as `LEAD_RESTORED` / `CLIENT_RESTORED`) or **deleted permanently** under the rules above.
 
-**Projects** follow the same model: OWNER and ADMIN can archive a project or delete it permanently from the projects list, and restore or permanently delete archived projects at `/dashboard/projects/archived`. Permanent deletion removes the project's milestones and activity history, leaving one `PROJECT_DELETED_PERMANENTLY` audit entry. A project created from a proposal can't be restored while another live project exists for that proposal. When invoices, files and messages reference projects, a project with any of them will be archive-only, like clients with proposals.
+**Projects** follow the same model: OWNER and ADMIN can archive a project or delete it permanently from the projects list, and restore or permanently delete archived projects at `/dashboard/projects/archived`. Permanent deletion removes the project's milestones and activity history, leaving one `PROJECT_DELETED_PERMANENTLY` audit entry. A project created from a proposal can't be restored while another live project exists for that proposal. A project with files, messages or invoices is archive-only, like clients with proposals.
 
 ---
 

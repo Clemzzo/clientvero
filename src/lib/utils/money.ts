@@ -26,3 +26,21 @@ export function proposalTotal({ subtotal, discount, tax }: { subtotal: string; d
 export function isZeroAmount(amount: string): boolean {
   return toCents(amount) === 0n;
 }
+
+export function lineAmount(quantity: string, unitPrice: string): string {
+  const product = toCents(quantity) * toCents(unitPrice);
+  return fromCents((product + 50n) / 100n);
+}
+
+type LineInput = { quantity: string; unitPrice: string };
+
+export function invoiceTotals({ items, discount }: { items: LineInput[]; discount: string }) {
+  const amounts = items.map((item) => lineAmount(item.quantity, item.unitPrice));
+  const subtotal = amounts.reduce((sum, amount) => sum + toCents(amount), 0n);
+
+  return {
+    amounts,
+    subtotal: fromCents(subtotal),
+    total: fromCents(subtotal - toCents(discount)),
+  };
+}

@@ -1,4 +1,4 @@
-import { timestamp, uuid } from "drizzle-orm/pg-core";
+import { numeric, timestamp, uuid } from "drizzle-orm/pg-core";
 
 export const id = () => uuid("id").defaultRandom().primaryKey();
 
@@ -13,3 +13,5 @@ export const timestamps = {
 export const softDelete = {
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
 };
+
+export const money = (name: string) => numeric(name, { precision: 14, scale: 2 }).notNull().default("0");

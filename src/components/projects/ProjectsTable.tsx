@@ -21,7 +21,7 @@ function ProjectDeleteMenu({ project }: { project: ProjectListRow }) {
     <RowDeleteMenu
       name={project.name}
       archiveDescription="This project will be hidden from your projects. Its milestones and history are kept."
-      permanentDescription="This project, its milestones, and its activity history will be erased from the database. This can't be undone."
+      permanentDescription="This project, its milestones, and its activity history will be erased from the database. This can't be undone. Projects with files, messages or invoices can only be archived."
       onDelete={deleteProjectAction.bind(null, project.id)}
     />
   );

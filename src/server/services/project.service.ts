@@ -5,7 +5,7 @@ import { randomUUID } from "node:crypto";
 import { and, eq, isNotNull, isNull, sql, type SQL } from "drizzle-orm";
 
 import { db } from "@/db";
-import { activityLogs, clients, files, messages, milestones, projects, type Project, type ProjectStatus } from "@/db/schema";
+import { activityLogs, clients, files, invoices, messages, milestones, projects, type Project, type ProjectStatus } from "@/db/schema";
 import { activityActions, activityResources, type ActivityAction } from "@/features/activity/activity-actions";
 import { projectProgress } from "@/features/projects/progress";
 import type { WorkspaceActor } from "@/server/auth/organization";
@@ -232,13 +232,13 @@ export async function restoreProject(ctx: WorkspaceActor, projectId: string): Pr
   }
 }
 
-const projectHasHistory = "This project has files or messages, so it can only be archived.";
+const projectHasHistory = "This project has files, messages or invoices, so it can only be archived.";
 
 export async function deleteProjectPermanently(ctx: WorkspaceActor, projectId: string): Promise<void> {
   const organizationId = ctx.organization.id;
   const project = await findProject(ownedProjectScope(organizationId, projectId));
 
-  const [projectFile, projectMessage] = await Promise.all([
+  const [projectFile, projectMessage, projectInvoice] = await Promise.all([
     db
       .select({ id: files.id })
       .from(files)
@@ -249,9 +249,14 @@ export async function deleteProjectPermanently(ctx: WorkspaceActor, projectId: s
       .from(messages)
       .where(and(eq(messages.organizationId, organizationId), eq(messages.projectId, projectId)))
       .limit(1),
+    db
+      .select({ id: invoices.id })
+      .from(invoices)
+      .where(and(eq(invoices.organizationId, organizationId), eq(invoices.projectId, projectId)))
+      .limit(1),
   ]);
 
-  if (projectFile.length > 0 || projectMessage.length > 0) {
+  if (projectFile.length > 0 || projectMessage.length > 0 || projectInvoice.length > 0) {
     throw new ConflictError(projectHasHistory);
   }
 
