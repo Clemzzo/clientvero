@@ -2,6 +2,7 @@ import type { ComponentProps } from "react";
 import type { Metadata } from "next";
 import { FileText, FolderKanban, UserPlus, Users } from "lucide-react";
 
+import { GetStartedBanner } from "@/components/dashboard/GetStartedBanner";
 import { MoneySummaryCard } from "@/components/dashboard/MoneySummaryCard";
 import { PipelineCard } from "@/components/dashboard/PipelineCard";
 import { RecentActivityCard } from "@/components/dashboard/RecentActivityCard";
@@ -68,6 +69,7 @@ export default async function DashboardPage() {
     { label: "Send an invoice", done: overview.setup.invoiceSent, href: "/dashboard/invoices/new" },
   ];
   const setupComplete = setupSteps.every((step) => step.done);
+  const nextStep = setupSteps.find((step) => !step.done && step.href);
 
   return (
     <div className="mx-auto max-w-300 space-y-6 px-4 py-8 sm:px-8 lg:py-10">
@@ -79,6 +81,15 @@ export default async function DashboardPage() {
           newLeadsThisWeek: leads.newThisWeek,
         }).join(" · ")}
       />
+
+      {nextStep?.href && (
+        <GetStartedBanner
+          title="Get started with ClientVero"
+          description="Set up your workspace in a few steps — add leads, win clients, deliver projects and get paid, all from one place."
+          primaryAction={{ label: nextStep.label, href: nextStep.href }}
+          secondaryAction={{ label: "Read the guides", href: "/guides" }}
+        />
+      )}
 
       <ul aria-label="Key numbers" className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((stat) => (
