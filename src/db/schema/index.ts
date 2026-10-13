@@ -12,4 +12,5 @@ export * from "./files";
 export * from "./messages";
 export * from "./invoices";
 export * from "./payments";
+export * from "./notifications";
 export * from "./relations";

@@ -1,10 +1,12 @@
 import "server-only";
 
-import { and, eq, inArray, isNull, type SQL } from "drizzle-orm";
+import { and, eq, inArray, isNull, not, sql, type SQL } from "drizzle-orm";
 
 import { db } from "@/db";
 import { messages, projects } from "@/db/schema";
+import { activityResources } from "@/features/activity/activity-actions";
 import type { ThreadMessage } from "@/features/messages/thread-message";
+import { notificationTypes } from "@/features/notifications/notification-types";
 import type { WorkspaceActor } from "@/server/auth/organization";
 import type { PortalContext } from "@/server/auth/portal-session";
 import { AuthenticationError, AuthorizationError, ConflictError, NotFoundError } from "@/server/errors";
@@ -18,6 +20,7 @@ import {
   type ThreadViewer,
 } from "@/server/repositories/message.repository";
 import { getPortalProject } from "@/server/repositories/portal.repository";
+import { hasUnreadNotification, notifyMembersIf } from "@/server/services/notification.service";
 import { requireProject } from "@/server/services/project.service";
 import type { PollThreadInput, SendMessageInput } from "@/validators/messages";
 
@@ -40,12 +43,13 @@ const messageMissing = "This message no longer exists.";
 
 type NewMessage = typeof messages.$inferInsert & { id: string; organizationId: string; projectId: string };
 
-async function insertOnce(values: NewMessage, sentBySameSender: SQL | undefined): Promise<void> {
-  const [inserted] = await db
-    .insert(messages)
-    .values(values)
-    .onConflictDoNothing({ target: messages.id })
-    .returning({ id: messages.id });
+async function insertOnce(
+  values: NewMessage,
+  sentBySameSender: SQL | undefined,
+  notify?: ReturnType<typeof notifyMembersIf>,
+): Promise<void> {
+  const insert = db.insert(messages).values(values).onConflictDoNothing({ target: messages.id }).returning({ id: messages.id });
+  const [inserted] = notify ? (await db.batch([insert, notify]))[0] : await insert;
 
   if (inserted) return;
 
@@ -102,22 +106,40 @@ export async function sendTeamMessage(ctx: WorkspaceActor, input: SendMessageInp
   return listThreadAfter(scope, { side: "team", userId: ctx.user.id }, input.after);
 }
 
+function notifyNewClientMessage(context: PortalContext, project: { id: string; name: string }, messageId: string) {
+  const insertedNow = sql`exists (select 1 from ${messages} where ${messages.id} = ${messageId} and ${messages.createdAt} = now())`;
+
+  return notifyMembersIf(
+    {
+      organizationId: context.organization.id,
+      type: notificationTypes.messageReceived,
+      title: "New message",
+      message: `${context.client.name} sent a message about ${project.name}.`,
+      resourceType: activityResources.project,
+      resourceId: project.id,
+    },
+    and(insertedNow, not(hasUnreadNotification(notificationTypes.messageReceived, project.id)))!,
+  );
+}
+
 export async function sendClientMessage(context: PortalContext, input: SendMessageInput): Promise<ThreadMessage[]> {
-  const { scope, viewer } = await requireClientThread(context, input.projectId);
+  const project = await getPortalProject(context, input.projectId);
+  const scope: ThreadScope = { organizationId: context.organization.id, projectId: project.id, clientId: context.client.id };
 
   await insertOnce(
     {
       id: input.id,
       organizationId: scope.organizationId,
       clientId: context.client.id,
-      projectId: scope.projectId,
+      projectId: project.id,
       senderUserId: null,
       content: input.content,
     },
     and(isNull(messages.senderUserId), eq(messages.clientId, context.client.id)),
+    notifyNewClientMessage(context, project, input.id),
   );
 
-  return listThreadAfter(scope, viewer, input.after);
+  return listThreadAfter(scope, { side: "client" }, input.after);
 }
 
 function liveProjectIds(organizationId: string, clientId?: string) {

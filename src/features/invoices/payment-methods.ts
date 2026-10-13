@@ -13,3 +13,12 @@ export const paymentMethodLabels: Record<PaymentMethod, string> = {
 export function asPaymentMethod(value: string | undefined): PaymentMethod {
   return (paymentMethods as readonly string[]).includes(value ?? "") ? (value as PaymentMethod) : "OTHER";
 }
+
+export const paymentMethodFilters = ["all", ...paymentMethods] as const;
+
+export type PaymentMethodFilter = (typeof paymentMethodFilters)[number];
+
+export const paymentMethodFilterLabels: Record<PaymentMethodFilter, string> = {
+  all: "All",
+  ...paymentMethodLabels,
+};

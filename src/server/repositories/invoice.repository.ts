@@ -1,25 +1,32 @@
 import "server-only";
 
-import { and, asc, desc, eq, gte, ilike, inArray, isNull, lt, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, inArray, isNull, lt, or, sql, type SQL } from "drizzle-orm";
 
 import { db } from "@/db";
 import { clients, invoices, payments, projects, type InvoiceStatus, type PaymentStatus } from "@/db/schema";
 import { clientParty, type InvoiceParty } from "@/features/invoices/invoice-document";
 import { invoiceFilters, openInvoiceStatuses, type InvoiceFilter } from "@/features/invoices/invoice-status";
 import { asPaymentMethod, type PaymentMethod } from "@/features/invoices/payment-methods";
+import { todayInTimeZone } from "@/lib/utils/timezone";
+import { paidThisPeriod } from "@/server/repositories/payment.repository";
 import { escapeLike } from "@/server/repositories/search";
 import { INVOICES_PAGE_SIZE, type InvoiceListQuery } from "@/validators/invoices";
 
 const isOpen = inArray(invoices.status, [...openInvoiceStatuses]);
-const isOverdue = and(isOpen, lt(invoices.dueDate, sql`current_date`))!;
+function isOverdue(today: string) {
+  return and(isOpen, lt(invoices.dueDate, today))!;
+}
 
-const filterConditions: Record<Exclude<InvoiceFilter, "all">, SQL> = {
-  draft: eq(invoices.status, "DRAFT"),
-  outstanding: isOpen,
-  overdue: isOverdue,
-  paid: eq(invoices.status, "PAID"),
-  cancelled: eq(invoices.status, "CANCELLED"),
-};
+function filterCondition(filter: Exclude<InvoiceFilter, "all">, today: string): SQL {
+  const conditions: Record<Exclude<InvoiceFilter, "all">, SQL> = {
+    draft: eq(invoices.status, "DRAFT"),
+    outstanding: isOpen,
+    overdue: isOverdue(today),
+    paid: eq(invoices.status, "PAID"),
+    cancelled: eq(invoices.status, "CANCELLED"),
+  };
+  return conditions[filter];
+}
 
 const listFields = {
   id: invoices.id,
@@ -110,7 +117,7 @@ function listQuery(where: SQL | undefined) {
     .where(where);
 }
 
-async function countByFilter(organizationId: string, q: string): Promise<Record<InvoiceFilter, number>> {
+async function countByFilter(organizationId: string, q: string, today: string): Promise<Record<InvoiceFilter, number>> {
   const filters = visibleInvoices(organizationId);
   if (q) filters.push(searchFilter(q));
 
@@ -119,11 +126,11 @@ async function countByFilter(organizationId: string, q: string): Promise<Record<
   const [row] = await db
     .select({
       all: sql<number>`count(*)`.mapWith(Number),
-      draft: countWhere(filterConditions.draft),
-      outstanding: countWhere(filterConditions.outstanding),
-      overdue: countWhere(filterConditions.overdue),
-      paid: countWhere(filterConditions.paid),
-      cancelled: countWhere(filterConditions.cancelled),
+      draft: countWhere(filterCondition("draft", today)),
+      outstanding: countWhere(filterCondition("outstanding", today)),
+      overdue: countWhere(filterCondition("overdue", today)),
+      paid: countWhere(filterCondition("paid", today)),
+      cancelled: countWhere(filterCondition("cancelled", today)),
     })
     .from(invoices)
     .innerJoin(clients, eq(clients.id, invoices.clientId))
@@ -132,17 +139,17 @@ async function countByFilter(organizationId: string, q: string): Promise<Record<
   return Object.fromEntries(invoiceFilters.map((filter) => [filter, row?.[filter] ?? 0])) as Record<InvoiceFilter, number>;
 }
 
-export async function listInvoices(organizationId: string, query: InvoiceListQuery): Promise<InvoiceListResult> {
+export async function listInvoices(organizationId: string, query: InvoiceListQuery, today: string): Promise<InvoiceListResult> {
   const filters = visibleInvoices(organizationId);
   if (query.q) filters.push(searchFilter(query.q));
-  if (query.status !== "all") filters.push(filterConditions[query.status]);
+  if (query.status !== "all") filters.push(filterCondition(query.status, today));
 
   const [rows, counts] = await Promise.all([
     listQuery(and(...filters))
       .orderBy(desc(invoices.createdAt), desc(invoices.id))
       .limit(INVOICES_PAGE_SIZE)
       .offset((query.page - 1) * INVOICES_PAGE_SIZE),
-    countByFilter(organizationId, query.q),
+    countByFilter(organizationId, query.q, today),
   ]);
 
   const total = counts[query.status];
@@ -155,15 +162,20 @@ export function listClientInvoices(organizationId: string, clientId: string): Pr
     .limit(50);
 }
 
-export async function getInvoiceMoneySummary(organizationId: string, currency: string): Promise<InvoiceMoneySummary> {
+export async function getInvoiceMoneySummary(
+  organizationId: string,
+  currency: string,
+  timeZone: string,
+): Promise<InvoiceMoneySummary> {
   const inCurrency = eq(invoices.currency, currency);
+  const overdue = isOverdue(todayInTimeZone(timeZone));
 
   const [[totals], [settled]] = await Promise.all([
     db
       .select({
         outstanding: sql<string>`coalesce(sum(${invoices.amountDue}) filter (where ${isOpen} and ${inCurrency}), 0)::text`,
-        overdue: sql<string>`coalesce(sum(${invoices.amountDue}) filter (where ${isOverdue} and ${inCurrency}), 0)::text`,
-        overdueInvoices: sql<number>`count(*) filter (where ${isOverdue} and ${inCurrency})`.mapWith(Number),
+        overdue: sql<string>`coalesce(sum(${invoices.amountDue}) filter (where ${overdue} and ${inCurrency}), 0)::text`,
+        overdueInvoices: sql<number>`count(*) filter (where ${overdue} and ${inCurrency})`.mapWith(Number),
         openInOtherCurrencies: sql<number>`count(*) filter (where ${isOpen} and ${invoices.currency} <> ${currency})`.mapWith(Number),
       })
       .from(invoices)
@@ -176,7 +188,7 @@ export async function getInvoiceMoneySummary(organizationId: string, currency: s
           eq(payments.organizationId, organizationId),
           eq(payments.status, "SUCCEEDED"),
           eq(payments.currency, currency),
-          gte(payments.paidAt, sql`date_trunc('month', now())`),
+          paidThisPeriod("month", timeZone),
         ),
       ),
   ]);

@@ -4,13 +4,15 @@ import { and, desc, eq, isNull, ne, sql, type SQL } from "drizzle-orm";
 
 import { db } from "@/db";
 import { clients, invoices, organizations, projects, type Invoice } from "@/db/schema";
-import { activityActions, activityActorTypes } from "@/features/activity/activity-actions";
+import { activityActions, activityActorTypes, activityResources } from "@/features/activity/activity-actions";
 import { businessParty, clientParty, type InvoiceDocumentData } from "@/features/invoices/invoice-document";
+import { notificationTypes } from "@/features/notifications/notification-types";
 import type { PortalContext } from "@/server/auth/portal-session";
 import { NotFoundError } from "@/server/errors";
 import type { InvoiceListRow } from "@/server/repositories/invoice.repository";
 import { invoiceActivity } from "@/server/services/invoice-activity";
 import { listInvoiceItems, toDocument } from "@/server/services/invoice.service";
+import { notifyMembersIf } from "@/server/services/notification.service";
 
 export type ClientInvoice = Pick<Invoice, "id" | "organizationId" | "status" | "dueDate" | "paidAt" | "publicId"> & {
   organizationName: string;
@@ -105,10 +107,13 @@ export function listPortalInvoices(context: PortalContext): Promise<InvoiceListR
     .limit(PORTAL_INVOICE_LIMIT);
 }
 
-export async function markInvoiceViewed(invoice: Pick<ClientInvoice, "id" | "organizationId" | "status" | "clientName">): Promise<void> {
+export async function markInvoiceViewed(
+  invoice: Pick<ClientInvoice, "id" | "organizationId" | "status" | "clientName" | "document">,
+): Promise<void> {
   if (invoice.status !== "SENT") return;
 
   const viewedAt = new Date();
+  const viewedNow = sql`exists (select 1 from ${invoices} where ${invoices.id} = ${invoice.id} and ${invoices.viewedAt} = ${viewedAt})`;
 
   await db.batch([
     db
@@ -120,6 +125,17 @@ export async function markInvoiceViewed(invoice: Pick<ClientInvoice, "id" | "org
       invoice.id,
       activityActions.invoiceViewed,
       { when: sql`${invoices.viewedAt} = ${viewedAt}`, metadata: { clientName: invoice.clientName } },
+    ),
+    notifyMembersIf(
+      {
+        organizationId: invoice.organizationId,
+        type: notificationTypes.invoiceViewed,
+        title: "Invoice viewed",
+        message: `${invoice.clientName} opened invoice ${invoice.document.invoiceNumber}.`,
+        resourceType: activityResources.invoice,
+        resourceId: invoice.id,
+      },
+      viewedNow,
     ),
   ]);
 }

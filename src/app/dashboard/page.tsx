@@ -10,6 +10,7 @@ import { SetupChecklistCard, type SetupStep } from "@/components/dashboard/Setup
 import { StatCard } from "@/components/dashboard/StatCard";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { dashboardHighlights } from "@/features/dashboard/highlights";
+import { resolveTimeZone } from "@/lib/utils/timezone";
 import { requireOrganizationContext } from "@/server/auth/organization";
 import { getDashboardOverview } from "@/server/repositories/dashboard.repository";
 
@@ -21,7 +22,7 @@ type Stat = ComponentProps<typeof StatCard>;
 
 export default async function DashboardPage() {
   const { user, organization } = await requireOrganizationContext();
-  const overview = await getDashboardOverview(organization.id, organization.currency);
+  const overview = await getDashboardOverview(organization.id, organization.currency, resolveTimeZone(user.timezone));
   const { leads, clients, projects, proposals } = overview;
 
   const stats: Stat[] = [

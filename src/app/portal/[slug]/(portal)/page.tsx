@@ -6,9 +6,9 @@ import { AmountDueNotice } from "@/components/invoices/AmountDueNotice";
 import { PortalProjectGrid } from "@/components/portal/PortalProjectGrid";
 import { PortalSummary } from "@/components/portal/PortalSummary";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { todayIso } from "@/features/invoices/invoice-dates";
 import { activeProjectStatuses } from "@/features/projects/project-status";
 import { formatDate } from "@/lib/utils/format";
+import { viewerToday } from "@/lib/utils/viewer-today";
 import { requirePortalContext } from "@/server/auth/portal-session";
 import { listPortalProjects, type PortalProjectSummary } from "@/server/repositories/portal.repository";
 import { listPortalInvoices } from "@/server/services/client-invoice.service";
@@ -33,7 +33,7 @@ function nextDue(projects: PortalProjectSummary[]) {
 
 export default async function PortalOverviewPage(props: PageProps<"/portal/[slug]">) {
   const context = await requirePortalContext((await props.params).slug);
-  const [projects, invoices] = await Promise.all([listPortalProjects(context), listPortalInvoices(context)]);
+  const [projects, invoices, today] = await Promise.all([listPortalProjects(context), listPortalInvoices(context), viewerToday()]);
   const active = projects.filter(isActive);
   const featured = (active.length > 0 ? active : projects).slice(0, OVERVIEW_PROJECT_LIMIT);
 
@@ -44,7 +44,7 @@ export default async function PortalOverviewPage(props: PageProps<"/portal/[slug
         description={`Here's where your work with ${context.organization.name} stands.`}
       />
 
-      <AmountDueNotice invoices={invoices} href={`/portal/${context.organization.slug}/invoices`} today={todayIso()} />
+      <AmountDueNotice invoices={invoices} href={`/portal/${context.organization.slug}/invoices`} today={today} />
 
       <PortalSummary
         activeProjects={active.length}

@@ -12,8 +12,10 @@ import {
   type ProposalSection,
 } from "@/db/schema";
 import { activityActions, activityActorTypes, activityResources, type ActivityAction } from "@/features/activity/activity-actions";
+import { notificationTypes } from "@/features/notifications/notification-types";
 import { ConflictError, NotFoundError } from "@/server/errors";
 import { activityInsertIf } from "@/server/services/activity.service";
+import { notifyMembersIf } from "@/server/services/notification.service";
 import { getSignerName } from "@/server/services/proposal.service";
 
 export type PublicProposal = Proposal & {
@@ -134,6 +136,7 @@ async function respond(publicId: string, response: Response): Promise<void> {
   const respondedAt = new Date();
   const accepting = response.kind === "accept";
   const timestampColumn = accepting ? proposals.acceptedAt : proposals.declinedAt;
+  const responded = sql`exists (select 1 from ${proposals} where ${proposals.id} = ${row.proposal.id} and ${timestampColumn} = ${respondedAt})`;
 
   await db.batch([
     db.execute(sql`select pg_advisory_xact_lock(hashtext(${publicId}))`),
@@ -150,7 +153,18 @@ async function respond(publicId: string, response: Response): Promise<void> {
       row.clientName,
       accepting ? activityActions.proposalAccepted : activityActions.proposalDeclined,
       accepting ? { signerName: response.signerName } : { reason: response.reason },
-      sql`exists (select 1 from ${proposals} where ${proposals.id} = ${row.proposal.id} and ${timestampColumn} = ${respondedAt})`,
+      responded,
+    ),
+    notifyMembersIf(
+      {
+        organizationId: row.proposal.organizationId,
+        type: accepting ? notificationTypes.proposalAccepted : notificationTypes.proposalDeclined,
+        title: accepting ? "Proposal accepted" : "Proposal declined",
+        message: `${row.clientName} ${accepting ? "accepted" : "declined"} “${row.proposal.title}”.`,
+        resourceType: activityResources.proposal,
+        resourceId: row.proposal.id,
+      },
+      responded,
     ),
   ]);
 

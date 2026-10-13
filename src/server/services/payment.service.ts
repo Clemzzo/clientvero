@@ -4,7 +4,8 @@ import { and, eq, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import { invoices, payments, type PaymentMetadata } from "@/db/schema";
-import { activityActions } from "@/features/activity/activity-actions";
+import { activityActions, activityResources } from "@/features/activity/activity-actions";
+import { notificationTypes } from "@/features/notifications/notification-types";
 import { canRecordPayment, openInvoiceStatuses } from "@/features/invoices/invoice-status";
 import { formatMoney } from "@/lib/utils/format";
 import { toCents } from "@/lib/utils/money";
@@ -12,6 +13,7 @@ import type { WorkspaceActor } from "@/server/auth/organization";
 import { ConflictError, NotFoundError, ValidationError } from "@/server/errors";
 import { invoiceActivity } from "@/server/services/invoice-activity";
 import { getInvoice, lockInvoice } from "@/server/services/invoice.service";
+import { notifyMembersIf } from "@/server/services/notification.service";
 import type { RecordPaymentInput } from "@/validators/invoices";
 
 const paymentMissing = "This payment no longer exists.";
@@ -109,6 +111,18 @@ export async function recordPayment(ctx: WorkspaceActor, invoiceId: string, inpu
     invoiceActivity(actor(ctx), invoiceId, activityActions.invoicePaid, {
       when: sql`${isNew} and ${invoices.status} = 'PAID'`,
     }),
+    notifyMembersIf(
+      {
+        organizationId,
+        type: notificationTypes.paymentReceived,
+        title: "Payment received",
+        message: `${formatMoney(input.amount, invoice.currency)} recorded on ${invoice.invoiceNumber} from ${invoice.clientName}.`,
+        resourceType: activityResources.invoice,
+        resourceId: invoiceId,
+        excludeUserId: ctx.user.id,
+      },
+      isNew,
+    ),
   ]);
 
   const recorded = await findPayment(organizationId, input.id);

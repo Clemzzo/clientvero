@@ -28,7 +28,7 @@ describe("getDashboardOverview", () => {
   });
 
   it("counts only this organization's non-deleted leads", async () => {
-    const { leads } = await getDashboardOverview(orgA.id, "USD");
+    const { leads } = await getDashboardOverview(orgA.id, "USD", "UTC");
 
     expect(leads.total).toBe(5);
     expect(leads.open).toBe(3);
@@ -37,14 +37,14 @@ describe("getDashboardOverview", () => {
   });
 
   it("sums open pipeline value in the organization's currency as an exact decimal", async () => {
-    const { leads } = await getDashboardOverview(orgA.id, "USD");
+    const { leads } = await getDashboardOverview(orgA.id, "USD", "UTC");
 
     expect(leads.pipelineValue).toBe("3000.75");
     expect(leads.openInOtherCurrencies).toBe(1);
   });
 
   it("never includes another organization's leads", async () => {
-    const { leads } = await getDashboardOverview(orgB.id, "USD");
+    const { leads } = await getDashboardOverview(orgB.id, "USD", "UTC");
 
     expect(leads.total).toBe(1);
     expect(leads.pipelineValue).toBe("123456.00");

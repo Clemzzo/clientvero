@@ -45,3 +45,16 @@ export const invoiceStatusEnum = pgEnum("invoice_status", [
 ]);
 
 export const paymentStatusEnum = pgEnum("payment_status", ["PENDING", "SUCCEEDED", "FAILED", "REFUNDED"]);
+
+export const notificationTypeEnum = pgEnum("notification_type", [
+  "PROPOSAL_ACCEPTED",
+  "PROPOSAL_DECLINED",
+  "INVOICE_SENT",
+  "INVOICE_VIEWED",
+  "INVOICE_OVERDUE",
+  "PAYMENT_RECEIVED",
+  "MESSAGE_RECEIVED",
+  "MILESTONE_COMPLETED",
+  "PROJECT_DEADLINE",
+  "GENERAL",
+]);

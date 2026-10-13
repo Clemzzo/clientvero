@@ -933,7 +933,7 @@ Implementation notes (approved by the owner):
 
 - The client accepts by typing their full name; the name and time are stored in the activity log (`PROPOSAL_ACCEPTED`, `actor_type = CLIENT`). This is a sign-off, not an e-signature (Phase 2).
 - The first response (accept or decline) closes the link for good: the page becomes read-only and any later response is refused. A repeated identical acceptance returns the existing acceptance.
-- Creating a notification is added with the Notifications build.
+- Accepting or declining notifies every workspace member (§39).
 - Acceptance does not create a project automatically. An accepted proposal shows a **Create project** button that opens the new-project form prefilled from the proposal (client, name, budget, currency, description). One live project per proposal (`projects_proposal_uidx`, ignoring archived projects); after that the button becomes **View project**.
 - Until the Email build, "Send" produces a shareable link instead of an email.
 
@@ -1159,6 +1159,13 @@ is_read
 created_at
 read_at
 ```
+
+Implementation (approved by the owner):
+
+- **Per-user, in-app only.** Each notification belongs to one workspace member (`user_id`); every read and update is scoped by `organization_id` **and** the signed-in user, so no capability is needed and nobody can read or mark someone else's. Emails come with the Email build; preferences (`/dashboard/settings/notifications`) with the Settings build. Clients get no portal notifications in the MVP.
+- **What notifies** — things clients do, plus teammates' payments: `PROPOSAL_ACCEPTED` / `PROPOSAL_DECLINED` (public proposal response), `INVOICE_VIEWED` (first client view), `PAYMENT_RECEIVED` (every member except the person who recorded it), `MESSAGE_RECEIVED` (a client portal message; at most one *unread* message notification per member per project). The other `notification_type` values stay in the enum for later; overdue invoices and deadlines would need a scheduled job.
+- **Same transaction, idempotent.** Each notification is inserted in the same `db.batch` as the write that causes it, under the same guard as its activity entry, so retries and repeated responses never duplicate it. Message content is never copied into a notification.
+- **UI:** a bell with an unread count in the app header (refreshed by the same 15-second poll as the Messages badge) and `/dashboard/notifications` (All / Unread, 25 per page, "Mark all as read"). Opening one goes through `/dashboard/notifications/[id]/open`, which marks it read and redirects to the record.
 
 ---
 

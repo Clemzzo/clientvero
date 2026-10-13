@@ -9,7 +9,6 @@ import { toActionError } from "@/server/actions/action-error";
 import { requireWithinLimit } from "@/server/actions/rate-limit-guard";
 import { requireOrganizationContext } from "@/server/auth/organization";
 import { permissions, requirePermission } from "@/server/authorization/permissions";
-import { unreadSummary, type UnreadSummary } from "@/server/repositories/message.repository";
 import {
   deleteOwnTeamMessage,
   listEarlierMessages,
@@ -108,18 +107,5 @@ export async function pollThreadAction(input: unknown): Promise<PollFailure | Th
     return await pollThread(access, parsed.data);
   } catch (error) {
     return { error: toActionError(error, errorOptions), retryable: !isTerminalPollError(error) };
-  }
-}
-
-export async function pollInboxSummaryAction(): Promise<UnreadSummary | null> {
-  try {
-    const ctx = await requireMessageReader();
-    if (!(await withinLimits([workspaceLimits.messagePollsPerUser, ctx.user.id]))) {
-      return null;
-    }
-
-    return await unreadSummary(ctx.organization.id, "team");
-  } catch {
-    return null;
   }
 }

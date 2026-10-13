@@ -8,7 +8,7 @@ import { ArrowLeft } from "lucide-react";
 import { ClientSettlementLine } from "@/components/invoices/ClientSettlementLine";
 import { InvoiceDocument } from "@/components/invoices/InvoiceDocument";
 import { PrintButton } from "@/components/invoices/PrintButton";
-import { todayIso } from "@/features/invoices/invoice-dates";
+import { viewerToday } from "@/lib/utils/viewer-today";
 import { requirePortalContext } from "@/server/auth/portal-session";
 import { NotFoundError } from "@/server/errors";
 import { getPortalInvoice, markInvoiceViewed } from "@/server/services/client-invoice.service";
@@ -40,6 +40,7 @@ export default async function PortalInvoicePage(props: PageProps<"/portal/[slug]
   const { slug, id } = await props.params;
   const { context, invoice } = await loadInvoice(slug, id);
   const { document } = invoice;
+  const today = await viewerToday();
 
   if (invoice.status === "SENT") {
     after(() => markInvoiceViewed(invoice));
@@ -64,7 +65,7 @@ export default async function PortalInvoicePage(props: PageProps<"/portal/[slug]
             dueDate={invoice.dueDate}
             paidAt={invoice.paidAt}
             businessName={invoice.organizationName}
-            today={todayIso()}
+            today={today}
           />
           <PrintButton />
         </div>

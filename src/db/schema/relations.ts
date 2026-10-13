@@ -6,6 +6,7 @@ import { files } from "./files";
 import { invoiceItems, invoices } from "./invoices";
 import { leads } from "./leads";
 import { messages } from "./messages";
+import { notifications } from "./notifications";
 import { portalAccounts, portalSessions, portalSetupTokens } from "./portal";
 import { milestones, projects } from "./projects";
 import { proposalSections, proposals } from "./proposals";
@@ -234,6 +235,17 @@ export const paymentsRelations = relations(payments, ({ one }) => ({
   }),
   recorder: one(users, {
     fields: [payments.recordedBy],
+    references: [users.id],
+  }),
+}));
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [notifications.organizationId],
+    references: [organizations.id],
+  }),
+  user: one(users, {
+    fields: [notifications.userId],
     references: [users.id],
   }),
 }));

@@ -11,8 +11,8 @@ import { SearchForm } from "@/components/shared/SearchForm";
 import { TabLinks } from "@/components/shared/TabLinks";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { todayIso } from "@/features/invoices/invoice-dates";
 import { invoiceFilterLabels, invoiceFilters, type InvoiceFilter } from "@/features/invoices/invoice-status";
+import { resolveTimeZone, userToday } from "@/lib/utils/timezone";
 import { requireOrganizationContext } from "@/server/auth/organization";
 import { hasPermission, permissions, requirePermission } from "@/server/authorization/permissions";
 import { getInvoiceMoneySummary, listInvoices } from "@/server/repositories/invoice.repository";
@@ -46,13 +46,13 @@ export default async function InvoicesPage(props: PageProps<"/dashboard/invoices
   requirePermission(ctx, permissions.invoicesRead);
   const { organization, membership } = ctx;
   const query = invoiceListQuerySchema.parse(await props.searchParams);
+  const today = userToday(ctx.user.timezone);
   const canCreate = hasPermission(membership.role, permissions.invoicesCreate);
   const [result, summary] = await Promise.all([
-    listInvoices(organization.id, query),
-    getInvoiceMoneySummary(organization.id, organization.currency),
+    listInvoices(organization.id, query, today),
+    getInvoiceMoneySummary(organization.id, organization.currency, resolveTimeZone(ctx.user.timezone)),
   ]);
   const filtered = Boolean(query.q) || query.status !== "all";
-  const today = todayIso();
 
   const tabs = invoiceFilters.map((filter) => ({
     value: filter,

@@ -922,7 +922,7 @@ Implementation notes (approved by the owner):
 
 - The client accepts by typing their full name; the name and time are stored in the activity log (`PROPOSAL_ACCEPTED`, `actor_type = CLIENT`). This is a sign-off, not an e-signature (Phase 2).
 - The first response (accept or decline) closes the link for good: the page becomes read-only and any later response is refused. A repeated identical acceptance returns the existing acceptance.
-- Creating a notification is added with the Notifications build.
+- Accepting or declining notifies every workspace member (§39).
 - Acceptance does not create a project automatically. An accepted proposal shows a **Create project** button that opens the new-project form prefilled from the proposal (client, name, budget, currency, description). One live project per proposal (`projects_proposal_uidx`, ignoring archived projects); after that the button becomes **View project**.
 - Until the Email build, "Send" produces a shareable link instead of an email.
 
@@ -1071,7 +1071,7 @@ created_at
 updated_at
 ```
 
-Implementation (approved by the owner): the MVP records **manual** payments only (`provider = 'MANUAL'`, `status = 'SUCCEEDED'`). A team member records the amount (up to the amount still due), the date, the method (bank transfer, card, cash, cheque or other, stored in `metadata.method` with an optional `metadata.note`) and an optional reference; `recorded_by` stores who recorded it. Recording is one transaction under an advisory lock on the invoice and is idempotent: the browser generates the payment id, and a repeated submission stores nothing new. The invoice's `amount_paid`, `amount_due`, status and `paid_at` are recalculated from its successful payments. OWNER/ADMIN can remove a payment recorded by mistake; the invoice is recalculated and a `PAYMENT_REMOVED` entry stays as the audit trail. Online card payments are Phase 2.
+Implementation (approved by the owner): the MVP records **manual** payments only (`provider = 'MANUAL'`, `status = 'SUCCEEDED'`). A team member records the amount (up to the amount still due), the date, the method (bank transfer, card, cash, cheque or other, stored in `metadata.method` with an optional `metadata.note`) and an optional reference; `recorded_by` stores who recorded it. Recording is one transaction under an advisory lock on the invoice and is idempotent: the browser generates the payment id, and a repeated submission stores nothing new. The invoice's `amount_paid`, `amount_due`, status and `paid_at` are recalculated from its successful payments. OWNER/ADMIN can remove a payment recorded by mistake; the invoice is recalculated and a `PAYMENT_REMOVED` entry stays as the audit trail. Online card payments are Phase 2. Payments are listed in one read-only ledger at `/dashboard/payments` (§70; newest first, 25 per page, search by invoice number, client or reference, method tabs, totals for this month / this year / all time in the workspace currency, with other currencies counted but not summed) and on the client's **Payments** tab (§66). Both need `invoices.read`; recording and removing stay on the invoice page.
 
 ---
 
@@ -1160,7 +1160,7 @@ Implementation (approved by the owner):
 - **Deleting is permanent and own-only.** Team members and clients can delete their own messages; the row is removed (no `deleted_at`) and disappears for both sides. Messages cannot be edited.
 - **No activity entries** are written for messages. Plain text only (up to 5,000 characters; `http(s)` links are made clickable); no attachments.
 - Sending and deleting need `projects.update`; reading needs `projects.read`. Clients are authorized only through their portal session, on their own live projects.
-- A project with messages can only be archived (§86). Email and in-app notifications for new messages come with the Email and Notifications builds.
+- A project with messages can only be archived (§86). A client message notifies the team in-app (§39); email notifications come with the Email build.
 
 ---
 
@@ -1181,6 +1181,13 @@ is_read
 created_at
 read_at
 ```
+
+Implementation (approved by the owner):
+
+- **Per-user, in-app only.** Each notification belongs to one workspace member (`user_id`); every read and update is scoped by `organization_id` **and** the signed-in user, so no capability is needed and nobody can read or mark someone else's. Emails come with the Email build; preferences (`/dashboard/settings/notifications`) with the Settings build. Clients get no portal notifications in the MVP.
+- **What notifies** — things clients do, plus teammates' payments: `PROPOSAL_ACCEPTED` / `PROPOSAL_DECLINED` (public proposal response), `INVOICE_VIEWED` (first client view), `PAYMENT_RECEIVED` (every member except the person who recorded it), `MESSAGE_RECEIVED` (a client portal message; at most one *unread* message notification per member per project). The other `notification_type` values stay in the enum for later; overdue invoices and deadlines would need a scheduled job.
+- **Same transaction, idempotent.** Each notification is inserted in the same `db.batch` as the write that causes it, under the same guard as its activity entry, so retries and repeated responses never duplicate it. Message content is never copied into a notification.
+- **UI:** a bell with an unread count in the app header (refreshed by the same 15-second poll as the Messages badge) and `/dashboard/notifications` (All / Unread, 25 per page, "Mark all as read"). Opening one goes through `/dashboard/notifications/[id]/open`, which marks it read and redirects to the record.
 
 ---
 

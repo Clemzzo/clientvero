@@ -7,6 +7,7 @@ import { InboxPoller } from "@/components/messages/InboxPoller";
 import { PortalBrand } from "@/components/portal/PortalBrand";
 import { PortalFooter } from "@/components/portal/PortalFooter";
 import { portalNavigation } from "@/components/portal/portal-navigation";
+import { TimeZoneCookie } from "@/components/shared/time-zone-cookie";
 import { portalSignOutAction } from "@/server/actions/portal";
 import { pollPortalInboxSummaryAction } from "@/server/actions/portal-messages";
 import type { UnreadSummary } from "@/server/repositories/message.repository";
@@ -76,6 +77,7 @@ export function PortalShell({ slug, organizationName, clientName, email, message
         <main className="mx-auto w-full max-w-300 flex-1 px-4 py-8 sm:px-8 lg:py-10">{children}</main>
         <PortalFooter className="lg:hidden" />
         <InboxPoller initial={messages} poll={pollPortalInboxSummaryAction.bind(null, slug)} />
+        <TimeZoneCookie />
       </div>
     </div>
   );

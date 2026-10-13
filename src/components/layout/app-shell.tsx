@@ -4,18 +4,20 @@ import { AppNavLink } from "@/components/layout/app-nav-link";
 import { appNavigation } from "@/components/layout/app-navigation";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { Logo } from "@/components/layout/logo";
+import { TimeZoneSync } from "@/components/layout/time-zone-sync";
 import { UserMenu } from "@/components/layout/user-menu";
 import { InboxPoller } from "@/components/messages/InboxPoller";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { NoticeProvider } from "@/components/shared/notice-provider";
 import type { Organization, User } from "@/db/schema";
 import { signOutAction } from "@/server/actions/auth";
-import { pollInboxSummaryAction } from "@/server/actions/messages";
-import type { UnreadSummary } from "@/server/repositories/message.repository";
+import { pollShellSummaryAction } from "@/server/actions/notifications";
+import type { ShellSummary } from "@/server/services/shell-summary.service";
 
 type AppShellProps = {
   user: User;
   organization: Organization;
-  messages: UnreadSummary;
+  summary: ShellSummary;
   sidebarCollapsed: boolean;
   children: ReactNode;
 };
@@ -57,7 +59,7 @@ function WorkspaceBadge({ organization }: { organization: Organization }) {
   );
 }
 
-export function AppShell({ user, organization, messages, sidebarCollapsed, children }: AppShellProps) {
+export function AppShell({ user, organization, summary, sidebarCollapsed, children }: AppShellProps) {
   const name = displayName(user);
 
   return (
@@ -70,7 +72,7 @@ export function AppShell({ user, organization, messages, sidebarCollapsed, child
         <nav aria-label="Main" className="flex-1 px-3 pt-6">
           <p className="px-3 pb-2 text-[11px] group-data-[collapsed=true]/sidebar:sr-only font-semibold uppercase tracking-[0.14em] text-ink-500">Workspace</p>
           <div className="space-y-1">
-            <NavLinks unreadMessages={messages.unread} />
+            <NavLinks unreadMessages={summary.messages.unread} />
           </div>
         </nav>
       </AppSidebar>
@@ -78,20 +80,27 @@ export function AppShell({ user, organization, messages, sidebarCollapsed, child
       <header className="sticky top-0 z-20 border-b border-ink-200 bg-white lg:hidden">
         <div className="flex h-14 items-center justify-between gap-3 px-4">
           <Logo href="/dashboard" className="h-8 w-auto" />
-          <UserMenu name={name} email={user.email} onSignOut={signOutAction} />
+          <div className="flex items-center gap-1">
+            <NotificationBell unread={summary.notifications.unread} />
+            <UserMenu name={name} email={user.email} onSignOut={signOutAction} />
+          </div>
         </div>
         <nav aria-label="Main" className="flex gap-1 overflow-x-auto px-3 pb-2">
-          <NavLinks unreadMessages={messages.unread} />
+          <NavLinks unreadMessages={summary.messages.unread} />
         </nav>
       </header>
 
       <div className="min-w-0">
         <header className="sticky top-0 z-20 hidden h-16 items-center justify-end border-b border-ink-200 bg-white/80 px-8 backdrop-blur lg:flex">
-          <UserMenu name={name} email={user.email} onSignOut={signOutAction} />
+          <div className="flex items-center gap-2">
+            <NotificationBell unread={summary.notifications.unread} />
+            <UserMenu name={name} email={user.email} onSignOut={signOutAction} />
+          </div>
         </header>
         <main>
           <NoticeProvider>{children}</NoticeProvider>
-          <InboxPoller initial={messages} poll={pollInboxSummaryAction} />
+          <InboxPoller initial={summary} poll={pollShellSummaryAction} />
+          <TimeZoneSync saved={user.timezone} />
         </main>
       </div>
     </div>

@@ -6,6 +6,7 @@ import { ClientDetails } from "@/components/clients/ClientDetails";
 import { ClientFiles } from "@/components/clients/ClientFiles";
 import { ClientInvoices } from "@/components/clients/ClientInvoices";
 import { ClientMessages } from "@/components/clients/ClientMessages";
+import { ClientPayments } from "@/components/clients/ClientPayments";
 import { ClientProjects } from "@/components/clients/ClientProjects";
 import { ClientProposals } from "@/components/clients/ClientProposals";
 import { DisablePortalButton } from "@/components/clients/DisablePortalButton";
@@ -19,12 +20,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import type { Client } from "@/db/schema";
 import { activityResources } from "@/features/activity/activity-actions";
-import { todayIso } from "@/features/invoices/invoice-dates";
 import { noticeSchema, type NoticeKey } from "@/features/notices";
+import { resolveTimeZone, userToday } from "@/lib/utils/timezone";
 import { hasPermission, permissions } from "@/server/authorization/permissions";
 import { listWorkspaceFiles } from "@/server/repositories/file.repository";
 import { listClientInvoices } from "@/server/repositories/invoice.repository";
 import { listConversations, unreadSummary } from "@/server/repositories/message.repository";
+import { getPaymentTotals, listPayments } from "@/server/repositories/payment.repository";
 import { listClientProjects } from "@/server/repositories/project.repository";
 import { listClientProposals } from "@/server/repositories/proposal.repository";
 import { listActivity } from "@/server/services/activity.service";
@@ -51,10 +53,13 @@ export default async function ClientPage(props: PageProps<"/dashboard/clients/[i
   const notice = noticeSchema.parse(searchParams.notice);
   const page = pageNumber.parse(searchParams.page);
   const canEdit = hasPermission(ctx.membership.role, permissions.clientsUpdate);
-  const [proposals, projects, invoices, files, conversations, clientMessages] = await Promise.all([
+  const clientScope = { clientId: client.id };
+  const [proposals, projects, invoices, payments, paymentTotals, files, conversations, clientMessages] = await Promise.all([
     listClientProposals(ctx.organization.id, client.id),
     listClientProjects(ctx.organization.id, client.id),
     listClientInvoices(ctx.organization.id, client.id),
+    listPayments(ctx.organization.id, { q: "", method: "all", page: tab === "payments" ? page : 1 }, clientScope),
+    tab === "payments" ? getPaymentTotals(ctx.organization.id, ctx.organization.currency, resolveTimeZone(ctx.user.timezone), clientScope) : null,
     listWorkspaceFiles(ctx.organization.id, { q: "", page: tab === "files" ? page : 1 }, { clientId: client.id }),
     listConversations(ctx.organization.id, { q: "", page: tab === "messages" ? page : 1, filter: "all" }, { clientId: client.id }),
     unreadSummary(ctx.organization.id, "team", client.id),
@@ -66,6 +71,7 @@ export default async function ClientPage(props: PageProps<"/dashboard/clients/[i
     { value: "proposals", label: "Proposals", href: `${basePath}?tab=proposals`, count: proposals.length },
     { value: "projects", label: "Projects", href: `${basePath}?tab=projects`, count: projects.length },
     { value: "invoices", label: "Invoices", href: `${basePath}?tab=invoices`, count: invoices.length },
+    { value: "payments", label: "Payments", href: `${basePath}?tab=payments`, count: payments.total },
     { value: "files", label: "Files", href: `${basePath}?tab=files`, count: files.total },
     {
       value: "messages",
@@ -126,8 +132,17 @@ export default async function ClientPage(props: PageProps<"/dashboard/clients/[i
           <ClientInvoices
             clientId={client.id}
             invoices={invoices}
-            today={todayIso()}
+            today={userToday(ctx.user.timezone)}
             canCreate={hasPermission(ctx.membership.role, permissions.invoicesCreate)}
+          />
+        )}
+        {tab === "payments" && paymentTotals && (
+          <ClientPayments
+            clientId={client.id}
+            result={payments}
+            totals={paymentTotals}
+            currency={ctx.organization.currency}
+            page={page}
           />
         )}
         {tab === "files" && <ClientFiles clientId={client.id} result={files} page={page} />}

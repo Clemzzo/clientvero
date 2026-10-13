@@ -5,9 +5,9 @@ import { InvoiceBuilder } from "@/components/invoices/InvoiceBuilder";
 import { BackLink } from "@/components/shared/BackLink";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { newInvoiceValues } from "@/features/invoices/builder-values";
-import { todayIso } from "@/features/invoices/invoice-dates";
 import { businessParty } from "@/features/invoices/invoice-document";
 import { formatInvoiceNumber } from "@/features/invoices/invoice-number";
+import { userToday } from "@/lib/utils/timezone";
 import { createInvoiceAction } from "@/server/actions/invoices";
 import { requireOrganizationContext } from "@/server/auth/organization";
 import { hasPermission, permissions } from "@/server/authorization/permissions";
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 };
 
 export default async function NewInvoicePage(props: PageProps<"/dashboard/invoices/new">) {
-  const { organization, membership } = await requireOrganizationContext();
+  const { user, organization, membership } = await requireOrganizationContext();
 
   if (!hasPermission(membership.role, permissions.invoicesCreate)) {
     notFound();
@@ -47,7 +47,7 @@ export default async function NewInvoicePage(props: PageProps<"/dashboard/invoic
           business={businessParty(organization)}
           invoiceNumber={formatInvoiceNumber(organization.invoiceSequence + 1)}
           status="DRAFT"
-          values={newInvoiceValues(prefill, todayIso())}
+          values={newInvoiceValues(prefill, userToday(user.timezone))}
           cancelHref="/dashboard/invoices"
           submitLabel="Save draft"
         />

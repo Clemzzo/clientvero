@@ -5,7 +5,7 @@ import { InvoiceStripList } from "@/components/invoices/InvoiceStripList";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Card } from "@/components/ui/card";
-import { todayIso } from "@/features/invoices/invoice-dates";
+import { viewerToday } from "@/lib/utils/viewer-today";
 import { requirePortalContext } from "@/server/auth/portal-session";
 import { listPortalInvoices } from "@/server/services/client-invoice.service";
 
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 export default async function PortalInvoicesPage(props: PageProps<"/portal/[slug]/invoices">) {
   const context = await requirePortalContext((await props.params).slug);
-  const invoices = await listPortalInvoices(context);
+  const [invoices, today] = await Promise.all([listPortalInvoices(context), viewerToday()]);
   const slug = context.organization.slug;
 
   return (
@@ -35,7 +35,7 @@ export default async function PortalInvoicesPage(props: PageProps<"/portal/[slug
         <InvoiceStripList
           label="Your invoices"
           invoices={invoices}
-          today={todayIso()}
+          today={today}
           showClient={false}
           hrefFor={(invoice) => `/portal/${slug}/invoices/${invoice.id}`}
         />

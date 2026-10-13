@@ -72,14 +72,18 @@ async function setupMilestones(organizationId: string) {
   return result.rows[0];
 }
 
-export async function getDashboardOverview(organizationId: string, currency: string): Promise<DashboardOverview> {
+export async function getDashboardOverview(
+  organizationId: string,
+  currency: string,
+  timeZone: string,
+): Promise<DashboardOverview> {
   const [[aggregates], statusCounts, [clientTotals], proposalCounts, projectCounts, invoiceMoney, setup, recentActivity] = await Promise.all([
     leadAggregates(organizationId, currency),
     leadStatusCounts(organizationId),
     activeClientCount(organizationId),
     countPendingProposals(organizationId),
     countActiveProjects(organizationId),
-    getInvoiceMoneySummary(organizationId, currency),
+    getInvoiceMoneySummary(organizationId, currency, timeZone),
     setupMilestones(organizationId),
     listRecentActivity(organizationId, RECENT_ACTIVITY_LIMIT),
   ]);

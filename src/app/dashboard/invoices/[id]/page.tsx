@@ -10,10 +10,10 @@ import { SettlementMeter } from "@/components/invoices/SettlementMeter";
 import { BackLink } from "@/components/shared/BackLink";
 import { UrlNotice } from "@/components/shared/UrlNotice";
 import { activityResources } from "@/features/activity/activity-actions";
-import { todayIso } from "@/features/invoices/invoice-dates";
 import { displayStatus } from "@/features/invoices/invoice-status";
 import { noticeSchema, type NoticeKey } from "@/features/notices";
 import { invoicePublicUrl } from "@/lib/utils/public-url";
+import { userToday } from "@/lib/utils/timezone";
 import { hasPermission, permissions } from "@/server/authorization/permissions";
 import { listInvoicePayments } from "@/server/repositories/invoice.repository";
 import { listActivity } from "@/server/services/activity.service";
@@ -39,7 +39,7 @@ export default async function InvoicePage(props: PageProps<"/dashboard/invoices/
     listActivity(ctx.organization.id, activityResources.invoice, invoice.id),
   ]);
   const role = ctx.membership.role;
-  const today = todayIso();
+  const today = userToday(ctx.user.timezone);
 
   return (
     <div className="min-h-full bg-ink-100">

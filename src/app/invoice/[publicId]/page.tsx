@@ -6,7 +6,8 @@ import { notFound } from "next/navigation";
 import { ClientSettlementLine } from "@/components/invoices/ClientSettlementLine";
 import { InvoiceDocument } from "@/components/invoices/InvoiceDocument";
 import { PrintButton } from "@/components/invoices/PrintButton";
-import { todayIso } from "@/features/invoices/invoice-dates";
+import { TimeZoneCookie } from "@/components/shared/time-zone-cookie";
+import { viewerToday } from "@/lib/utils/viewer-today";
 import { getPublicInvoice, markInvoiceViewed } from "@/server/services/client-invoice.service";
 import { invoicePublicIdSchema } from "@/validators/invoices";
 
@@ -33,6 +34,7 @@ export async function generateMetadata(props: PageProps<"/invoice/[publicId]">):
 export default async function PublicInvoicePage(props: PageProps<"/invoice/[publicId]">) {
   const invoice = await loadInvoice((await props.params).publicId);
   const { document } = invoice;
+  const today = await viewerToday();
 
   if (invoice.status === "SENT") {
     after(() => markInvoiceViewed(invoice));
@@ -50,12 +52,13 @@ export default async function PublicInvoicePage(props: PageProps<"/invoice/[publ
             dueDate={invoice.dueDate}
             paidAt={invoice.paidAt}
             businessName={invoice.organizationName}
-            today={todayIso()}
+            today={today}
           />
           <PrintButton />
         </div>
         <InvoiceDocument invoice={document} />
         <p className="text-center text-[12.5px] text-ink-500 print:hidden">Sent with ClientVero</p>
+        <TimeZoneCookie />
       </div>
     </main>
   );

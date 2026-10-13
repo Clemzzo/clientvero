@@ -2,13 +2,14 @@ import { z } from "zod";
 
 import { addDays, todayIso } from "@/features/invoices/invoice-dates";
 import { invoiceFilters } from "@/features/invoices/invoice-status";
-import { paymentMethods } from "@/features/invoices/payment-methods";
+import { paymentMethodFilters, paymentMethods } from "@/features/invoices/payment-methods";
 import { currencyCodes } from "@/features/organizations/business-profile";
 import { invoiceTotals, toCents } from "@/lib/utils/money";
 import { optionalDate, optionalMoney, optionalText, pageNumber, searchQuery } from "@/validators/fields";
 
 export const INVOICES_PAGE_SIZE = 20;
 export const MAX_INVOICE_ITEMS = 50;
+export const PAYMENTS_PAGE_SIZE = 25;
 
 const quantity = z
   .string({ error: "Enter a quantity." })
@@ -119,3 +120,11 @@ export const recordPaymentSchema = z.object({
 export type RecordPaymentInput = z.infer<typeof recordPaymentSchema>;
 
 export const paymentIdSchema = z.uuid();
+
+export const paymentListQuerySchema = z.object({
+  q: searchQuery,
+  method: z.enum(paymentMethodFilters).catch("all"),
+  page: pageNumber,
+});
+
+export type PaymentListQuery = z.infer<typeof paymentListQuerySchema>;
