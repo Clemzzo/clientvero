@@ -5,7 +5,7 @@ import { AuthBrandPanel } from "@/components/auth/AuthBrandPanel";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { SignUpForm } from "@/components/auth/SignUpForm";
 import { formatPlanPrice, getPlan, type Plan } from "@/features/subscriptions/plans";
-import { auth } from "@/lib/auth/server";
+import { getCurrentAccount } from "@/server/auth/current-user";
 import { pathAfterSignIn } from "@/server/auth/redirect-after-sign-in";
 import { planIdSchema } from "@/validators/auth";
 
@@ -23,13 +23,13 @@ function planDescription(plan: Plan) {
 }
 
 export default async function SignUpPage(props: PageProps<"/sign-up">) {
-  const { data: session } = await auth.getSession();
+  const { plan: requestedPlan } = await props.searchParams;
+  const account = await getCurrentAccount();
 
-  if (session?.user) {
-    redirect(await pathAfterSignIn(session.user.id));
+  if (account) {
+    redirect(await pathAfterSignIn(account.user.authUserId));
   }
 
-  const { plan: requestedPlan } = await props.searchParams;
   const planId = planIdSchema.parse(requestedPlan);
 
   return (

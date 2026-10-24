@@ -1,6 +1,6 @@
 import { activityResources, type ActivityResource } from "@/features/activity/activity-actions";
 
-export const activityFilters = ["all", "leads", "clients", "proposals", "projects", "invoices"] as const;
+export const activityFilters = ["all", "leads", "clients", "proposals", "projects", "invoices", "workspace"] as const;
 
 export type ActivityFilter = (typeof activityFilters)[number];
 
@@ -10,6 +10,7 @@ export const activityFilterResources: Record<Exclude<ActivityFilter, "all">, Act
   proposals: activityResources.proposal,
   projects: activityResources.project,
   invoices: activityResources.invoice,
+  workspace: activityResources.organization,
 };
 
 export const activityFilterLabels: Record<ActivityFilter, string> = {
@@ -19,4 +20,5 @@ export const activityFilterLabels: Record<ActivityFilter, string> = {
   proposals: "Proposals",
   projects: "Projects",
   invoices: "Invoices",
+  workspace: "Workspace",
 };

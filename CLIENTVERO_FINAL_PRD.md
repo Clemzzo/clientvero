@@ -500,6 +500,7 @@ Core entities:
 users
 organizations
 organization_members
+organization_invitations
 
 leads
 clients
@@ -1184,7 +1185,7 @@ read_at
 
 Implementation (approved by the owner):
 
-- **Per-user, in-app only.** Each notification belongs to one workspace member (`user_id`); every read and update is scoped by `organization_id` **and** the signed-in user, so no capability is needed and nobody can read or mark someone else's. Emails come with the Email build; preferences (`/dashboard/settings/notifications`) with the Settings build. Clients get no portal notifications in the MVP.
+- **Per-user, in-app only.** Each notification belongs to one workspace member (`user_id`); every read and update is scoped by `organization_id` **and** the signed-in user, so no capability is needed and nobody can read or mark someone else's. Emails come with the Email build. Preferences live at `/dashboard/settings/notifications` (§71): each member can switch off any emitted type, stored in `organization_members.notification_preferences` (missing key = on), and `notifyMembersIf` skips members who turned that type off. Clients get no portal notifications in the MVP.
 - **What notifies** — things clients do, plus teammates' payments: `PROPOSAL_ACCEPTED` / `PROPOSAL_DECLINED` (public proposal response), `INVOICE_VIEWED` (first client view), `PAYMENT_RECEIVED` (every member except the person who recorded it), `MESSAGE_RECEIVED` (a client portal message; at most one *unread* message notification per member per project). The other `notification_type` values stay in the enum for later; overdue invoices and deadlines would need a scheduled job.
 - **Same transaction, idempotent.** Each notification is inserted in the same `db.batch` as the write that causes it, under the same guard as its activity entry, so retries and repeated responses never duplicate it. Message content is never copied into a notification.
 - **UI:** a bell with an unread count in the app header (refreshed by the same 15-second poll as the Messages badge) and `/dashboard/notifications` (All / Unread, 25 per page, "Mark all as read"). Opening one goes through `/dashboard/notifications/[id]/open`, which marks it read and redirects to the record.
@@ -1278,6 +1279,7 @@ This table is the basis for idempotent webhook processing.
 Organization
 │
 ├── Members
+├── Invitations
 ├── Leads
 ├── Clients
 │   ├── Portal account (setup tokens, sessions)
@@ -1487,7 +1489,7 @@ billing.manage
 activity.delete
 ```
 
-Roles map to these capabilities. Deleting leads, clients and projects — archiving, restoring or deleting permanently — is limited to OWNER and ADMIN (`leads.delete`, `clients.delete`, `projects.delete`). Deleting or clearing activity entries is limited to OWNER and ADMIN (`activity.delete`). Deleting draft invoices and removing recorded payments is limited to OWNER and ADMIN (`invoices.delete`).
+Roles map to these capabilities. Team rules (§71): everyone can read the team and business details (`team.read`, `organization.read`); only OWNER and ADMIN can invite, change roles, remove members and edit business details (`team.manage`, `organization.update`) or see Billing (`billing.read`). The OWNER can't be changed, removed or leave, nobody can change their own role or remove themselves (non-owners can leave instead), and invitations are only for ADMIN or MEMBER. Deleting leads, clients and projects — archiving, restoring or deleting permanently — is limited to OWNER and ADMIN (`leads.delete`, `clients.delete`, `projects.delete`). Deleting or clearing activity entries is limited to OWNER and ADMIN (`activity.delete`). Deleting draft invoices and removing recorded payments is limited to OWNER and ADMIN (`invoices.delete`).
 
 ---
 
@@ -1701,6 +1703,10 @@ Messages: 60/minute/user (sends and deletes; clients: 60/minute per portal accou
 Message polling: 120/minute per user or portal account (a limited poll returns nothing and the next one retries)
 
 Public document actions: 30/minute/IP
+
+Public invitation page views: 30/minute/IP
+
+Password changes: 5/15 minutes/user
 
 Portal authentication: 10 attempts/15 minutes/IP, 5 attempts/15 minutes/email
 
@@ -2010,6 +2016,16 @@ Client portal (no workspace sign-in; portal session instead, see §53):
 /dashboard/settings/notifications
 /dashboard/settings/billing
 ```
+
+Implementation (approved by the owner):
+
+- **Profile** (everyone): first and last name, a profile photo, and password change (current password required, optional "sign out of other devices", via Neon Auth `changePassword`, rate-limited 5 / 15 minutes per user). The sign-in email is shown read-only. The time zone is not a setting: it stays detected from the browser.
+- **Business** (`organization.read` to view, `organization.update` to edit): logo, name, website, address, business type, country and currency (a new currency applies to new records only). The slug is fixed and the portal address is shown for copying. Changes log `ORGANIZATION_UPDATED` with the changed field names. Tax ID is not collected.
+- **Images:** avatars (`users.avatar_key`) and logos (`organizations.logo_key`) are PNG or JPG, up to 2 MB, uploaded straight to the private bucket with a presigned PUT and checked (`HeadObject` size and type, key prefix `org/{id}/brand/logo/…` or `org/{id}/members/{userId}/avatar/…`) before the key is saved; the previous object is then deleted. Avatars are served through `/dashboard/team/[userId]/avatar` (same-workspace members only); logos through the public `/brand/[slug]/logo`, because they appear in the portal and on public proposals and invoices. Both stream through the app with `nosniff` and a sandboxed CSP.
+- **Team** (`team.read` to view, `team.manage` to change): members with roles, and pending invitations. An invitation (`organization_invitations`) is a single-use link valid for 7 days (only the SHA-256 hash is stored, plus an AES-GCM copy so it can be copied again; a new invite to the same email replaces the open one). Until the Email build the link is copied and sent by hand. Up to 20 people per workspace, counting open invitations. The invitee opens `/invite/[token]`, signs up or signs in with the invited email, and joins; a signed-in user without a workspace also sees open invitations on `/onboarding`. Joining is one transaction under an advisory lock and only succeeds for the invited email, an open unexpired invitation and a user with no workspace (one workspace per account for now). Removing a member deletes their membership and their notifications in that workspace; their records stay. Activity: `MEMBER_INVITED`, `INVITATION_REVOKED`, `MEMBER_JOINED`, `MEMBER_ROLE_CHANGED`, `MEMBER_REMOVED`, `MEMBER_LEFT` (Activity screen "Workspace" tab).
+- **Notifications** (everyone, own settings only): switches per emitted notification type (§39).
+- **Billing** (`billing.read`): the current plan (Free until Stripe), usage against its limits (clients, active projects, proposals and invoices this month in the user's time zone), and the other plans with upgrades marked "available soon". Stripe fills this page in (§60).
+- **Not in this build:** ownership transfer, deleting the workspace or account, changing the sign-in email, invitation emails, and seat limits per plan.
 
 ---
 
@@ -2996,7 +3012,7 @@ Rate Limiting
 - time tracking
 - expenses
 - reports
-- team management
+- team management beyond the MVP (basic invitations, roles and removal were brought forward with the owner's approval, §71)
 
 ## Phase 4
 

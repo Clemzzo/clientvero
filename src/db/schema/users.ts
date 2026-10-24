@@ -9,6 +9,7 @@ export const users = pgTable("users", {
   firstName: varchar("first_name", { length: 120 }),
   lastName: varchar("last_name", { length: 120 }),
   avatarUrl: text("avatar_url"),
+  avatarKey: text("avatar_key"),
   timezone: varchar("timezone", { length: 100 }),
   ...timestamps,
 });

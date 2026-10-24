@@ -3,6 +3,7 @@ import { relations } from "drizzle-orm";
 import { activityLogs } from "./activity";
 import { clients } from "./clients";
 import { files } from "./files";
+import { organizationInvitations } from "./invitations";
 import { invoiceItems, invoices } from "./invoices";
 import { leads } from "./leads";
 import { messages } from "./messages";
@@ -25,6 +26,18 @@ export const organizationsRelations = relations(organizations, ({ many }) => ({
   proposals: many(proposals),
   projects: many(projects),
   invoices: many(invoices),
+  invitations: many(organizationInvitations),
+}));
+
+export const organizationInvitationsRelations = relations(organizationInvitations, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [organizationInvitations.organizationId],
+    references: [organizations.id],
+  }),
+  inviter: one(users, {
+    fields: [organizationInvitations.invitedBy],
+    references: [users.id],
+  }),
 }));
 
 export const organizationMembersRelations = relations(organizationMembers, ({ one }) => ({

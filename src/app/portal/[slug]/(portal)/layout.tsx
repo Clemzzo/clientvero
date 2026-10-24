@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { PortalShell } from "@/components/portal/PortalShell";
+import { logoSrc } from "@/features/settings/image-urls";
 import { requirePortalContext } from "@/server/auth/portal-session";
 import { unreadSummary } from "@/server/repositories/message.repository";
 
@@ -17,6 +18,7 @@ export default async function PortalAppLayout({ children, params }: PortalAppLay
     <PortalShell
       slug={context.organization.slug}
       organizationName={context.organization.name}
+      logoSrc={logoSrc(context.organization.slug, context.organization.logoKey)}
       clientName={context.client.name}
       email={context.email}
       messages={messages}

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { ProposalDocument } from "@/components/proposals/ProposalDocument";
 import { BackLink } from "@/components/shared/BackLink";
+import { logoSrc } from "@/features/settings/image-urls";
 
 import { loadProposal } from "../load-proposal";
 
@@ -22,7 +23,11 @@ export default async function ProposalPreviewPage(props: PageProps<"/dashboard/p
         </p>
       </div>
       <div className="mx-auto mt-6 max-w-190">
-        <ProposalDocument proposal={{ ...proposal, organizationName: ctx.organization.name }} />
+        <ProposalDocument proposal={{
+          ...proposal,
+          organizationName: ctx.organization.name,
+          organizationLogo: logoSrc(ctx.organization.slug, ctx.organization.logoKey),
+        }} />
       </div>
     </div>
   );

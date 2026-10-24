@@ -24,6 +24,7 @@ export default async function PortalSetupPage(props: PageProps<"/portal/[slug]/s
     return (
       <PortalAuthCard
         organizationName={organization.name}
+        logoSrc={organization.logoSrc}
         title="This link has expired"
         description={`Portal links work once and expire after 7 days. Ask ${organization.name} to send you a new one.`}
       >
@@ -44,6 +45,7 @@ export default async function PortalSetupPage(props: PageProps<"/portal/[slug]/s
   return (
     <PortalAuthCard
       organizationName={organization.name}
+      logoSrc={organization.logoSrc}
       title={link.isReset ? "Choose a new password" : `Welcome, ${link.clientName}`}
       description={
         link.isReset

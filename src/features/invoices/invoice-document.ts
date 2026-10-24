@@ -1,4 +1,5 @@
 import type { InvoiceStatus } from "@/db/schema";
+import { logoSrc } from "@/features/settings/image-urls";
 
 export type InvoiceDocumentLine = {
   description: string;
@@ -10,6 +11,7 @@ export type InvoiceDocumentLine = {
 export type InvoiceParty = {
   name: string;
   lines: string[];
+  logo?: string | null;
 };
 
 export type InvoiceDocumentData = {
@@ -30,7 +32,7 @@ export type InvoiceDocumentData = {
   client: InvoiceParty;
 };
 
-type BusinessFields = { name: string; address: string | null; website: string | null };
+type BusinessFields = { name: string; slug: string; logoKey: string | null; address: string | null; website: string | null };
 type ClientFields = { name: string; company: string | null; email: string | null; address: string | null; country: string | null };
 
 function present(values: (string | null)[]) {
@@ -38,7 +40,11 @@ function present(values: (string | null)[]) {
 }
 
 export function businessParty(business: BusinessFields): InvoiceParty {
-  return { name: business.name, lines: present([business.address, business.website]) };
+  return {
+    name: business.name,
+    lines: present([business.address, business.website]),
+    logo: logoSrc(business.slug, business.logoKey),
+  };
 }
 
 export function clientParty(client: ClientFields): InvoiceParty {

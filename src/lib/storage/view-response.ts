@@ -1,6 +1,7 @@
 import "server-only";
 
 import { isViewableMimeType } from "@/features/files/file-types";
+import { isImageMimeType } from "@/features/settings/image-types";
 import { contentDisposition, openObject } from "@/lib/storage/client";
 import type { FileObject } from "@/server/repositories/file.repository";
 
@@ -35,4 +36,31 @@ export async function inlineFileResponse(file: FileObject): Promise<Response> {
   }
 
   return new Response(object.body, { status: 200, headers });
+}
+
+type ImageCache = "public" | "private";
+
+const imageCacheControl: Record<ImageCache, string> = {
+  public: "public, max-age=31536000, immutable",
+  private: "private, max-age=31536000, immutable",
+};
+
+export async function imageResponse(objectKey: string, cache: ImageCache): Promise<Response> {
+  const object = await openObject(objectKey);
+
+  if (!object || !isImageMimeType(object.contentType)) {
+    return notFoundResponse();
+  }
+
+  return new Response(object.body, {
+    status: 200,
+    headers: {
+      "Content-Type": object.contentType,
+      "Content-Length": String(object.sizeBytes),
+      "Cache-Control": imageCacheControl[cache],
+      "Content-Security-Policy": imagePolicy,
+      "X-Content-Type-Options": "nosniff",
+      "Cross-Origin-Resource-Policy": "same-origin",
+    },
+  });
 }

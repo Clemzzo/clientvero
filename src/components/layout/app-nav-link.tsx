@@ -15,9 +15,10 @@ type AppNavLinkProps = {
   icon: ReactNode;
   exact?: boolean;
   badge?: number;
+  nested?: boolean;
 };
 
-export function AppNavLink({ href, label, icon, exact = false, badge = 0 }: AppNavLinkProps) {
+export function AppNavLink({ href, label, icon, exact = false, badge = 0, nested = false }: AppNavLinkProps) {
   const pathname = usePathname();
   const collapsed = useSidebarCollapsed();
   const active = exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
@@ -27,7 +28,8 @@ export function AppNavLink({ href, label, icon, exact = false, badge = 0 }: AppN
       href={href}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "relative flex shrink-0 items-center gap-2.5 rounded-lg py-2 text-[14px] font-medium transition-colors",
+        "relative flex shrink-0 items-center gap-2.5 rounded-lg font-medium transition-colors",
+        nested ? "py-1.5 text-[13.5px]" : "py-2 text-[14px]",
         collapsed ? "justify-center px-0" : "px-3",
         active ? "bg-brand-50 text-brand-700" : "text-ink-500 hover:bg-ink-100 hover:text-ink-900",
       )}

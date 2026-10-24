@@ -16,6 +16,7 @@ import { Card, CardHeader } from "@/components/ui/card";
 import { activityResources } from "@/features/activity/activity-actions";
 import { noticeSchema } from "@/features/notices";
 import { proposalStatusLabels, proposalStatusTones } from "@/features/proposals/proposal-status";
+import { logoSrc } from "@/features/settings/image-urls";
 import { proposalPublicUrl } from "@/lib/utils/public-url";
 import { hasPermission, permissions } from "@/server/authorization/permissions";
 import { findProjectIdForProposal } from "@/server/repositories/project.repository";
@@ -85,7 +86,11 @@ export default async function ProposalPage(props: PageProps<"/dashboard/proposal
       </header>
 
       <div className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <ProposalDocument proposal={{ ...proposal, organizationName: ctx.organization.name }} />
+        <ProposalDocument proposal={{
+          ...proposal,
+          organizationName: ctx.organization.name,
+          organizationLogo: logoSrc(ctx.organization.slug, ctx.organization.logoKey),
+        }} />
 
         <aside className="space-y-4 lg:sticky lg:top-24">
           <ProposalSummaryCard proposal={proposal} />

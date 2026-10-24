@@ -36,3 +36,9 @@ export function formatRelativeTime(date: Date, now = new Date()): string {
 
   return "just now";
 }
+
+type PersonFields = { firstName: string | null; lastName: string | null; email: string };
+
+export function personName(person: PersonFields): string {
+  return [person.firstName, person.lastName].filter(Boolean).join(" ") || person.email;
+}

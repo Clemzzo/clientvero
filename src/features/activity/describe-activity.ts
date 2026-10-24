@@ -15,6 +15,8 @@ const metadataSchema = z
     fileName: z.string().optional(),
     projectStatus: z.enum(projectStatuses).optional(),
     count: z.number().int().nonnegative().optional(),
+    email: z.string().optional(),
+    role: z.enum(["OWNER", "ADMIN", "MEMBER"]).optional(),
     amount: z.string().regex(/^\d{1,12}(\.\d{1,2})?$/).optional(),
     currency: z.string().length(3).optional(),
   })
@@ -27,7 +29,10 @@ type ActivityDescription = {
 };
 
 export function describeActivity(action: string, metadata: unknown): ActivityDescription {
-  const { name, to, milestoneName, fileName, projectStatus, count, amount, currency } = metadataSchema.parse(metadata ?? {});
+  const { name, to, milestoneName, fileName, projectStatus, count, amount, currency, email, role } = metadataSchema.parse(
+    metadata ?? {},
+  );
+  const roleLabel = role ? role.charAt(0) + role.slice(1).toLowerCase() : undefined;
   const money = amount && currency ? formatMoney(amount, currency) : undefined;
 
   switch (action) {
@@ -129,6 +134,20 @@ export function describeActivity(action: string, metadata: unknown): ActivityDes
       return { verb: "revoked portal access for", subject: name };
     case activityActions.portalDisabled:
       return { verb: "turned off the client portal" };
+    case activityActions.organizationUpdated:
+      return { verb: "updated the business details" };
+    case activityActions.memberInvited:
+      return { verb: "invited", subject: email, detail: roleLabel ? `as ${roleLabel}` : undefined };
+    case activityActions.invitationRevoked:
+      return { verb: "revoked the invitation for", subject: email };
+    case activityActions.memberJoined:
+      return { verb: "joined the workspace", detail: roleLabel ? `as ${roleLabel}` : undefined };
+    case activityActions.memberRoleChanged:
+      return { verb: "changed the role of", subject: name, detail: roleLabel ? `to ${roleLabel}` : undefined };
+    case activityActions.memberRemoved:
+      return { verb: "removed", subject: name, detail: "from the workspace" };
+    case activityActions.memberLeft:
+      return { verb: "left the workspace" };
     case activityActions.activityCleared:
       return { verb: `cleared ${count ?? 0} activity ${count === 1 ? "entry" : "entries"}` };
     default:

@@ -11,6 +11,7 @@ export const noticeKeys = [
   "invoice-created",
   "invoice-saved",
   "invoice-locked",
+  "joined",
 ] as const;
 
 export type NoticeKey = (typeof noticeKeys)[number];

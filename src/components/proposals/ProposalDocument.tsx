@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { WorkspaceLogo } from "@/components/shared/WorkspaceLogo";
 import type { Proposal, ProposalSection } from "@/db/schema";
 import { cn } from "@/lib/utils";
 import { formatMoney } from "@/lib/utils/format";
@@ -10,6 +11,7 @@ export type ProposalDocumentData = Pick<
   "title" | "description" | "currency" | "subtotal" | "discount" | "tax" | "total" | "timeline" | "terms" | "sentAt" | "createdAt"
 > & {
   organizationName: string;
+  organizationLogo?: string | null;
   clientName: string;
   sections: Pick<ProposalSection, "id" | "title" | "content">[];
 };
@@ -105,18 +107,11 @@ function MetaItem({ label, children }: { label: string; children: ReactNode }) {
 }
 
 function DocumentHeader({ proposal }: { proposal: ProposalDocumentData }) {
-  const initial = proposal.organizationName.trim().charAt(0).toUpperCase();
-
   return (
     <header className="border-b border-ink-200 bg-ink-50/60 px-6 pb-8 pt-6 sm:px-12 sm:pb-10 sm:pt-8">
       <div className="flex items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
-          <span
-            aria-hidden
-            className="grid size-9 shrink-0 place-items-center rounded-lg bg-brand-600 font-display text-[15px] font-bold text-white"
-          >
-            {initial}
-          </span>
+          <WorkspaceLogo name={proposal.organizationName} src={proposal.organizationLogo ?? null} />
           <p className="truncate text-[15px] font-semibold text-ink-900">{proposal.organizationName}</p>
         </div>
         <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-ink-500">Proposal</p>

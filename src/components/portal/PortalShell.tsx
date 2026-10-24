@@ -15,6 +15,7 @@ import type { UnreadSummary } from "@/server/repositories/message.repository";
 type PortalShellProps = {
   slug: string;
   organizationName: string;
+  logoSrc: string | null;
   clientName: string;
   email: string;
   messages: UnreadSummary;
@@ -34,7 +35,7 @@ function NavLinks({ slug, unreadMessages }: { slug: string; unreadMessages: numb
   ));
 }
 
-export function PortalShell({ slug, organizationName, clientName, email, messages, children }: PortalShellProps) {
+export function PortalShell({ slug, organizationName, logoSrc, clientName, email, messages, children }: PortalShellProps) {
   const clientMenu = <UserMenu name={clientName} email={email} onSignOut={portalSignOutAction.bind(null, slug)} />;
 
   return (
@@ -42,7 +43,7 @@ export function PortalShell({ slug, organizationName, clientName, email, message
       <aside className="sticky top-0 hidden h-dvh flex-col border-r border-ink-200 bg-white lg:flex">
         <div className="px-3 pt-6">
           <Link href={`/portal/${slug}`} className="block rounded-xl border border-ink-200 bg-ink-50 p-2.5 transition-colors hover:bg-ink-100">
-            <PortalBrand organizationName={organizationName} />
+            <PortalBrand organizationName={organizationName} logoSrc={logoSrc} />
           </Link>
         </div>
 
@@ -61,7 +62,7 @@ export function PortalShell({ slug, organizationName, clientName, email, message
       <header className="sticky top-0 z-20 border-b border-ink-200 bg-white lg:hidden">
         <div className="flex h-14 items-center justify-between gap-3 px-4">
           <Link href={`/portal/${slug}`} className="min-w-0 rounded-xl">
-            <PortalBrand organizationName={organizationName} />
+            <PortalBrand organizationName={organizationName} logoSrc={logoSrc} />
           </Link>
           {clientMenu}
         </div>

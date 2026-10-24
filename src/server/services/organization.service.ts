@@ -2,11 +2,15 @@ import "server-only";
 
 import { randomUUID } from "node:crypto";
 
-import { eq, sql } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 
 import { db } from "@/db";
-import { organizationMembers, organizations, users } from "@/db/schema";
+import { organizationMembers, organizations, users, type Organization } from "@/db/schema";
+import { activityActions, activityResources } from "@/features/activity/activity-actions";
+import type { WorkspaceActor } from "@/server/auth/organization";
+import { activityInsert } from "@/server/services/activity.service";
 import type { OnboardingInput } from "@/validators/onboarding";
+import type { BusinessInput } from "@/validators/settings";
 
 export async function hasWorkspace(authUserId: string): Promise<boolean> {
   const [membership] = await db
@@ -47,4 +51,40 @@ export async function createWorkspace(userId: string, input: OnboardingInput): P
       select id, ${userId}, 'OWNER' from ${organizations} where id = ${organizationId}
     `),
   ]);
+}
+
+const businessFields = ["name", "businessType", "country", "currency", "website", "address"] as const satisfies readonly (keyof BusinessInput & keyof Organization)[];
+
+export async function updateBusiness(ctx: WorkspaceActor, input: BusinessInput): Promise<void> {
+  const changed = businessFields.filter((field) => ctx.organization[field] !== input[field]);
+
+  if (changed.length === 0) {
+    return;
+  }
+
+  await db.batch([
+    db.update(organizations).set(input).where(eq(organizations.id, ctx.organization.id)),
+    activityInsert({
+      organizationId: ctx.organization.id,
+      actorUserId: ctx.user.id,
+      action: activityActions.organizationUpdated,
+      resourceType: activityResources.organization,
+      resourceId: ctx.organization.id,
+      metadata: { fields: changed },
+    }),
+  ]);
+}
+
+export async function setLogoKey(organizationId: string, logoKey: string | null): Promise<void> {
+  await db.update(organizations).set({ logoKey }).where(eq(organizations.id, organizationId));
+}
+
+export async function findLogoKeyBySlug(slug: string): Promise<string | null> {
+  const [row] = await db
+    .select({ logoKey: organizations.logoKey })
+    .from(organizations)
+    .where(and(eq(organizations.slug, slug), isNull(organizations.deletedAt)))
+    .limit(1);
+
+  return row?.logoKey ?? null;
 }

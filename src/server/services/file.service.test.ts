@@ -77,7 +77,7 @@ describe("project files", () => {
       accountId: "unused",
       email: "client@example.com",
       client: { id: clientId, name: "Client" },
-      organization: { id: organization.id, name: organization.name, slug: organization.slug },
+      organization: { id: organization.id, name: organization.name, slug: organization.slug, logoKey: null },
     };
   }
 

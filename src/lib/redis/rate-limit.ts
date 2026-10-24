@@ -26,6 +26,7 @@ export const authLimits = {
   resetRequestPerEmailBurst: limiter("reset-request:email:burst", 1, "60 s"),
   resetRequestPerEmail: limiter("reset-request:email", 3, "1 h"),
   resetSubmitPerIp: limiter("reset-submit:ip", 5, "10 m"),
+  changePasswordPerUser: limiter("change-password:user", 5, "15 m"),
 };
 
 export const workspaceLimits = {
@@ -45,6 +46,7 @@ export const portalLimits = {
 
 export const publicLimits = {
   documentActionsPerIp: limiter("public:document:ip", 30, "1 m"),
+  invitationViewsPerIp: limiter("public:invitation:ip", 30, "1 m"),
 };
 
 type LimitCheck = [Ratelimit, string];

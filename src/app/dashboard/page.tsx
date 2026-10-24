@@ -9,7 +9,9 @@ import { RecentActivityCard } from "@/components/dashboard/RecentActivityCard";
 import { SetupChecklistCard, type SetupStep } from "@/components/dashboard/SetupChecklistCard";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { UrlNotice } from "@/components/shared/UrlNotice";
 import { dashboardHighlights } from "@/features/dashboard/highlights";
+import { noticeSchema } from "@/features/notices";
 import { resolveTimeZone } from "@/lib/utils/timezone";
 import { requireOrganizationContext } from "@/server/auth/organization";
 import { getDashboardOverview } from "@/server/repositories/dashboard.repository";
@@ -20,8 +22,9 @@ export const metadata: Metadata = {
 
 type Stat = ComponentProps<typeof StatCard>;
 
-export default async function DashboardPage() {
+export default async function DashboardPage(props: PageProps<"/dashboard">) {
   const { user, organization } = await requireOrganizationContext();
+  const notice = noticeSchema.parse((await props.searchParams).notice);
   const overview = await getDashboardOverview(organization.id, organization.currency, resolveTimeZone(user.timezone));
   const { leads, clients, projects, proposals } = overview;
 
@@ -74,6 +77,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-300 space-y-6 px-4 py-8 sm:px-8 lg:py-10">
+      <UrlNotice notice={notice} message={`Welcome to ${organization.name}! You've joined the workspace.`} />
       <PageHeader
         title={`Welcome back${user.firstName ? `, ${user.firstName}` : ""}`}
         description={dashboardHighlights({

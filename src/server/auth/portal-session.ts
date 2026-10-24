@@ -17,7 +17,7 @@ export type PortalContext = {
   accountId: string;
   email: string;
   client: { id: string; name: string };
-  organization: { id: string; name: string; slug: string };
+  organization: { id: string; name: string; slug: string; logoKey: string | null };
 };
 
 export function portalSessionExpiry(from = new Date()): Date {
@@ -52,6 +52,7 @@ export async function findPortalContextByToken(token: string): Promise<PortalCon
       organizationId: organizations.id,
       organizationName: organizations.name,
       organizationSlug: organizations.slug,
+      organizationLogoKey: organizations.logoKey,
     })
     .from(portalSessions)
     .innerJoin(portalAccounts, eq(portalAccounts.id, portalSessions.portalAccountId))
@@ -79,7 +80,7 @@ export async function findPortalContextByToken(token: string): Promise<PortalCon
     accountId: row.accountId,
     email: row.email,
     client: { id: row.clientId, name: row.clientName },
-    organization: { id: row.organizationId, name: row.organizationName, slug: row.organizationSlug },
+    organization: { id: row.organizationId, name: row.organizationName, slug: row.organizationSlug, logoKey: row.organizationLogoKey },
   };
 }
 

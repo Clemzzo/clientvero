@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/app-shell";
 import { SIDEBAR_COOKIE } from "@/components/layout/app-sidebar";
 import { getCurrentAccount } from "@/server/auth/current-user";
+import { settingsSectionsFor } from "@/server/authorization/settings-sections";
 import { getShellSummary } from "@/server/services/shell-summary.service";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
@@ -23,7 +24,13 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const sidebarCollapsed = cookieStore.get(SIDEBAR_COOKIE)?.value === "collapsed";
 
   return (
-    <AppShell user={account.user} organization={organization} summary={summary} sidebarCollapsed={sidebarCollapsed}>
+    <AppShell
+      user={account.user}
+      organization={organization}
+      summary={summary}
+      settingsSections={settingsSectionsFor(account.membership.role)}
+      sidebarCollapsed={sidebarCollapsed}
+    >
       {children}
     </AppShell>
   );

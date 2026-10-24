@@ -124,7 +124,13 @@ export async function getInvoice(organizationId: string, invoiceId: string): Pro
     .select({
       invoice: invoices,
       client: { name: clients.name, company: clients.company, email: clients.email, address: clients.address, country: clients.country },
-      business: { name: organizations.name, address: organizations.address, website: organizations.website },
+      business: {
+        name: organizations.name,
+        slug: organizations.slug,
+        logoKey: organizations.logoKey,
+        address: organizations.address,
+        website: organizations.website,
+      },
       projectName: projects.name,
     })
     .from(invoices)

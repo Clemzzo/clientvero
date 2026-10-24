@@ -120,6 +120,13 @@
       "when": 1791831714217,
       "tag": "0016_blue_grim_reaper",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1792431472348,
+      "tag": "0017_unusual_malcolm_colcord",
+      "breakpoints": true
     }
   ]
 }

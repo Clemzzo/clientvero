@@ -11,6 +11,33 @@ export function buildObjectKey(organizationId: string, projectId: string): strin
 }
 
 export function isProjectObjectKey(key: string, organizationId: string, projectId: string): boolean {
-  const prefix = projectPrefix(organizationId, projectId);
+  return hasPrefixAndId(key, projectPrefix(organizationId, projectId));
+}
+
+function logoPrefix(organizationId: string) {
+  return `org/${organizationId}/brand/logo/`;
+}
+
+function avatarPrefix(organizationId: string, userId: string) {
+  return `org/${organizationId}/members/${userId}/avatar/`;
+}
+
+function hasPrefixAndId(key: string, prefix: string) {
   return key.startsWith(prefix) && new RegExp(`^${uuidPattern}$`).test(key.slice(prefix.length));
+}
+
+export function buildLogoKey(organizationId: string): string {
+  return `${logoPrefix(organizationId)}${randomUUID()}`;
+}
+
+export function buildAvatarKey(organizationId: string, userId: string): string {
+  return `${avatarPrefix(organizationId, userId)}${randomUUID()}`;
+}
+
+export function isLogoKey(key: string, organizationId: string): boolean {
+  return hasPrefixAndId(key, logoPrefix(organizationId));
+}
+
+export function isAvatarKey(key: string, organizationId: string, userId: string): boolean {
+  return hasPrefixAndId(key, avatarPrefix(organizationId, userId));
 }

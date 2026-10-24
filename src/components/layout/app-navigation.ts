@@ -1,4 +1,17 @@
-import { Banknote, FileText, FolderKanban, FolderOpen, History, LayoutDashboard, MessagesSquare, ReceiptText, UserPlus, Users, type LucideIcon } from "lucide-react";
+import {
+  Banknote,
+  FileText,
+  FolderKanban,
+  FolderOpen,
+  History,
+  LayoutDashboard,
+  MessagesSquare,
+  ReceiptText,
+  Settings,
+  UserPlus,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 
 export type AppNavItem = {
   label: string;
@@ -20,3 +33,5 @@ export const appNavigation: AppNavItem[] = [
   { label: "Files", href: "/dashboard/files", icon: FolderOpen },
   { label: "Activity", href: "/dashboard/activity", icon: History },
 ];
+
+export const settingsNavItem: AppNavItem = { label: "Settings", href: "/dashboard/settings", icon: Settings };

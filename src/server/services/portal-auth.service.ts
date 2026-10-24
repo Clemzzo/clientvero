@@ -50,9 +50,9 @@ function sessionInsert(organizationId: string, accountId: string) {
   };
 }
 
-export async function getPortalOrganization(slug: string): Promise<{ name: string } | null> {
+export async function getPortalOrganization(slug: string): Promise<{ name: string; logoKey: string | null } | null> {
   const [organization] = await db
-    .select({ name: organizations.name })
+    .select({ name: organizations.name, logoKey: organizations.logoKey })
     .from(organizations)
     .where(and(eq(organizations.slug, slug), isNull(organizations.deletedAt)))
     .limit(1);

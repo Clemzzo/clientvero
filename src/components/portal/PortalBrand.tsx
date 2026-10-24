@@ -1,23 +1,21 @@
+import { WorkspaceLogo } from "@/components/shared/WorkspaceLogo";
 import { cn } from "@/lib/utils";
 
 type PortalBrandProps = {
   organizationName: string;
+  logoSrc?: string | null;
   size?: "sm" | "lg";
   caption?: string;
 };
 
-export function PortalBrand({ organizationName, size = "sm", caption = "Client portal" }: PortalBrandProps) {
+export function PortalBrand({ organizationName, logoSrc = null, size = "sm", caption = "Client portal" }: PortalBrandProps) {
   return (
     <div className={cn("flex min-w-0 items-center", size === "lg" ? "flex-col gap-3 text-center" : "gap-3")}>
-      <span
-        aria-hidden
-        className={cn(
-          "grid shrink-0 place-items-center bg-brand-600 font-display font-bold text-white",
-          size === "lg" ? "size-14 rounded-2xl text-[24px]" : "size-9 rounded-xl text-[15px]",
-        )}
-      >
-        {organizationName.trim().charAt(0).toUpperCase()}
-      </span>
+      <WorkspaceLogo
+        name={organizationName}
+        src={logoSrc}
+        className={size === "lg" ? "size-14 rounded-2xl text-[24px]" : "size-9 rounded-xl"}
+      />
       <div className="min-w-0">
         <p className={cn("truncate font-semibold text-ink-900", size === "lg" ? "text-[17px]" : "text-[14px]")}>
           {organizationName}

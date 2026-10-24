@@ -1,6 +1,8 @@
 import "server-only";
 
 import { eq } from "drizzle-orm";
+import { unstable_rethrow } from "next/navigation";
+import { connection } from "next/server";
 import { cache } from "react";
 import { z } from "zod";
 
@@ -41,6 +43,7 @@ async function findAccount(authUserId: string): Promise<CurrentAccount | null> {
     with: {
       organizationMemberships: {
         with: { organization: true },
+        orderBy: (membership, { asc }) => [asc(membership.joinedAt)],
         limit: 1,
       },
     },
@@ -79,15 +82,31 @@ async function provisionAccount(sessionUser: SessionUser): Promise<CurrentAccoun
   return existing;
 }
 
-export const getCurrentAccount = cache(async (): Promise<CurrentAccount | null> => {
-  const { data: session, error } = await auth.getSession();
+async function readSession() {
+  await connection();
 
-  if (error) {
-    console.error("[auth] session lookup failed", { code: error.code, status: error.status });
+  try {
+    return await auth.getSession();
+  } catch (error) {
+    unstable_rethrow(error);
+    console.error("[auth] session lookup threw", error instanceof Error ? error.message : error);
+    return null;
+  }
+}
+
+export const getCurrentAccount = cache(async (): Promise<CurrentAccount | null> => {
+  const result = await readSession();
+
+  if (!result) {
     return null;
   }
 
-  const parsed = sessionUserSchema.safeParse(session?.user);
+  if (result.error) {
+    console.error("[auth] session lookup failed", { code: result.error.code, status: result.error.status });
+    return null;
+  }
+
+  const parsed = sessionUserSchema.safeParse(result.data?.user);
 
   if (!parsed.success) {
     return null;

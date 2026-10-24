@@ -12,7 +12,7 @@ export const emailSchema = z
   .toLowerCase()
   .pipe(z.email({ error: "Enter a valid email address." }).max(320));
 
-const passwordSchema = z
+export const passwordSchema = z
   .string({ error: "Enter a password." })
   .min(8, "Use at least 8 characters.")
   .max(128, "Use 128 characters or fewer.");

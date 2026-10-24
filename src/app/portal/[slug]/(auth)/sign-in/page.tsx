@@ -21,6 +21,7 @@ export default async function PortalSignInPage(props: PageProps<"/portal/[slug]/
   return (
     <PortalAuthCard
       organizationName={organization.name}
+      logoSrc={organization.logoSrc}
       title="Sign in to your portal"
       description={`See your projects and progress with ${organization.name}.`}
     >

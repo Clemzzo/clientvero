@@ -13,6 +13,7 @@ import {
 } from "@/db/schema";
 import { activityActions, activityActorTypes, activityResources, type ActivityAction } from "@/features/activity/activity-actions";
 import { notificationTypes } from "@/features/notifications/notification-types";
+import { logoSrc } from "@/features/settings/image-urls";
 import { ConflictError, NotFoundError } from "@/server/errors";
 import { activityInsertIf } from "@/server/services/activity.service";
 import { notifyMembersIf } from "@/server/services/notification.service";
@@ -21,6 +22,7 @@ import { getSignerName } from "@/server/services/proposal.service";
 export type PublicProposal = Proposal & {
   clientName: string;
   organizationName: string;
+  organizationLogo: string | null;
   sections: ProposalSection[];
   signerName: string | null;
 };
@@ -41,6 +43,8 @@ async function findPublicProposal(publicId: string) {
       proposal: proposals,
       clientName: clients.name,
       organizationName: organizations.name,
+      organizationSlug: organizations.slug,
+      organizationLogoKey: organizations.logoKey,
     })
     .from(proposals)
     .innerJoin(clients, eq(clients.id, proposals.clientId))
@@ -76,6 +80,7 @@ export async function getPublicProposal(publicId: string): Promise<PublicProposa
     ...row.proposal,
     clientName: row.clientName,
     organizationName: row.organizationName,
+    organizationLogo: logoSrc(row.organizationSlug, row.organizationLogoKey),
     sections,
     signerName,
   };

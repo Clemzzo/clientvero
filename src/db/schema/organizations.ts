@@ -1,4 +1,4 @@
-import { index, integer, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core";
+import { index, integer, jsonb, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core";
 
 import { id, softDelete, timestamps } from "./common";
 import { organizationRoleEnum } from "./enums";
@@ -9,6 +9,7 @@ export const organizations = pgTable("organizations", {
   name: varchar("name", { length: 200 }).notNull(),
   slug: varchar("slug", { length: 80 }).notNull().unique(),
   logoUrl: text("logo_url"),
+  logoKey: text("logo_key"),
   website: text("website"),
   businessType: varchar("business_type", { length: 120 }),
   country: varchar("country", { length: 120 }),
@@ -31,6 +32,7 @@ export const organizationMembers = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     role: organizationRoleEnum("role").notNull().default("MEMBER"),
+    notificationPreferences: jsonb("notification_preferences").$type<Record<string, boolean>>().notNull().default({}),
     joinedAt: timestamp("joined_at", { withTimezone: true }).defaultNow().notNull(),
     ...timestamps,
   },

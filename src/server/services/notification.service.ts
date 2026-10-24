@@ -6,7 +6,8 @@ import { db } from "@/db";
 import { notifications, organizationMembers } from "@/db/schema";
 import type { ActivityResource } from "@/features/activity/activity-actions";
 import { notificationHref, type EmittedNotificationType } from "@/features/notifications/notification-types";
-import type { WorkspaceActor } from "@/server/auth/organization";
+import { resolvePreferences, type NotificationPreferences } from "@/features/settings/notification-preferences";
+import type { OrganizationContext, WorkspaceActor } from "@/server/auth/organization";
 import { NotFoundError } from "@/server/errors";
 import { NOTIFICATION_PAGE_SIZE, type NotificationListQuery } from "@/validators/notifications";
 
@@ -30,6 +31,7 @@ export function notifyMembersIf(input: NotifyInput, condition: SQL) {
     from ${organizationMembers} recipient
     where recipient.organization_id = ${input.organizationId}::uuid
       ${input.excludeUserId ? sql`and ${recipientUserId} <> ${input.excludeUserId}::uuid` : sql``}
+      and coalesce((recipient.notification_preferences ->> ${input.type})::boolean, true)
       and ${condition}
   `);
 }
@@ -141,4 +143,21 @@ export async function markAllNotificationsRead(actor: WorkspaceActor): Promise<n
     .returning({ id: notifications.id });
 
   return marked.length;
+}
+
+export function getNotificationPreferences(ctx: OrganizationContext): NotificationPreferences {
+  return resolvePreferences(ctx.membership.notificationPreferences);
+}
+
+export async function updateNotificationPreferences(ctx: OrganizationContext, preferences: NotificationPreferences): Promise<void> {
+  await db
+    .update(organizationMembers)
+    .set({ notificationPreferences: preferences })
+    .where(
+      and(
+        eq(organizationMembers.id, ctx.membership.id),
+        eq(organizationMembers.organizationId, ctx.organization.id),
+        eq(organizationMembers.userId, ctx.user.id),
+      ),
+    );
 }

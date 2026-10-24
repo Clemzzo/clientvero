@@ -47,6 +47,13 @@ export const activityActions = {
   portalActivated: "PORTAL_ACTIVATED",
   portalAccessRevoked: "PORTAL_ACCESS_REVOKED",
   portalDisabled: "PORTAL_DISABLED",
+  organizationUpdated: "ORGANIZATION_UPDATED",
+  memberInvited: "MEMBER_INVITED",
+  invitationRevoked: "INVITATION_REVOKED",
+  memberJoined: "MEMBER_JOINED",
+  memberRoleChanged: "MEMBER_ROLE_CHANGED",
+  memberRemoved: "MEMBER_REMOVED",
+  memberLeft: "MEMBER_LEFT",
 } as const;
 
 export type ActivityAction = (typeof activityActions)[keyof typeof activityActions];

@@ -29,7 +29,7 @@ export type StoredObject = { sizeBytes: number; contentType: string | null };
 
 export type UploadTarget = { url: string; headers: Record<string, string> };
 
-export type ObjectStream = { body: ReadableStream; sizeBytes: number };
+export type ObjectStream = { body: ReadableStream; sizeBytes: number; contentType: string | null };
 
 export function contentDisposition(type: "attachment" | "inline", fileName: string): string {
   const fallback = fileName.replace(/[^\x20-\x7e]|["\\]/g, "_");
@@ -65,7 +65,11 @@ export async function openObject(objectKey: string): Promise<ObjectStream | null
   try {
     const result = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: objectKey }));
     if (!result.Body) return null;
-    return { body: result.Body.transformToWebStream(), sizeBytes: result.ContentLength ?? 0 };
+    return {
+      body: result.Body.transformToWebStream(),
+      sizeBytes: result.ContentLength ?? 0,
+      contentType: result.ContentType ?? null,
+    };
   } catch (error) {
     if (error instanceof NoSuchKey) return null;
     throw error;

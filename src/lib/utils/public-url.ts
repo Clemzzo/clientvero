@@ -13,3 +13,11 @@ export function portalSetupUrl(slug: string, token: string) {
 export function invoicePublicUrl(publicId: string) {
   return new URL(`/invoice/${publicId}`, env.NEXT_PUBLIC_APP_URL).toString();
 }
+
+export function invitationUrl(token: string) {
+  return new URL(`/invite/${token}`, env.NEXT_PUBLIC_APP_URL).toString();
+}
+
+export function portalUrl(slug: string) {
+  return new URL(`/portal/${slug}`, env.NEXT_PUBLIC_APP_URL).toString();
+}

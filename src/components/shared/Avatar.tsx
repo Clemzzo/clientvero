@@ -1,7 +1,10 @@
+import Image from "next/image";
+
 import { cn } from "@/lib/utils";
 
 type AvatarProps = {
   name: string;
+  src?: string | null;
   className?: string;
 };
 
@@ -11,16 +14,16 @@ function initials(name: string) {
   return letters.toUpperCase() || "?";
 }
 
-export function Avatar({ name, className }: AvatarProps) {
+export function Avatar({ name, src, className }: AvatarProps) {
   return (
     <span
       aria-hidden
       className={cn(
-        "grid size-8 shrink-0 place-items-center rounded-full bg-brand-50 text-[12px] font-semibold text-brand-700",
+        "relative grid size-8 shrink-0 place-items-center overflow-hidden rounded-full bg-brand-50 text-[12px] font-semibold text-brand-700",
         className,
       )}
     >
-      {initials(name)}
+      {src ? <Image src={src} alt="" fill unoptimized sizes="96px" className="object-cover" /> : initials(name)}
     </span>
   );
 }

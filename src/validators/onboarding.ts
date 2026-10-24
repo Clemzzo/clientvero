@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { businessTypes, countryCodes, currencyCodes } from "@/features/organizations/business-profile";
 
-export const onboardingSchema = z.object({
+export const businessProfileFields = {
   name: z
     .string({ error: "Enter a workspace name." })
     .trim()
@@ -15,6 +15,8 @@ export const onboardingSchema = z.object({
   currency: z
     .string({ error: "Choose a currency." })
     .refine((code) => currencyCodes.includes(code), "Choose a currency."),
-});
+};
+
+export const onboardingSchema = z.object(businessProfileFields);
 
 export type OnboardingInput = z.infer<typeof onboardingSchema>;

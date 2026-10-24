@@ -5,7 +5,7 @@ import { AuthBrandPanel } from "@/components/auth/AuthBrandPanel";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { SignInForm } from "@/components/auth/SignInForm";
 import { FormAlert } from "@/components/shared/FormAlert";
-import { auth } from "@/lib/auth/server";
+import { getCurrentAccount } from "@/server/auth/current-user";
 import { pathAfterSignIn } from "@/server/auth/redirect-after-sign-in";
 
 export const metadata: Metadata = {
@@ -16,10 +16,10 @@ export const metadata: Metadata = {
 export default async function SignInPage(props: PageProps<"/sign-in">) {
   const { next, reset } = await props.searchParams;
   const nextPath = typeof next === "string" ? next : undefined;
-  const { data: session } = await auth.getSession();
+  const account = await getCurrentAccount();
 
-  if (session?.user) {
-    redirect(await pathAfterSignIn(session.user.id, nextPath));
+  if (account) {
+    redirect(await pathAfterSignIn(account.user.authUserId, nextPath));
   }
 
   return (
