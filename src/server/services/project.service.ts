@@ -8,10 +8,12 @@ import { db } from "@/db";
 import { activityLogs, clients, files, invoices, messages, milestones, projects, type Project, type ProjectStatus } from "@/db/schema";
 import { activityActions, activityResources, type ActivityAction } from "@/features/activity/activity-actions";
 import { projectProgress } from "@/features/projects/progress";
+import { isActiveProjectStatus } from "@/features/projects/project-status";
 import type { WorkspaceActor } from "@/server/auth/organization";
 import { ConflictError, NotFoundError, ValidationError } from "@/server/errors";
 import { activityInsert, activityInsertIf } from "@/server/services/activity.service";
 import { getClient } from "@/server/services/client.service";
+import { requireWithinPlan } from "@/server/services/plan-limit.service";
 import { getProposal } from "@/server/services/proposal.service";
 import type { CreateProjectInput, ProjectFormInput } from "@/validators/projects";
 
@@ -124,6 +126,7 @@ export async function createProject(ctx: WorkspaceActor, input: CreateProjectInp
   const organizationId = ctx.organization.id;
   const clientId = await resolveClientId(organizationId, input);
   await getClient(organizationId, clientId);
+  await requireWithinPlan(ctx, "activeProjects");
   const projectId = randomUUID();
 
   const [created] = await db.batch([
@@ -175,6 +178,10 @@ export async function changeProjectStatus(ctx: WorkspaceActor, projectId: string
     return;
   }
 
+  if (isActiveProjectStatus(status) && !isActiveProjectStatus(project.status)) {
+    await requireWithinPlan(ctx, "activeProjects");
+  }
+
   await db.batch([
     db
       .update(projects)
@@ -199,6 +206,9 @@ const proposalAlreadyHasProject =
 export async function restoreProject(ctx: WorkspaceActor, projectId: string): Promise<void> {
   const organizationId = ctx.organization.id;
   const project = await findProject(archivedProjectScope(organizationId, projectId));
+  if (isActiveProjectStatus(project.status)) {
+    await requireWithinPlan(ctx, "activeProjects");
+  }
   const proposalIsFree = project.proposalId
     ? sql`not exists (
         select 1 from ${projects}

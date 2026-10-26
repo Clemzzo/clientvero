@@ -3,15 +3,35 @@ import { randomUUID } from "node:crypto";
 import { inArray } from "drizzle-orm";
 
 import { db } from "@/db";
-import { organizations, users, type NewLead, leads } from "@/db/schema";
+import { organizations, subscriptions, users, type NewLead, leads, type SubscriptionStatus } from "@/db/schema";
 
-export async function createTestOrganization(currency = "USD") {
+export async function createTestOrganization(currency = "USD", { plan = "pro" }: { plan?: "free" | "pro" } = {}) {
   const suffix = randomUUID().slice(0, 8);
   const [organization] = await db
     .insert(organizations)
     .values({ name: `Test org ${suffix}`, slug: `test-org-${suffix}`, currency })
     .returning();
+  if (plan === "pro") {
+    await setTestSubscription(organization.id, "ACTIVE");
+  }
   return organization;
+}
+
+export async function setTestSubscription(organizationId: string, status: SubscriptionStatus) {
+  const suffix = randomUUID();
+  const values = {
+    organizationId,
+    bachsCustomerId: `cust_test_${suffix}`,
+    bachsSubscriptionId: `sub_test_${suffix}`,
+    bachsProductId: "prod_test_pro",
+    plan: "pro" as const,
+    status,
+    bachsEventAt: new Date(),
+  };
+  await db
+    .insert(subscriptions)
+    .values(values)
+    .onConflictDoUpdate({ target: subscriptions.organizationId, set: { status } });
 }
 
 export async function createTestUser() {

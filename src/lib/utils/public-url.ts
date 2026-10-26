@@ -21,3 +21,7 @@ export function invitationUrl(token: string) {
 export function portalUrl(slug: string) {
   return new URL(`/portal/${slug}`, env.NEXT_PUBLIC_APP_URL).toString();
 }
+
+export function billingSettingsUrl(query?: string) {
+  return new URL(`/dashboard/settings/billing${query ? `?${query}` : ""}`, env.NEXT_PUBLIC_APP_URL).toString();
+}

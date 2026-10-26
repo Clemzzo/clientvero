@@ -1,15 +1,16 @@
+import type { ReactNode } from "react";
 import { Check, Sparkles } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { formatPlanPrice, type Plan } from "@/features/subscriptions/plans";
 import { cn } from "@/lib/utils";
 
 type PlanOptionCardProps = {
   plan: Plan;
   recommended?: boolean;
+  action: ReactNode;
 };
 
-export function PlanOptionCard({ plan, recommended = false }: PlanOptionCardProps) {
+export function PlanOptionCard({ plan, recommended = false, action }: PlanOptionCardProps) {
   const headingId = `billing-plan-${plan.id}`;
 
   return (
@@ -44,9 +45,7 @@ export function PlanOptionCard({ plan, recommended = false }: PlanOptionCardProp
           </li>
         ))}
       </ul>
-      <Button type="button" variant={recommended ? "default" : "outline"} className="mt-6 h-10 w-full rounded-lg" disabled>
-        Upgrade — available soon
-      </Button>
+      {action}
     </article>
   );
 }

@@ -12,6 +12,10 @@ export const projectStatuses = [
 
 export const activeProjectStatuses = ["PLANNING", "IN_PROGRESS", "REVIEW"] as const satisfies readonly ProjectStatus[];
 
+export function isActiveProjectStatus(status: ProjectStatus): boolean {
+  return (activeProjectStatuses as readonly ProjectStatus[]).includes(status);
+}
+
 export const projectStatusLabels: Record<ProjectStatus, string> = {
   PLANNING: "Planning",
   IN_PROGRESS: "In progress",

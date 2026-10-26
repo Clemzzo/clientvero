@@ -627,11 +627,12 @@ subscription_status
   TRIALING
   ACTIVE
   PAST_DUE
-  CANCELLED
-  INCOMPLETE
-  INCOMPLETE_EXPIRED
   UNPAID
+  PAUSED
+  CANCELLED
 ```
+
+`subscription_status` mirrors Bachs' subscription statuses (`trialing`, `active`, `past_due`, `unpaid`, `paused`, `canceled`), approved by the owner in place of the earlier Stripe-style list.
 
 `OVERDUE` is never stored: an invoice is shown as overdue when it is SENT, VIEWED or PARTIALLY_PAID and its due date has passed (§33). This avoids a scheduled job, the same way `EXPIRED` is kept but unused for proposals.
 
@@ -1087,16 +1088,21 @@ id
 organization_id
 bachs_customer_id
 bachs_subscription_id
+bachs_product_id
 plan
 status
 current_period_start
 current_period_end
 cancel_at_period_end
+canceled_at
+bachs_event_at
 created_at
 updated_at
 ```
 
-Billing is handled by Bachs (§60). One Bachs customer per organization (`bachs_customer_id`); `bachs_subscription_id` is unique. Bachs subscription statuses are mapped to `subscription_status` (§19) when the integration is built; a status with no match is raised with the owner rather than guessed.
+Billing is handled by Bachs (§60). One row per organization (`UNIQUE(organization_id)`); no row means the Free plan. `bachs_subscription_id` is unique and `plan` is `pro` or `agency`, derived from `bachs_product_id`. `bachs_event_at` is the timestamp of the last webhook event applied, so older deliveries never overwrite newer state.
+
+Implementation (approved by the owner): only `ACTIVE` and `TRIALING` give the workspace its paid plan. `PAST_DUE`, `UNPAID`, `PAUSED` and `CANCELLED` put it on the Free plan straight away; nothing is deleted, and the paid plan returns when Bachs reports the subscription active again.
 
 ---
 
@@ -1782,7 +1788,16 @@ Update subscriptions
 
 Browser state, including the checkout return URL, is never the authority for payment completion: only a verified, not-yet-processed webhook changes a subscription.
 
-Calls to Bachs go through an internal client in `src/lib/bachs`, used only by `subscription.service.ts`. Endpoints, webhook event names and the signature scheme come from Bachs' developer documentation when the integration is built. Webhook events are stored in `webhook_events` with `provider = 'BACHS'`.
+Calls to Bachs go through an internal client in `src/lib/bachs`, used only by `subscription.service.ts`. Webhook events are stored in `webhook_events` with `provider = 'BACHS'`.
+
+Implementation (approved by the owner):
+
+- **SDK and keys.** `@bachs/sdk` with `BACHS_API_KEY` (`sk_sandbox_…` locally, `sk_live_…` in production; the key decides the environment), `BACHS_WEBHOOK_SECRET`, and `BACHS_PRODUCT_PRO` / `BACHS_PRODUCT_AGENCY` (one monthly USD product per paid plan). Bachs subscriptions bill USD cards only. The variables are checked when billing is first used, so the rest of the app runs without them; billing actions then show "Billing isn't set up yet".
+- **Upgrade.** OWNER/ADMIN (`billing.manage`) choose Pro or Agency on `/dashboard/settings/billing`. The server creates a checkout session (`metadata.organization_id`, the signed-in user's email and name the first time, the stored `customer_id` after that; return to `/dashboard/settings/billing?checkout=success`), and the browser goes to Bachs' hosted checkout. Back on the Billing page, "Activating your plan…" refreshes every 3 seconds until the webhook has landed (up to 30 seconds). A workspace that already has a live subscription can't start another checkout. No trial.
+- **Switch plan** is an in-app button with a confirmation: `PATCH /v1/subscriptions/{id}` with the other plan's product and `proration_behavior: "invoice_now"` (the difference is charged now; a downgrade's credit goes to the customer's Bachs credit balance). Only an `ACTIVE` subscription that isn't set to end can switch.
+- **Cancel** is an in-app button with a confirmation and always cancels at the end of the billing period; the workspace keeps the plan until then. Bachs has no "undo cancel", so there is no Resume button.
+- **Payment method & receipts** (shown as **Update card** after a failed payment) opens a Bachs customer-portal session.
+- **Webhooks** arrive at `POST /api/webhooks/bachs` (no session; `X-Bachs-Signature-V2` checked by the SDK, 5-minute tolerance; a bad signature returns 400). Every event is stored once by `event_id`; an event already processed returns 200 straight away. `customer.subscription.created|updated|deleted` update `subscriptions` in one transaction with an activity entry (`SUBSCRIPTION_STARTED`, `SUBSCRIPTION_PLAN_CHANGED`, `SUBSCRIPTION_CANCEL_SCHEDULED`, `SUBSCRIPTION_STATUS_CHANGED`, `SUBSCRIPTION_ENDED`; actor "Billing", Activity screen "Workspace" tab). The workspace is found from the stored `bachs_subscription_id`; only a subscription ClientVero doesn't know yet uses `metadata.organization_id`, and that id must be an existing workspace. Events older than the stored `bachs_event_at` change nothing. Events that can never apply (unknown product or workspace, a second live subscription for the same workspace) are kept with `failed_at` and `error_message` and acknowledged with 200; unexpected errors return 500 so Bachs retries. Other event types are stored and acknowledged.
 
 ---
 
@@ -2030,7 +2045,7 @@ Implementation (approved by the owner):
 - **Images:** avatars (`users.avatar_key`) and logos (`organizations.logo_key`) are PNG or JPG, up to 2 MB, uploaded straight to the private bucket with a presigned PUT and checked (`HeadObject` size and type, key prefix `org/{id}/brand/logo/…` or `org/{id}/members/{userId}/avatar/…`) before the key is saved; the previous object is then deleted. Avatars are served through `/dashboard/team/[userId]/avatar` (same-workspace members only); logos through the public `/brand/[slug]/logo`, because they appear in the portal and on public proposals and invoices. Both stream through the app with `nosniff` and a sandboxed CSP.
 - **Team** (`team.read` to view, `team.manage` to change): members with roles, and pending invitations. An invitation (`organization_invitations`) is a single-use link valid for 7 days (only the SHA-256 hash is stored, plus an AES-GCM copy so it can be copied again; a new invite to the same email replaces the open one). Until the Email build the link is copied and sent by hand. Up to 20 people per workspace, counting open invitations. The invitee opens `/invite/[token]`, signs up or signs in with the invited email, and joins; a signed-in user without a workspace also sees open invitations on `/onboarding`. Joining is one transaction under an advisory lock and only succeeds for the invited email, an open unexpired invitation and a user with no workspace (one workspace per account for now). Removing a member deletes their membership and their notifications in that workspace; their records stay. Activity: `MEMBER_INVITED`, `INVITATION_REVOKED`, `MEMBER_JOINED`, `MEMBER_ROLE_CHANGED`, `MEMBER_REMOVED`, `MEMBER_LEFT` (Activity screen "Workspace" tab).
 - **Notifications** (everyone, own settings only): switches per emitted notification type (§39).
-- **Billing** (`billing.read`): the current plan (Free until Bachs), usage against its limits (clients, active projects, proposals and invoices this month in the user's time zone), and the other plans with upgrades marked "available soon". Bachs fills this page in (§60).
+- **Billing** (`billing.read`): the current plan (§36), its renewal or end date, usage against its limits (clients, active projects, proposals and invoices this month in the user's time zone), a warning when a payment has failed, and the upgrade or switch options. Changing the plan needs `billing.manage` (§60).
 - **Not in this build:** ownership transfer, deleting the workspace or account, changing the sign-in email, invitation emails, and seat limits per plan.
 
 ---
@@ -2594,6 +2609,8 @@ $10/month
 - advanced team features
 
 Pricing should be configuration-driven.
+
+Implementation (approved by the owner): plans and limits live in `src/features/subscriptions/plans.ts`. The Free limits are enforced on the server before any write that would raise a count: creating or restoring a client and converting a lead (clients); creating a project, restoring an active one, or moving a project back to Planning / In progress / Review (active projects); creating a proposal or an invoice (per month, in the user's time zone). Reaching a limit shows "Your Free plan includes 2 clients. Upgrade in Settings → Billing…". Editing, sending, archiving and deleting are never blocked, and records already over the limit after a downgrade or failed payment stay usable. The check counts first and then writes, so two simultaneous creates at the limit can both succeed; that's accepted for plan quotas.
 
 ---
 

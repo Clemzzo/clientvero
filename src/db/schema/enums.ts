@@ -58,3 +58,12 @@ export const notificationTypeEnum = pgEnum("notification_type", [
   "PROJECT_DEADLINE",
   "GENERAL",
 ]);
+
+export const subscriptionStatusEnum = pgEnum("subscription_status", [
+  "TRIALING",
+  "ACTIVE",
+  "PAST_DUE",
+  "UNPAID",
+  "PAUSED",
+  "CANCELLED",
+]);

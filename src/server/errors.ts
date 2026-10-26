@@ -43,3 +43,15 @@ export class RateLimitError extends AppError {
     super(message, "RATE_LIMITED");
   }
 }
+
+export class PlanLimitError extends AppError {
+  constructor(message: string) {
+    super(message, "PLAN_LIMIT");
+  }
+}
+
+export class ExternalServiceError extends AppError {
+  constructor(message = "Billing is unavailable right now. Please try again in a few minutes.") {
+    super(message, "EXTERNAL_SERVICE");
+  }
+}

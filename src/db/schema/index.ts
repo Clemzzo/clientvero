@@ -14,4 +14,6 @@ export * from "./messages";
 export * from "./invoices";
 export * from "./payments";
 export * from "./notifications";
+export * from "./subscriptions";
+export * from "./webhooks";
 export * from "./relations";

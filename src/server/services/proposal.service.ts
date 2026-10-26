@@ -14,6 +14,7 @@ import type { WorkspaceActor } from "@/server/auth/organization";
 import { ConflictError, NotFoundError, ValidationError } from "@/server/errors";
 import { activityInsert, activityInsertIf } from "@/server/services/activity.service";
 import { getClient } from "@/server/services/client.service";
+import { requireWithinPlan } from "@/server/services/plan-limit.service";
 import type { ProposalFormInput } from "@/validators/proposals";
 
 export type ProposalDetail = Proposal & {
@@ -125,6 +126,7 @@ export async function getProposal(organizationId: string, proposalId: string): P
 
 export async function createProposal(ctx: WorkspaceActor, input: ProposalFormInput): Promise<string> {
   await getClient(ctx.organization.id, input.clientId);
+  await requireWithinPlan(ctx, "proposalsPerMonth");
   const proposalId = randomUUID();
 
   await db.batch([

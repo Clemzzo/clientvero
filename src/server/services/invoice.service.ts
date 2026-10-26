@@ -16,6 +16,7 @@ import type { WorkspaceActor } from "@/server/auth/organization";
 import { ConflictError, NotFoundError, ValidationError } from "@/server/errors";
 import { getClient } from "@/server/services/client.service";
 import { invoiceActivity } from "@/server/services/invoice-activity";
+import { requireWithinPlan } from "@/server/services/plan-limit.service";
 import { requireProject } from "@/server/services/project.service";
 import type { InvoiceFormInput } from "@/validators/invoices";
 
@@ -215,6 +216,7 @@ export async function getInvoicePrefill(
 export async function createInvoice(ctx: WorkspaceActor, input: InvoiceFormInput): Promise<string> {
   const organizationId = ctx.organization.id;
   await requireBillingTarget(organizationId, input);
+  await requireWithinPlan(ctx, "invoicesPerMonth");
   const invoiceId = randomUUID();
 
   await db.batch([

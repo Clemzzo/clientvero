@@ -3,6 +3,7 @@ import { z } from "zod";
 import { activityActions } from "@/features/activity/activity-actions";
 import { leadStatusLabels, leadStatuses } from "@/features/leads/lead-status";
 import { projectStatusLabels, projectStatuses } from "@/features/projects/project-status";
+import { subscriptionStatusLabels, subscriptionStatuses } from "@/features/subscriptions/subscription-status";
 import { formatMoney } from "@/lib/utils/format";
 
 const metadataSchema = z
@@ -19,6 +20,8 @@ const metadataSchema = z
     role: z.enum(["OWNER", "ADMIN", "MEMBER"]).optional(),
     amount: z.string().regex(/^\d{1,12}(\.\d{1,2})?$/).optional(),
     currency: z.string().length(3).optional(),
+    source: z.literal("billing").optional(),
+    subscriptionStatus: z.enum(subscriptionStatuses).optional(),
   })
   .catch({});
 
@@ -29,9 +32,8 @@ type ActivityDescription = {
 };
 
 export function describeActivity(action: string, metadata: unknown): ActivityDescription {
-  const { name, to, milestoneName, fileName, projectStatus, count, amount, currency, email, role } = metadataSchema.parse(
-    metadata ?? {},
-  );
+  const { name, to, milestoneName, fileName, projectStatus, count, amount, currency, email, role, subscriptionStatus } =
+    metadataSchema.parse(metadata ?? {});
   const roleLabel = role ? role.charAt(0) + role.slice(1).toLowerCase() : undefined;
   const money = amount && currency ? formatMoney(amount, currency) : undefined;
 
@@ -148,6 +150,20 @@ export function describeActivity(action: string, metadata: unknown): ActivityDes
       return { verb: "removed", subject: name, detail: "from the workspace" };
     case activityActions.memberLeft:
       return { verb: "left the workspace" };
+    case activityActions.subscriptionStarted:
+      return { verb: "started the", subject: name ? `${name} plan` : "paid plan" };
+    case activityActions.subscriptionPlanChanged:
+      return { verb: "switched the workspace to the", subject: name ? `${name} plan` : "new plan" };
+    case activityActions.subscriptionCancelScheduled:
+      return { verb: "scheduled the", subject: name ? `${name} plan` : "plan", detail: "to end at the close of the billing period" };
+    case activityActions.subscriptionStatusChanged:
+      return {
+        verb: "marked the",
+        subject: name ? `${name} plan` : "plan",
+        detail: subscriptionStatus ? `as ${subscriptionStatusLabels[subscriptionStatus].toLowerCase()}` : undefined,
+      };
+    case activityActions.subscriptionEnded:
+      return { verb: "ended the", subject: name ? `${name} plan` : "paid plan", detail: "· the workspace is on Free" };
     case activityActions.activityCleared:
       return { verb: `cleared ${count ?? 0} activity ${count === 1 ? "entry" : "entries"}` };
     default:
@@ -167,6 +183,7 @@ export function actorName(entry: ActorFields) {
 
   if (userName) return userName;
 
-  const { signerName, clientName } = metadataSchema.parse(entry.metadata ?? {});
+  const { signerName, clientName, source } = metadataSchema.parse(entry.metadata ?? {});
+  if (source === "billing") return "Billing";
   return signerName ?? clientName ?? "Someone";
 }

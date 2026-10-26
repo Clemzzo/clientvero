@@ -11,6 +11,7 @@ import type { WorkspaceActor } from "@/server/auth/organization";
 import { ConflictError } from "@/server/errors";
 import { activityInsertIf } from "@/server/services/activity.service";
 import { getLead } from "@/server/services/lead.service";
+import { requireWithinPlan } from "@/server/services/plan-limit.service";
 
 const alreadyConverted = "This lead has already been converted to a client.";
 
@@ -43,6 +44,7 @@ export async function convertLead(ctx: WorkspaceActor, leadId: string): Promise<
     throw new ConflictError(alreadyConverted);
   }
 
+  await requireWithinPlan(ctx, "clients");
   const clientId = randomUUID();
   const leadIsConvertible = sql`exists (
     select 1 from ${leads}

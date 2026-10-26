@@ -54,6 +54,11 @@ export const activityActions = {
   memberRoleChanged: "MEMBER_ROLE_CHANGED",
   memberRemoved: "MEMBER_REMOVED",
   memberLeft: "MEMBER_LEFT",
+  subscriptionStarted: "SUBSCRIPTION_STARTED",
+  subscriptionPlanChanged: "SUBSCRIPTION_PLAN_CHANGED",
+  subscriptionCancelScheduled: "SUBSCRIPTION_CANCEL_SCHEDULED",
+  subscriptionStatusChanged: "SUBSCRIPTION_STATUS_CHANGED",
+  subscriptionEnded: "SUBSCRIPTION_ENDED",
 } as const;
 
 export type ActivityAction = (typeof activityActions)[keyof typeof activityActions];
@@ -72,6 +77,7 @@ export type ActivityResource = (typeof activityResources)[keyof typeof activityR
 export const activityActorTypes = {
   user: "USER",
   client: "CLIENT",
+  system: "SYSTEM",
 } as const;
 
 export type ActivityActorType = (typeof activityActorTypes)[keyof typeof activityActorTypes];

@@ -10,6 +10,7 @@ import { activityActions, activityResources, type ActivityAction } from "@/featu
 import type { WorkspaceActor } from "@/server/auth/organization";
 import { ConflictError, NotFoundError } from "@/server/errors";
 import { activityInsert, activityInsertIf } from "@/server/services/activity.service";
+import { requireWithinPlan } from "@/server/services/plan-limit.service";
 import type { ClientFormInput } from "@/validators/clients";
 
 function ownedClientScope(organizationId: string, clientId: string) {
@@ -55,6 +56,7 @@ export async function getClient(organizationId: string, clientId: string): Promi
 }
 
 export async function createClient(ctx: WorkspaceActor, input: ClientFormInput): Promise<string> {
+  await requireWithinPlan(ctx, "clients");
   const clientId = randomUUID();
 
   await db.batch([
@@ -85,6 +87,7 @@ export async function archiveClient(ctx: WorkspaceActor, clientId: string): Prom
 
 export async function restoreClient(ctx: WorkspaceActor, clientId: string): Promise<void> {
   const client = await findClient(archivedClientScope(ctx.organization.id, clientId));
+  await requireWithinPlan(ctx, "clients");
 
   await db.batch([
     db.update(clients).set({ deletedAt: null }).where(archivedClientScope(ctx.organization.id, clientId)),
