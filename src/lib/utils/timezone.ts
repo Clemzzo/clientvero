@@ -23,4 +23,18 @@ export function userToday(timeZone: string | null | undefined, now = new Date())
   return todayInTimeZone(resolveTimeZone(timeZone), now);
 }
 
+export function hourInTimeZone(timeZone: string, now = new Date()): number {
+  const hour = new Intl.DateTimeFormat("en", { timeZone, hour: "numeric", hourCycle: "h23" })
+    .formatToParts(now)
+    .find((entry) => entry.type === "hour")?.value;
+  return Number(hour ?? 0);
+}
+
+export function greetingForTimeZone(timeZone: string | null | undefined, now = new Date()): string {
+  const hour = hourInTimeZone(resolveTimeZone(timeZone), now);
+  if (hour >= 5 && hour < 12) return "Good morning";
+  if (hour >= 12 && hour < 18) return "Good afternoon";
+  return "Good evening";
+}
+
 export const TIME_ZONE_COOKIE = "cv_tz";

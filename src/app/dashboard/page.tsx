@@ -12,7 +12,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { UrlNotice } from "@/components/shared/UrlNotice";
 import { dashboardHighlights } from "@/features/dashboard/highlights";
 import { noticeSchema } from "@/features/notices";
-import { resolveTimeZone } from "@/lib/utils/timezone";
+import { greetingForTimeZone, resolveTimeZone } from "@/lib/utils/timezone";
 import { requireOrganizationContext } from "@/server/auth/organization";
 import { getDashboardOverview } from "@/server/repositories/dashboard.repository";
 
@@ -79,7 +79,7 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
     <div className="mx-auto max-w-300 space-y-6 px-4 py-8 sm:px-8 lg:py-10">
       <UrlNotice notice={notice} message={`Welcome to ${organization.name}! You've joined the workspace.`} />
       <PageHeader
-        title={`Welcome back${user.firstName ? `, ${user.firstName}` : ""}`}
+        title={`${greetingForTimeZone(user.timezone)}${user.firstName ? `, ${user.firstName}` : ""}`}
         description={dashboardHighlights({
           pendingProposals: proposals.pending,
           activeProjects: projects.active,
