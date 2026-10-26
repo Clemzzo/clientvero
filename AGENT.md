@@ -76,7 +76,7 @@ These come straight from the PRD's final engineering rules. Breaking one is a bu
 - Public proposal and invoice URLs use **opaque public IDs**, never internal UUIDs.
 - Invoice numbers are organization-scoped and generated with a concurrency-safe strategy — never a row count.
 - Use PostgreSQL **transactions** for lead conversion, proposal acceptance, and payment recording.
-- **Idempotency** is required for Stripe webhooks, proposal acceptance, payment recording, and subscription sync — via `webhook_events` unique event IDs or idempotency keys.
+- **Idempotency** is required for Bachs webhooks, proposal acceptance, payment recording, and subscription sync — via `webhook_events` unique event IDs or idempotency keys.
 - Write an **activity log** entry for meaningful business events (`LEAD_CONVERTED`, `PROPOSAL_ACCEPTED`, `PAYMENT_RECEIVED`, …).
 
 ### UI & accessibility
@@ -94,7 +94,7 @@ These come straight from the PRD's final engineering rules. Breaking one is a bu
 
 ### Stack boundaries
 
-Stay within the agreed stack: **Next.js App Router · React · TypeScript · Tailwind · shadcn/ui · Framer Motion · Server Actions & Route Handlers · Zod · Neon PostgreSQL · Drizzle ORM · Neon Auth (managed Better Auth) · Neon Object Storage · Stripe · Upstash Redis · Resend · PostHog · OpenAI · Vercel.**
+Stay within the agreed stack: **Next.js App Router · React · TypeScript · Tailwind · shadcn/ui · Framer Motion · Server Actions & Route Handlers · Zod · Neon PostgreSQL · Drizzle ORM · Neon Auth (managed Better Auth) · Neon Object Storage · Bachs · Upstash Redis · Resend · PostHog · OpenAI · Vercel.**
 
 Architecture is a **modular monolith**. Do not introduce microservices, alternative ORMs, or a global client store holding the application data model.
 

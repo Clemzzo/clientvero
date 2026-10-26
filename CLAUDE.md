@@ -87,7 +87,7 @@ npm run db:studio      # drizzle studio
 **Frontend:** Next.js (App Router) · React · TypeScript · Tailwind CSS · shadcn/ui · Framer Motion
 **Backend:** Server Actions · Route Handlers · Zod · domain service layer · optional repository layer
 **Data:** Neon PostgreSQL · Drizzle ORM · Drizzle Kit
-**Infra:** Neon Auth — managed Better Auth (auth) · Neon Object Storage, S3-compatible (files) · Stripe (subscriptions) · Upstash Redis (rate limit/cache) · Resend (email) · PostHog (analytics) · OpenAI (AI) · Vercel (deploy)
+**Infra:** Neon Auth — managed Better Auth (auth) · Neon Object Storage, S3-compatible (files) · Bachs (subscriptions) · Upstash Redis (rate limit/cache) · Resend (email) · PostHog (analytics) · OpenAI (AI) · Vercel (deploy)
 
 **Architecture: modular monolith.** No microservices for the MVP. No alternative ORM. No global client store holding the application data model.
 
@@ -100,7 +100,7 @@ src/
 ├── features/     leads clients proposals projects invoices payments files messages notifications ai subscriptions
 ├── server/       auth authorization services repositories actions
 ├── db/           index.ts schema/ migrations/
-├── lib/          auth storage stripe redis resend openai posthog utils
+├── lib/          auth storage bachs redis resend openai posthog utils
 ├── validators/
 └── types/
 ```
@@ -114,7 +114,7 @@ src/
 5. **Portal authorization starts from the authenticated portal identity** → client → organization → resource. Never from a `client_id` sent by the browser.
 6. **Money is `numeric`, never float.** Currency always stored with the amount. Totals always calculated on the trusted server.
 7. **Public proposal and invoice URLs use opaque public IDs,** never internal UUIDs.
-8. **Idempotency is required** for Stripe webhooks, proposal acceptance, payment recording, and subscription sync.
+8. **Idempotency is required** for Bachs webhooks, proposal acceptance, payment recording, and subscription sync.
 9. **Validate every external input with Zod** — forms, server actions, route handlers, query params, webhook payloads — on the server, regardless of client-side validation.
 10. **The browser never calls OpenAI directly.** AI goes through a server action with auth, plan check, rate limit, and `ai_usage` tracking.
 

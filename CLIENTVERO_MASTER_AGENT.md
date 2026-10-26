@@ -354,7 +354,7 @@ Neon
 
 ## Payments
 
-- Stripe
+- Bachs (ClientVero subscription billing)
 
 ## Storage
 
@@ -425,7 +425,7 @@ Neon Auth
 Neon Object Storage
 
 External infrastructure:
-Stripe
+Bachs
 Upstash
 Resend
 OpenAI
@@ -490,7 +490,7 @@ src/
 │
 ├── lib/
 │   ├── auth/
-│   ├── stripe/
+│   ├── bachs/
 │   ├── storage/
 │   ├── redis/
 │   ├── resend/
@@ -1080,8 +1080,8 @@ subscriptions
 -------------
 id
 organization_id
-stripe_customer_id
-stripe_subscription_id
+bachs_customer_id
+bachs_subscription_id
 plan
 status
 current_period_start
@@ -1090,6 +1090,8 @@ cancel_at_period_end
 created_at
 updated_at
 ```
+
+Billing is handled by Bachs (§60). One Bachs customer per organization (`bachs_customer_id`); `bachs_subscription_id` is unique. Bachs subscription statuses are mapped to `subscription_status` (§19) when the integration is built; a status with no match is raised with the owner rather than guessed.
 
 ---
 
@@ -1717,18 +1719,20 @@ The browser never directly calls OpenAI.
 
 ---
 
-# 60. Stripe
+# 60. Bachs
 
-Stripe handles ClientVero's subscription billing.
+[Bachs](https://bachs.io) handles ClientVero's subscription billing. A subscription only starts when the customer completes a Bachs hosted checkout for a recurring plan, so ClientVero never handles card details.
 
 Flow:
 
 ```text
-Choose plan
+Choose plan (billing.manage)
  ↓
-Stripe Checkout
+Server creates a Bachs checkout session
  ↓
-Stripe
+Bachs hosted checkout
+ ↓
+Bachs
  ↓
 Webhook
  ↓
@@ -1739,7 +1743,9 @@ Check webhook_events
 Update subscriptions
 ```
 
-Browser state is never the authority for payment completion.
+Browser state, including the checkout return URL, is never the authority for payment completion: only a verified, not-yet-processed webhook changes a subscription.
+
+Calls to Bachs go through an internal client in `src/lib/bachs`, used only by `subscription.service.ts`. Endpoints, webhook event names and the signature scheme come from Bachs' developer documentation when the integration is built. Webhook events are stored in `webhook_events` with `provider = 'BACHS'`.
 
 ---
 
@@ -2224,7 +2230,7 @@ create notification
 
 Required for:
 
-- Stripe webhooks
+- Bachs webhooks
 - proposal acceptance
 - payment recording
 - subscription synchronization
@@ -2403,7 +2409,7 @@ Monitor:
 - server errors
 - database failures
 - failed webhooks
-- Stripe failures
+- Bachs failures
 - AI failures
 - email failures
 - authorization failures
@@ -2679,7 +2685,7 @@ Core positioning:
 
 - invoices
 - payment tracking
-- Stripe subscriptions
+- Bachs subscriptions
 - plan management
 
 ## Week 7 — AI & Polish
@@ -2871,7 +2877,7 @@ Rate Limiting
 [ ] client portal implemented
 [ ] invoices implemented
 [ ] payments implemented
-[ ] Stripe subscriptions implemented
+[ ] Bachs subscriptions implemented
 [ ] Neon Object Storage file flows implemented
 [ ] messages implemented
 [ ] notifications implemented
@@ -2928,7 +2934,7 @@ Rate Limiting
                                 │
           ┌─────────────┬───────┴──────┬─────────────┐
           │             │              │             │
-       Stripe        Upstash        Resend        OpenAI
+       Bachs         Upstash        Resend        OpenAI
                                                      │
                                                   PostHog
 
@@ -3117,7 +3123,7 @@ Neon Auth
 Neon Object Storage
 Drizzle ORM
 
-Stripe
+Bachs
 Upstash Redis
 Resend
 PostHog
@@ -3157,7 +3163,7 @@ Build ClientVero as a production-ready, polished SaaS MVP according to Part I. P
 - Keep ClientVero subscription billing separate from client project invoice payments.
 - Keep Neon Object Storage buckets private and use presigned URLs for file access.
 - Keep OpenAI calls server-side and rate-limited; track AI usage.
-- Use idempotency for Stripe webhooks and other retriable workflow operations.
+- Use idempotency for Bachs webhooks and other retriable workflow operations.
 - Do not move the entire application state into a global client store.
 - Do not add microservices unless actual scale or operational requirements justify the split.
 
@@ -3174,7 +3180,7 @@ Build ClientVero as a production-ready, polished SaaS MVP according to Part I. P
 9. Invoices and payment tracking
 10. Files and messaging
 11. Notifications and email
-12. Stripe subscriptions
+12. Bachs subscriptions
 13. AI helpers
 14. Search, caching, rate limiting, analytics
 15. Testing, security hardening, responsive QA, deployment
@@ -3199,9 +3205,9 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 NEON_AUTH_BASE_URL=
 NEON_AUTH_COOKIE_SECRET=
 
-STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+# Bachs — hosted checkout only, so no publishable key is needed in the browser.
+BACHS_SECRET_KEY=
+BACHS_WEBHOOK_SECRET=
 
 # Neon Object Storage — branch credentials are written by `neon env pull`.
 AWS_ACCESS_KEY_ID=
@@ -3239,7 +3245,7 @@ This starter is the implementation appendix for the ClientVero PRD.
 - Drizzle ORM
 - Tailwind CSS
 - shadcn/ui
-- Stripe
+- Bachs
 - Upstash Redis
 - Resend
 - PostHog
@@ -3317,7 +3323,6 @@ export default defineConfig({
     "react-dom": "latest",
     "react-hook-form": "latest",
     "resend": "latest",
-    "stripe": "latest",
     "tailwind-merge": "latest",
     "zod": "latest"
   },
@@ -4212,8 +4217,8 @@ export const subscriptions = pgTable(
   {
     id: id(),
     organizationId: uuid("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
-    stripeCustomerId: varchar("stripe_customer_id", { length: 160 }),
-    stripeSubscriptionId: varchar("stripe_subscription_id", { length: 160 }).unique(),
+    bachsCustomerId: varchar("bachs_customer_id", { length: 160 }),
+    bachsSubscriptionId: varchar("bachs_subscription_id", { length: 160 }).unique(),
     plan: varchar("plan", { length: 60 }).notNull().default("FREE"),
     status: subscriptionStatusEnum("status").notNull().default("ACTIVE"),
     currentPeriodStart: timestamp("current_period_start", { withTimezone: true }),
@@ -4620,7 +4625,7 @@ export const createLeadSchema = z.object({
 - [ ] Implement server-side permissions for every domain.
 - [ ] Build the complete primary workflow end-to-end before polishing secondary features.
 - [ ] Add tenant-isolation tests before production deployment.
-- [ ] Add Stripe webhook idempotency and subscription synchronization.
+- [ ] Add Bachs webhook idempotency and subscription synchronization.
 - [ ] Add presigned Neon Object Storage upload/download flows.
 - [ ] Add Resend transactional email templates.
 - [ ] Add Upstash rate limiting and caching where specified.

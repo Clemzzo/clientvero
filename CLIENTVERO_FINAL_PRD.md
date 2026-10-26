@@ -342,7 +342,7 @@ Neon
 
 ## Payments
 
-- Stripe
+- Bachs (ClientVero subscription billing)
 
 ## Storage
 
@@ -413,7 +413,7 @@ Neon Auth
 Neon Object Storage
 
 External infrastructure:
-Stripe
+Bachs
 Upstash
 Resend
 OpenAI
@@ -478,7 +478,7 @@ src/
 │
 ├── lib/
 │   ├── auth/
-│   ├── stripe/
+│   ├── bachs/
 │   ├── storage/
 │   ├── redis/
 │   ├── resend/
@@ -1085,8 +1085,8 @@ subscriptions
 -------------
 id
 organization_id
-stripe_customer_id
-stripe_subscription_id
+bachs_customer_id
+bachs_subscription_id
 plan
 status
 current_period_start
@@ -1095,6 +1095,8 @@ cancel_at_period_end
 created_at
 updated_at
 ```
+
+Billing is handled by Bachs (§60). One Bachs customer per organization (`bachs_customer_id`); `bachs_subscription_id` is unique. Bachs subscription statuses are mapped to `subscription_status` (§19) when the integration is built; a status with no match is raised with the owner rather than guessed.
 
 ---
 
@@ -1754,18 +1756,20 @@ The browser never directly calls OpenAI.
 
 ---
 
-# 60. Stripe
+# 60. Bachs
 
-Stripe handles ClientVero's subscription billing.
+[Bachs](https://bachs.io) handles ClientVero's subscription billing. A subscription only starts when the customer completes a Bachs hosted checkout for a recurring plan, so ClientVero never handles card details.
 
 Flow:
 
 ```text
-Choose plan
+Choose plan (billing.manage)
  ↓
-Stripe Checkout
+Server creates a Bachs checkout session
  ↓
-Stripe
+Bachs hosted checkout
+ ↓
+Bachs
  ↓
 Webhook
  ↓
@@ -1776,7 +1780,9 @@ Check webhook_events
 Update subscriptions
 ```
 
-Browser state is never the authority for payment completion.
+Browser state, including the checkout return URL, is never the authority for payment completion: only a verified, not-yet-processed webhook changes a subscription.
+
+Calls to Bachs go through an internal client in `src/lib/bachs`, used only by `subscription.service.ts`. Endpoints, webhook event names and the signature scheme come from Bachs' developer documentation when the integration is built. Webhook events are stored in `webhook_events` with `provider = 'BACHS'`.
 
 ---
 
@@ -2024,7 +2030,7 @@ Implementation (approved by the owner):
 - **Images:** avatars (`users.avatar_key`) and logos (`organizations.logo_key`) are PNG or JPG, up to 2 MB, uploaded straight to the private bucket with a presigned PUT and checked (`HeadObject` size and type, key prefix `org/{id}/brand/logo/…` or `org/{id}/members/{userId}/avatar/…`) before the key is saved; the previous object is then deleted. Avatars are served through `/dashboard/team/[userId]/avatar` (same-workspace members only); logos through the public `/brand/[slug]/logo`, because they appear in the portal and on public proposals and invoices. Both stream through the app with `nosniff` and a sandboxed CSP.
 - **Team** (`team.read` to view, `team.manage` to change): members with roles, and pending invitations. An invitation (`organization_invitations`) is a single-use link valid for 7 days (only the SHA-256 hash is stored, plus an AES-GCM copy so it can be copied again; a new invite to the same email replaces the open one). Until the Email build the link is copied and sent by hand. Up to 20 people per workspace, counting open invitations. The invitee opens `/invite/[token]`, signs up or signs in with the invited email, and joins; a signed-in user without a workspace also sees open invitations on `/onboarding`. Joining is one transaction under an advisory lock and only succeeds for the invited email, an open unexpired invitation and a user with no workspace (one workspace per account for now). Removing a member deletes their membership and their notifications in that workspace; their records stay. Activity: `MEMBER_INVITED`, `INVITATION_REVOKED`, `MEMBER_JOINED`, `MEMBER_ROLE_CHANGED`, `MEMBER_REMOVED`, `MEMBER_LEFT` (Activity screen "Workspace" tab).
 - **Notifications** (everyone, own settings only): switches per emitted notification type (§39).
-- **Billing** (`billing.read`): the current plan (Free until Stripe), usage against its limits (clients, active projects, proposals and invoices this month in the user's time zone), and the other plans with upgrades marked "available soon". Stripe fills this page in (§60).
+- **Billing** (`billing.read`): the current plan (Free until Bachs), usage against its limits (clients, active projects, proposals and invoices this month in the user's time zone), and the other plans with upgrades marked "available soon". Bachs fills this page in (§60).
 - **Not in this build:** ownership transfer, deleting the workspace or account, changing the sign-in email, invitation emails, and seat limits per plan.
 
 ---
@@ -2274,7 +2280,7 @@ create notification
 
 Required for:
 
-- Stripe webhooks
+- Bachs webhooks
 - proposal acceptance
 - payment recording
 - subscription synchronization
@@ -2455,7 +2461,7 @@ Monitor:
 - server errors
 - database failures
 - failed webhooks
-- Stripe failures
+- Bachs failures
 - AI failures
 - email failures
 - authorization failures
@@ -2731,7 +2737,7 @@ Core positioning:
 
 - invoices
 - payment tracking
-- Stripe subscriptions
+- Bachs subscriptions
 - plan management
 
 ## Week 7 — AI & Polish
@@ -2923,7 +2929,7 @@ Rate Limiting
 [ ] client portal implemented
 [ ] invoices implemented
 [ ] payments implemented
-[ ] Stripe subscriptions implemented
+[ ] Bachs subscriptions implemented
 [ ] Neon Object Storage file flows implemented
 [ ] messages implemented
 [ ] notifications implemented
@@ -2980,7 +2986,7 @@ Rate Limiting
                                 │
           ┌─────────────┬───────┴──────┬─────────────┐
           │             │              │             │
-       Stripe        Upstash        Resend        OpenAI
+       Bachs         Upstash        Resend        OpenAI
                                                      │
                                                   PostHog
 
@@ -3168,7 +3174,7 @@ Neon Auth
 Neon Object Storage
 Drizzle ORM
 
-Stripe
+Bachs
 Upstash Redis
 Resend
 PostHog
