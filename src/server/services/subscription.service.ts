@@ -1,6 +1,6 @@
 import "server-only";
 
-import { BachsError } from "@bachs/sdk";
+import { BachsApiError, BachsError } from "@bachs/sdk";
 import { eq, sql } from "drizzle-orm";
 
 import { db } from "@/db";
@@ -42,6 +42,9 @@ async function callBachs<T>(operation: string, run: () => Promise<T>): Promise<T
       console.error(`[billing] ${operation}: ${error.message}`);
       throw new ExternalServiceError("Billing isn't set up yet. Please try again later.");
     }
+    if (error instanceof BachsApiError && error.statusCode === 409 && String(error.errorCode).startsWith("IDEMPOTENCY_")) {
+      throw new ConflictError("A checkout for this plan is already being opened. Wait a moment and try again.");
+    }
     if (error instanceof BachsError) {
       const code = "errorCode" in error ? String(error.errorCode ?? "") : "";
       const status = "statusCode" in error ? String(error.statusCode) : "";
@@ -56,6 +59,13 @@ function customerName(ctx: OrganizationContext) {
   return [ctx.user.firstName, ctx.user.lastName].filter(Boolean).join(" ") || ctx.organization.name;
 }
 
+const CHECKOUT_MINUTES = 60;
+
+export function checkoutIdempotencyKey(ctx: OrganizationContext, planId: PaidPlanId, now = Date.now()) {
+  const window = Math.floor(now / (CHECKOUT_MINUTES * 60_000));
+  return `checkout:${ctx.organization.id}:${planId}:${ctx.user.id}:${window}`;
+}
+
 export async function startCheckout(ctx: OrganizationContext, planId: PaidPlanId): Promise<string> {
   const subscription = await getSubscription(ctx.organization.id);
 
@@ -64,17 +74,20 @@ export async function startCheckout(ctx: OrganizationContext, planId: PaidPlanId
   }
 
   const checkout = await callBachs("checkout", () =>
-    bachsClient().checkoutSessions.create({
-      product_cart: [{ product_id: bachsConfig().products[planId], quantity: 1 }],
-      customer: subscription
-        ? { customer_id: subscription.bachsCustomerId }
-        : { email: ctx.user.email, name: customerName(ctx) },
-      billing_currency: "USD",
-      success_url: billingSettingsUrl("checkout=success"),
-      cancel_url: billingSettingsUrl(),
-      metadata: { organization_id: ctx.organization.id, plan: planId },
-      expires_in_minutes: 60,
-    }),
+    bachsClient().checkoutSessions.create(
+      {
+        product_cart: [{ product_id: bachsConfig().products[planId], quantity: 1 }],
+        customer: subscription
+          ? { customer_id: subscription.bachsCustomerId }
+          : { email: ctx.user.email, name: customerName(ctx) },
+        billing_currency: "USD",
+        success_url: billingSettingsUrl("checkout=success"),
+        cancel_url: billingSettingsUrl(),
+        metadata: { organization_id: ctx.organization.id, plan: planId },
+        expires_in_minutes: CHECKOUT_MINUTES,
+      },
+      { idempotencyKey: checkoutIdempotencyKey(ctx, planId) },
+    ),
   );
 
   return checkout.checkout_url;
